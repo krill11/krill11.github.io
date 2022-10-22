@@ -1,1 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      function copyEmail() {
+  navigator.clipboard.writeText('kirill@lutsenko.com');
+}
+    </script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Kirill Lutsenko</title>
+    <link rel="stylesheet" href="index.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="shared.css" type="text/css"/>
+    <link rel='stylesheet' media='screen and (max-device-width: 480px)' href='mobile.css' type='text/css' />
+    <link href="catppuccin.css" rel="stylesheet" type="text/css" />
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="favicon2.png">
+  </head>
+  <body>
+    <h1 class='firstani'>Hey There</h1>
+    <p class='justshow'>I'm Kirill Lutsenko, a random on the internet</p>
+    <h2 class='secondani'>Projects</h2>
+    <p class='secondani'><a href="https://stardom.kirilllutsenko.repl.co">Stardom - A play by email strategy game</a></p>
+    <p class='secondani'><a href="https://imageboard.kirilllutsenko.repl.co">CCA Imageboard - A somewhat unsuccessful imageboard</a></p>
+    <p class='secondani'><a href="https://csf.kirilllutsenko.repl.co">CSF - Full website from 2021</a></p>    
+    <h2 class='secondani'>About</h2>
+    <p id='wide' class='secondani'>I am a young highschool student living in California, and interested in computer science. If you wouldn't mind subscribing to my YouTube channel, that would be great. Have a nice day!</p>
+    <div class="center">
+      <div id="social">
+        <p class="notop" style="text-align: center; padding-left: 1.1em; margin-bottom: -5em; background-color: var(--lavender);">(c) Kirill Lutsenko 2022</p>
+        <ul>
+          <li class="envelope-o">
+            <button id="email-icon" class="border" onclick="copyEmail()"><i class="fa fa-envelope-o"></i></button>
+          </li>
 
+          <li class="twitter">
+            <button id="twitter-icon" class="border"><i class="fa fa-twitter"></i></button>
+          </li>
+
+          <li class="instagram">
+            <button id=insta-icon class="border"><i class="fa fa-instagram"></i></button>
+          </li>
+    
+          <li class="youtube">
+            <button class="border" onclick="window.location.href='https://www.youtube.com/channel/UCr7XWgKNXuOH19ifEW-TaHQ';"><i class="fa fa-youtube" ></i>      </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>
