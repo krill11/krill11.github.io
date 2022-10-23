@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap');
+/* #fff9e6  previous color */
+html,
+body {
+  background-color: var(--lavender);
+  font-family: "Roboto Mono", sans-serif;
+  min-height: 90vh;
+  margin: auto;
+  max-width: 90%;
+  color: var(--black0);
+}
+
+h1 {
+  font-size: 6em;
+  /* font-weight: 700; */
+  margin-top: 0.25em;
+  margin-bottom: 0em;
+}
+
+h2 {
+  font-size: 2em;
+}
+
+p {
+  font-size: 1.4em;
+  font-weight: 400;
+  line-height: 1.5em;
+}
+
+.notop {
+  margin-top: -0.25em;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+.center {
+  right: 0%;
+}
+
+.firstani {
+  animation-duration: 3s;
+  animation-name: fadein;
+}
+
+@keyframes fadein {
+    from { opacity: 0;
+           margin-top: 50%;
+         }
+    30% { opacity: 1;
+           margin-top: 50%;
+         }
+    25% { opacity: 1;
+           margin-top: 50%;
+         }
+    50%   { opacity: 1; 
+            margin-top: 0.25em;
+          }
+}
+
+.center {
+  animation-duration: 4s;
+  animation-name: zoom;
+}
+
+@keyframes zoom {
+    from { bottom: -100em;
+         }
+    75% { bottom: -100em;
+         }
+    to   {  
+          }
+}
