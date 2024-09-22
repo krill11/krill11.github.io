@@ -387,6 +387,53 @@
         transition: all 3s ease-in-out;
         filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.2));
       }
+
+      /* New unique style for marquee heading */
+      marquee h1 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 36px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: rainbow-text 4s ease infinite, neon-glow 1.5s ease-in-out infinite alternate;
+        text-shadow: 
+          0 0 5px #ff00ff,
+          0 0 10px #ff00ff,
+          0 0 20px #ff00ff,
+          0 0 40px #ff00ff;
+      }
+
+      @keyframes rainbow-text {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      @keyframes neon-glow {
+        from {
+          text-shadow: 
+            0 0 5px #ff00ff,
+            0 0 10px #ff00ff,
+            0 0 20px #ff00ff,
+            0 0 40px #ff00ff;
+        }
+        to {
+          text-shadow: 
+            0 0 10px #00ffff,
+            0 0 20px #00ffff,
+            0 0 40px #00ffff,
+            0 0 80px #00ffff;
+        }
+      }
+
+      /* Add some 3D effect to the marquee */
+      marquee {
+        transform: perspective(500px) rotateX(20deg);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+      }
     </style>
     <script>
       // Add this new script
