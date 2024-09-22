@@ -434,6 +434,56 @@
         transform: perspective(500px) rotateX(20deg);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
       }
+
+      /* New unique style for h2 headings */
+      h2 {
+        font-family: 'Russo One', sans-serif;
+        font-size: 36px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #fff;
+        background: linear-gradient(45deg, #ff00ff, #00ffff);
+        background-size: 200% 200%;
+        animation: gradient-shift 5s ease infinite;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        text-shadow: 
+          2px 2px 0 #000,
+          -2px -2px 0 #000,
+          2px -2px 0 #000,
+          -2px 2px 0 #000;
+        position: relative;
+        overflow: hidden;
+      }
+
+      h2::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+          to bottom right,
+          rgba(255, 255, 255, 0.3) 0%,
+          rgba(255, 255, 255, 0.1) 50%,
+          transparent 100%
+        );
+        transform: rotate(45deg);
+        animation: shine 3s infinite;
+      }
+
+      @keyframes gradient-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      @keyframes shine {
+        0% { top: -50%; left: -50%; }
+        100% { top: 150%; left: 150%; }
+      }
     </style>
     <script>
       // Add this new script
