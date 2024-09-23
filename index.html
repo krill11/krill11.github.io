@@ -17,6 +17,10 @@
         font-family: "Comic Sans MS", "Papyrus", "Jokerman", "Curlz MT", "Chiller", "Wingdings", "Webdings";
         color: rgb(166, 245, 228);
         text-shadow: 2px 2px 0 blue, -2px -2px 0 red;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        overflow-x: hidden;
       }
       h1, h2 {
         font-family: "Impact", "Bradley Hand", "Luminari", "Marker Felt", "Trattatello";
@@ -28,7 +32,8 @@
         box-shadow: 10px 10px 0 #d400ff, -10px -10px 0 #ffee00;
         position: relative;
         margin: 30px 0;
-
+        max-width: 100%;
+        box-sizing: border-box;
       }
 
       h1::before, h2::before {
@@ -77,6 +82,9 @@
         position: relative;
         z-index: 1;
         border: 3px dashed #ff00ff;
+        max-width: 100%;
+        box-sizing: border-box;
+        word-break: break-word;
       }
       a:hover {
         transform: scale(1.1) rotate(-2deg);
@@ -102,6 +110,9 @@
         box-shadow: 10px 10px 0 #ff0000, -10px -10px 0 #00ff00;
         position: relative;
         overflow: hidden;
+        flex-shrink: 0;
+        max-width: 100%;
+        box-sizing: border-box;
       }
       #social::before {
         content: "lorem ipsum";
@@ -135,6 +146,8 @@
         transition: all 0.3s;
         position: relative;
         z-index: 1;
+        max-width: 100%;
+        box-sizing: border-box;
       }
       .border:hover {
         transform: scale(1.1) rotate(-2deg);
@@ -172,6 +185,7 @@
           linear-gradient(45deg, transparent 75%, #000 75%),
           linear-gradient(-45deg, transparent 75%, #000 75%);
         background-size: 20px 20px;
+        overflow-x: hidden;
         background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         background-color: white;
         color: #FF1493;
@@ -180,6 +194,7 @@
           1px -1px 0 #00BFFF,
           -1px 1px 0 #00BFFF,
           1px 1px 0 #00BFFF;
+        max-width: 100%;
       }
       .glitch-wrapper {
         position: relative;
@@ -305,6 +320,8 @@
         transform: skew(-2deg, 1deg);
         position: relative;
         overflow: hidden;
+        max-width: 100%;
+        box-sizing: border-box;
       }
 
       @keyframes backgroundShift {
@@ -330,6 +347,7 @@
       .polycarbonate-section::before {
         content: "lorem ipsum";
         position: absolute;
+        transform: perspective(-200px);
         top: 0;
         left: 0;
         width: 100%;
@@ -409,6 +427,8 @@
 
       /* New unique style for marquee heading */
       marquee h1 {
+        white-space: nowrap;
+        display: inline-block;
         font-family: 'Press Start 2P', cursive;
         font-size: 36px;
         letter-spacing: 2px;
@@ -503,6 +523,64 @@
         0% { top: -50%; left: -50%; }
         100% { top: 150%; left: 150%; }
       }
+
+      /* Mobile-friendly styles */
+      @media screen and (max-width: 768px) {
+        body {
+          font-size: 16px;
+        }
+
+        h1, h2 {
+          font-size: 32px;
+        }
+
+        .polycarbonate-section {
+          font-size: 24px;
+        }
+
+        .polycarbonate-text {
+          display: block;
+          margin-bottom: 10px;
+        }
+
+        #social-buttons {
+          flex-direction: column;
+        }
+
+        #social-buttons button {
+          width: 100%;
+          margin-bottom: 10px;
+        }
+
+        ul {
+          padding-left: 0;
+          list-style-type: none;
+          text-align: center;
+        }
+
+        li {
+          margin-bottom: 15px;
+        }
+
+        a {
+          font-size: 18px;
+          display: inline-block;
+          width: 80%;
+          max-width: 300px;
+        }
+
+        marquee {
+          transform: none;
+        }
+
+        marquee h1 {
+          font-size: 24px;
+        }
+
+        .floating-blahaj {
+          width: 30px;
+        }
+      }
     </style>
     <script>
       // Add this new script
@@ -532,34 +610,39 @@
     </script>
   </head>
   <body>
-    <marquee scrollamount="20">
-      <h1>
-        <span class="glitch-wrapper">
-          <span id="random-greeting" class="glitch" data-text="!!!!!HEY THERE!!!!!">!!!!!HEY THERE!!!!!</span>
+    <div id="content-wrapper">
+      <div class="marquee-container">
+        <marquee scrollamount="20" behavior="alternate">
+          <h1>
+            <span class="glitch-wrapper">
+              <span id="random-greeting" class="glitch" data-text="!!!!!HEY THERE!!!!!">!!!!!HEY THERE!!!!!</span>
+            </span>
+          </h1>
+        </marquee>
+      </div>
+      <div class="polycarbonate-section">
+        <span class="polycarbonate-text glitch-effect" data-text="im polycarbonate and i like to design things,">
+          im polycarbonate and i like to design things,
         </span>
-      </h1>
-    </marquee>
-    <div class="polycarbonate-section">
-      <span class="polycarbonate-text glitch-effect" data-text="im polycarbonate and i like to design things,">
-        im polycarbonate and i like to design things,
-      </span>
-      <br>
-      <span class="polycarbonate-text glitch-effect" data-text="but mostly im an engineer">
-        but mostly im an engineer
-      </span>
-      <br>
-      <span class="polycarbonate-text glitch-effect" data-text="(or at least i hope so because thats what i do best)">
-        (or at least i hope so because thats what i do best)
-      </span>
+        <br>
+        <span class="polycarbonate-text glitch-effect" data-text="but mostly im an engineer">
+          but mostly im an engineer
+        </span>
+        <br>
+        <span class="polycarbonate-text glitch-effect" data-text="(or at least i hope so because thats what i do best)">
+          (or at least i hope so because thats what i do best)
+        </span>
+      </div>
+      <h2>LINKS TO MY STUFF</h2>
+      <ul>
+        <li><a href="https://www.linkedin.com/in/kirill-lutsenko-3059b12b8/">My PROFESSIONAL LinkedIn (VERY COOL)</a></li>
+        <li><a href="https://3fault.com">Triple Fault Robotics (ROBOTICS MY BELOVED)</a></li>    
+        <li><a href="https://www.youtube.com/@ubuntuuser">My YouTube Channel (SUBSCRIBE PLEASE)</a></li>
+      </ul>
+      <h2>WHO AM I?</h2>
+      <p style="font-size: 24px; background-color: rgba(0, 0, 0, 0.5); padding: 20px;">i am a person or at least i hope so because thats all i know how to do</p>
     </div>
-    <h2>LINKS TO MY STUFF</h2>
-    <ul>
-      <li><a href="https://www.linkedin.com/in/kirill-lutsenko-3059b12b8/">My PROFESSIONAL LinkedIn (VERY COOL)</a></li>
-      <li><a href="https://3fault.com">Triple Fault Robotics (ROBOTICS MY BELOVED)</a></li>    
-      <li><a href="https://www.youtube.com/@ubuntuuser">My YouTube Channel (SUBSCRIBE PLEASE)</a></li>
-    </ul>
-    <h2>WHO AM I?</h2>
-    <p style="font-size: 24px; background-color: rgba(0, 0, 0, 0.5); padding: 20px;">i am a person or at least i hope so because thats all i know how to do</p>
+    
     <div style="text-align: center;">
       <div id="social">
         <p style="font-size: 18px;">&copy; Polycarbonate 2022-2024 (TIME IS AN ILLUSION)</p>
