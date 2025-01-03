@@ -68,8 +68,35 @@ class BlogPost {
 
 class Blog {
     constructor() {
+        // Constructor remains empty
+    }
+
+    async initialize() {
         this.blogPostsElement = document.querySelector('main');
+        if (!this.blogPostsElement) {
+            console.error('Could not find main element');
+            return;
+        }
+        
+        // First load the posts
+        await this.init();
+        
+        // Then set up event listeners
         this.setupEventListeners();
+        
+        // Finally check URL parameters for post
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('post');
+        if (postId && this.posts) {
+            const post = this.posts.find(p => p.filename === postId);
+            if (post) {
+                this.renderSinglePost(postId);
+            } else {
+                this.renderPosts(); // Fallback if post not found
+            }
+        } else {
+            this.renderPosts();
+        }
     }
 
     async init() {
@@ -88,7 +115,6 @@ class Blog {
     
             await Promise.all(this.posts.map(post => post.load()));
             this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            this.renderPosts();
         } catch (error) {
             console.error('Detailed error:', error);
             this.blogPostsElement.innerHTML = `
@@ -101,12 +127,18 @@ class Blog {
 
     renderPosts() {
         this.blogPostsElement.innerHTML = this.posts.map(post => post.toHTML()).join('');
+        // Clear URL parameters when showing all posts
+        window.history.pushState({}, '', window.location.pathname);
     }
 
     renderSinglePost(filename) {
         const post = this.posts.find(p => p.filename === filename);
         if (post) {
             this.blogPostsElement.innerHTML = post.toFullHTML();
+            // Update URL without reloading page
+            const newUrl = `${window.location.pathname}?post=${filename}`;
+            window.history.pushState({ post: filename }, '', newUrl);
+            window.scrollTo(0, 0);
         }
     }
 
@@ -116,17 +148,25 @@ class Blog {
             if (e.target.classList.contains('read-more')) {
                 const filename = e.target.dataset.post;
                 this.renderSinglePost(filename);
-                window.scrollTo(0, 0);
             } else if (e.target.classList.contains('back-link')) {
                 this.renderPosts();
                 window.scrollTo(0, 0);
+            }
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.post) {
+                this.renderSinglePost(e.state.post);
+            } else {
+                this.renderPosts();
             }
         });
     }
 }
 
 // Initialize the blog
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const blog = new Blog();
-    blog.init();
+    await blog.initialize();
 });
