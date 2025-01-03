@@ -1,0 +1,12 @@
+title: My Blog
+description: A simple black and white blog
+baseurl: ""
+url: "https://yourusername.github.io"
+
+# Build settings
+markdown: kramdown
+permalink: /:year/:month/:day/:title/
+
+collections:
+  posts:
+    output: true
