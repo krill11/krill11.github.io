@@ -102,3 +102,43 @@ footer {
         height: 200px;
     }
 }
+
+.full-post {
+    padding: 2rem;
+}
+
+.full-post img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+}
+
+.full-post h1, 
+.full-post h2, 
+.full-post h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--nordic-blue);
+    margin: 1.5rem 0 1rem 0;
+}
+
+.full-post p {
+    margin-bottom: 1rem;
+}
+
+.full-post ul, 
+.full-post ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 2rem;
+    color: var(--nordic-blue);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.back-link:hover {
+    color: var(--nordic-accent);
+}
