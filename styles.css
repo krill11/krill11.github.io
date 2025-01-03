@@ -275,7 +275,7 @@ img {
 
 .mobile-sign-up {
     display: none;
-    position: absolute;
+    position: fixed;
     bottom: 1rem;
     left: calc(50% - 4.6rem);
     /* left: 50%; */
