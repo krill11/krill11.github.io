@@ -252,6 +252,7 @@ img {
 /* Then just apply the class to both elements */
 .read-more {
     composes: button;
+    margin-bottom: -1.0rem;
 }
 
 .back-link {
