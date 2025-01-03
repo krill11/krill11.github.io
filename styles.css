@@ -49,6 +49,7 @@ header {
 .profile-pic {
     width: 48px;
     height: 48px;
+    margin-left: -0.5rem;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--glass-border);
@@ -56,6 +57,7 @@ header {
 
 header h1 {
     margin: 0;
+    margin-left: 1rem;
     padding: 0;
     font-size: 2rem;
     background: linear-gradient(90deg, #fff, #ccc);
@@ -226,6 +228,59 @@ img {
     animation: imageLoad 0.5s ease forwards;
 }
 
+/* Shared button styling */
+.button {
+    background: linear-gradient(135deg, var(--accent), #00a0ff);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 980px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 113, 227, 0.3);
+    text-decoration: none;
+    display: inline-block;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 113, 227, 0.4);
+    text-decoration: none;
+    color: white;
+}
+
+/* Then just apply the class to both elements */
+.read-more {
+    composes: button;
+}
+
+.back-link {
+    composes: button;
+}
+
+.sign-up {
+    composes: button;
+    height: 1rem;
+    line-height: 1rem;
+    display: inline-block;
+  width: auto;
+  background: linear-gradient(135deg, #ff4800, #ff0000);
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+}
+
+footer p {
+    margin: 0;
+}
+
+#signup-container { /* Replace with your container's ID or class */
+    display: grid;
+    place-items: center;
+}
+
 @media (max-width: 768px) {
     main {
         padding: 0.5rem;  /* Reduced padding */
@@ -309,44 +364,7 @@ img {
         width: 100%;
         box-sizing: border-box;
     }
-
-}
-
-/* Shared button styling */
-.button {
-    background: linear-gradient(135deg, var(--accent), #00a0ff);
-    border: none;
-    padding: 12px 24px;
-    border-radius: 980px;
-    color: white;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 113, 227, 0.3);
-    text-decoration: none;
-    display: inline-block;
-}
-
-.button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 113, 227, 0.4);
-    text-decoration: none;
-    color: white;
-}
-
-/* Then just apply the class to both elements */
-.read-more {
-    composes: button;
-}
-
-.back-link {
-    composes: button;
-}
-
-footer {
-    text-align: center;
-    padding: 2rem;
-}
-
-footer p {
-    margin: 0;
+    .sign-up {
+        display:none;
+    }
 }
