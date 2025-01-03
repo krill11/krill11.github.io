@@ -1,8 +1,15 @@
 class BlogPost {
     constructor(filename) {
-        const [, date, ...titleParts] = filename.replace('.md', '').split('-');
-        this.date = date;
-        this.title = titleParts.join(' ').replace(/-/g, ' ');
+        // Extract date from filename format: YYYY-MM-DD-title.md
+        const dateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})/);
+        this.date = dateMatch ? dateMatch[1] : null;
+        
+        // Get title by removing date and .md, then replace hyphens with spaces
+        this.title = filename
+            .replace(/^\d{4}-\d{2}-\d{2}-/, '')
+            .replace('.md', '')
+            .replace(/-/g, ' ');
+            
         this.filename = filename;
         this.content = '';
     }
@@ -32,7 +39,7 @@ class BlogPost {
                     <h2>${this.title}</h2>
                     <div class="post-meta">Posted on ${this.formatDate()}</div>
                     <p>${this.preview}</p>
-                    <a href="#" class="read-more" data-post="${this.filename}">Read More →</a>
+                    <a href="#" class="button read-more" data-post="${this.filename}">Read More →</a>
                 </div>
             </article>
         `;
@@ -44,7 +51,7 @@ class BlogPost {
                 <h2>${this.title}</h2>
                 <div class="post-meta">Posted on ${this.formatDate()}</div>
                 ${marked.parse(this.content)}
-                <a href="#" class="back-link">← Back to Posts</a>
+                <a href="#" class="button back-link">← Back to Posts</a>
             </article>
         `;
     }
@@ -61,26 +68,34 @@ class BlogPost {
 
 class Blog {
     constructor() {
-        this.posts = [];
-        this.blogPostsElement = document.getElementById('blog-posts');
+        this.blogPostsElement = document.querySelector('main');
         this.setupEventListeners();
     }
 
     async init() {
         try {
-            const response = await fetch('posts/index.json');
+            console.log('Attempting to fetch posts/index.json...');
+            const response = await fetch('./posts/index.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const files = await response.json();
+            console.log('Successfully loaded files:', files);
             
             this.posts = files
                 .filter(file => file.endsWith('.md'))
                 .map(file => new BlogPost(file));
-
+    
             await Promise.all(this.posts.map(post => post.load()));
             this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
             this.renderPosts();
         } catch (error) {
-            console.error('Error initializing blog:', error);
-            this.blogPostsElement.innerHTML = '<p>Error loading blog posts.</p>';
+            console.error('Detailed error:', error);
+            this.blogPostsElement.innerHTML = `
+                <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                    Error: ${error.message}<br>
+                    <small>Check the console for more details.</small>
+                </p>`;
         }
     }
 

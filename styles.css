@@ -1,0 +1,258 @@
+:root {
+    --primary-bg: #ffffff;
+    --secondary-bg: #fafafa;
+    --text-primary: rgba(255, 255, 255, 0.9);
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --accent: #0071e3;
+    --border-color: #dbdbdb;
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+    line-height: 1.47059;
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    background: linear-gradient(
+        rgba(0, 0, 0, 0.3), 
+        rgba(0, 0, 0, 0.3)
+    ), url('bg.jpg') no-repeat center center fixed;
+    background-size: cover;
+}
+
+header {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 0.75rem 2rem; /* Reduced vertical padding */
+    transition: all 0.3s ease;
+    border-radius: 24px;
+    margin: 0 1rem 1rem 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 
+                0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-size: 2rem;
+    background: linear-gradient(90deg, #fff, #ccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: transform 0.3s ease;
+    margin: 0; /* Remove default margin */
+}
+
+header h1:hover {
+    transform: scale(1.02);
+}
+
+nav {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 9999px;
+    padding: 0.75rem 1.5rem;
+    margin: 1rem 0;
+    border: 1px solid var(--glass-border);
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+nav a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    transition: all 0.3s ease;
+}
+
+nav a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+h1 {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+main {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.post img {
+    width: 100%;
+    max-width: 480px;
+    height: 300px;
+    border-radius: 16px;
+    transition: transform 0.5s ease;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    margin: 0; /* Remove auto margins to left-align */
+}
+
+.post {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+    padding: 2rem;
+    /* Remove margin-bottom since we're using grid gap */
+    transition: all 0.4s ease;
+    transform: translateY(0);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 
+                0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.post:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+                0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.post:hover img {
+    transform: scale(1.02);
+}
+
+.post-content {
+    padding: 1rem 0;
+}
+
+.post h2 {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1.75rem;
+    letter-spacing: -0.015em;
+}
+
+.read-more {
+    color: var(--accent);
+    font-size: 0.875rem;
+    position: relative;
+}
+
+.read-more:hover {
+    text-decoration: underline;
+}
+
+.full-post {
+    grid-column: 1 / -1; /* Make it span all columns */
+    width: 100%;
+    padding: 2rem;
+    margin: 0;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 
+                0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.full-post img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 16px;
+    margin: 2rem auto;
+    display: block;
+}
+
+.back-link {
+    background: linear-gradient(135deg, var(--accent), #00a0ff);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 980px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 113, 227, 0.3);
+}
+
+.back-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 113, 227, 0.4);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+@keyframes imageLoad {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+img {
+    opacity: 0;
+    animation: imageLoad 0.5s ease forwards;
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 1rem;
+    }
+
+    .post img {
+        height: 200px; /* Smaller height while maintaining ratio */
+    }
+    
+    .post h2 {
+        font-size: 1.5rem;
+    }
+
+    .post {
+        padding: 1.5rem;
+    }
+
+    nav {
+        padding: 0.5rem 1rem;
+        gap: 1rem;
+    }
+    header {
+        margin: 0 0.5rem 0.5rem 0.5rem;
+        padding: 1rem;
+    }
+}
+
+/* Shared button styling */
+.button {
+    background: linear-gradient(135deg, var(--accent), #00a0ff);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 980px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 113, 227, 0.3);
+    text-decoration: none;
+    display: inline-block;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 113, 227, 0.4);
+    text-decoration: none;
+    color: white;
+}
+
+/* Then just apply the class to both elements */
+.read-more {
+    composes: button;
+}
+
+.back-link {
+    composes: button;
+}
