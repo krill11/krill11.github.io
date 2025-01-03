@@ -9,6 +9,8 @@
     --glass-border: rgba(255, 255, 255, 0.1);
 }
 
+
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
     line-height: 1.47059;
@@ -162,9 +164,11 @@ main {
     text-decoration: underline;
 }
 
+
 .full-post {
     grid-column: 1 / -1; /* Make it span all columns */
-    width: 100%;
+    max-width: 95%;
+    
     padding: 2rem;
     margin: 0;
     background: var(--glass-bg);
@@ -183,6 +187,8 @@ main {
     margin: 2rem auto;
     display: block;
 }
+
+/* Previous CSS remains the same until media queries */
 
 .back-link {
     background: linear-gradient(135deg, var(--accent), #00a0ff);
@@ -216,12 +222,18 @@ img {
 
 @media (max-width: 768px) {
     main {
-        padding: 1rem;
-        grid-template-columns: repeat(1, 1fr);  /* 2 columns on larger screens */
+        padding: 0.5rem;  /* Reduced padding */
+        grid-template-columns: repeat(1, 1fr);
+        width: 90%;
+        max-width: 90%;
+        margin: auto;
     }
 
     .post img {
-        height: 200px; /* Smaller height while maintaining ratio */
+        width: 100%;
+        height: 200px;
+        max-width: 100%;
+        object-fit: cover;
     }
     
     .post h2 {
@@ -229,24 +241,69 @@ img {
     }
 
     .post {
-        padding: 1.5rem;
+        padding: 1rem;
+        width: 100%;
+        margin: auto;
+        box-sizing: border-box; /* Ensure padding is included in width */
+    }
+
+    /* Add these new mobile-specific styles for full posts */
+    .full-post {
+        /* padding: 1rem; */
+        /* margin: 1rem; */
+        border-radius: 16px;
+        width: 95%; /* Take full width */
+        box-sizing: border-box;
+        /* Remove any fixed widths or complex calculations */
+    }
+
+    .full-post img {
+        width: 100%;
+        max-width: 100%;
+        margin: 1rem 0;
+    }
+
+    .full-post h2 {
+        font-size: 1.5rem;
+        margin-top: 0.5rem;
+    }
+
+    body {
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+        padding: 0;
+        margin: 0;
     }
 
     nav {
         padding: 0.5rem 1rem;
         gap: 1rem;
     }
+
     header {
-        margin: 0.5rem;
+        margin: auto;
+        margin-top: 1.0rem;
+        margin-bottom: 1.0rem;
         padding: 0.5rem 1rem;
+        width: 90%;
+        box-sizing: border-box;
     }
+
     .profile-pic {
         width: 36px;
         height: 36px;
     }
+
     header h1 {
         font-size: 1.5rem;
     }
+
+    .post-content {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
 }
 
 /* Shared button styling */
