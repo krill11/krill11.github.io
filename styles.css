@@ -257,3 +257,12 @@ img {
 .back-link {
     composes: button;
 }
+
+footer {
+    text-align: center;
+    padding: 2rem;
+}
+
+footer p {
+    margin: 0;
+}
