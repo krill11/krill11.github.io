@@ -4,17 +4,17 @@ title: Home
 ---
 
 <div class="posts">
-    {% raw %}{% for post in site.posts %}{% endraw %}
+    {% raw %}{% for post in site.posts %}
     <article class="post-preview">
         <h2>
-            <a href="{{ "{{ post.url | relative_url }}" }}">
-                {{ "{{ post.title }}" }}
+            <a href="{{ post.url | relative_url }}">
+                {{ post.title }}
             </a>
         </h2>
-        <div class="post-date">{{ "{{ post.date | date: '%B %d, %Y' }}" }}</div>
+        <div class="post-date">{{ post.date | date: '%B %d, %Y' }}</div>
         <div class="post-excerpt">
-            {{ "{{ post.excerpt }}" }}
+            {{ post.excerpt }}
         </div>
     </article>
-    {% raw %}{% endfor %}{% endraw %}
+    {% endfor %}{% endraw %}
 </div>
