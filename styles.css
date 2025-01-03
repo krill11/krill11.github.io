@@ -256,7 +256,7 @@ img {
 }
 
 .back-link {
-    composes: button;
+    /* composes: button; */
 }
 
 .sign-up {
@@ -270,6 +270,28 @@ img {
 }
 
 .sign-up:hover {
+    box-shadow: 0 8px 20px rgba(227, 0, 0, 0.4);
+}
+
+.mobile-sign-up {
+    display: none;
+    position: absolute;
+    bottom: 1rem;
+    left: calc(50% - 4.6rem);
+    /* left: 50%; */
+    /* left: 0; 
+  right: 0;  */
+  /* margin-inline: auto;  */
+    display: none;
+    composes: button;
+    height: 1rem;
+    line-height: 1rem;
+  width: 6.5rem;
+  background: linear-gradient(135deg, #ff4800, #ff0000);
+  box-shadow: 0 8px 20px rgba(227, 0, 0, 0.3);
+}
+
+.mobile-sign-up:hover {
     box-shadow: 0 8px 20px rgba(227, 0, 0, 0.4);
 }
 
@@ -292,6 +314,10 @@ footer p {
 }
 
 @media (max-width: 768px) {
+    .mobile-sign-up {
+        display: inline-block;
+    }
+
     main {
         padding: 0.5rem;  /* Reduced padding */
         grid-template-columns: repeat(1, 1fr);
