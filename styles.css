@@ -265,6 +265,11 @@ img {
     display: inline-block;
   width: auto;
   background: linear-gradient(135deg, #ff4800, #ff0000);
+  box-shadow: 0 8px 20px rgba(227, 0, 0, 0.3);
+}
+
+.sign-up:hover {
+    box-shadow: 0 8px 20px rgba(227, 0, 0, 0.4);
 }
 
 footer {
