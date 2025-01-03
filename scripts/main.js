@@ -126,5 +126,7 @@ class Blog {
 }
 
 // Initialize the blog
-const blog = new Blog();
-blog.init();
+document.addEventListener('DOMContentLoaded', () => {
+    const blog = new Blog();
+    blog.init();
+});
