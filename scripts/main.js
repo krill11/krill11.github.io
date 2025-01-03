@@ -48,7 +48,7 @@ class BlogPost {
     toFullHTML() {
         return `
             <article class="post full-post">
-                <h2>${this.title}</h2>
+                <h2 class="full-title">${this.title}</h2>
                 <div class="post-meta">Posted on ${this.formatDate()}</div>
                 ${marked.parse(this.content)}
                 <a href="#" class="button back-link">← Back to Posts</a>

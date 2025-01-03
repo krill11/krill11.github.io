@@ -287,6 +287,10 @@ footer p {
     place-items: center;
 }
 
+.full-title {
+    margin-top: 0rem;
+}
+
 @media (max-width: 768px) {
     main {
         padding: 0.5rem;  /* Reduced padding */
