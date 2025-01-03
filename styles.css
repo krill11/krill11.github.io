@@ -26,25 +26,39 @@ header {
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 1px solid var(--glass-border);
-    padding: 0.75rem 2rem; /* Reduced vertical padding */
-    transition: all 0.3s ease;
+    padding: 1rem 2rem;
     border-radius: 24px;
-    margin: 0 1rem 1rem 1rem;
+    margin: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 
                 0 5px 15px rgba(0, 0, 0, 0.1);
+    display: flex; /* Ensure children follow flex rules */
+    align-items: left; /* Center-align items vertically */
+}
+
+.header-content {
+    display: flex;
+    align-items: left;
+    /* justify-content: flex-start; */
+    gap: 1rem;
+    max-width: 1024px;
+    margin: 0 auto;
+}
+
+.profile-pic {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--glass-border);
 }
 
 header h1 {
+    margin: 0;
+    padding: 0;
     font-size: 2rem;
     background: linear-gradient(90deg, #fff, #ccc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    transition: transform 0.3s ease;
-    margin: 0; /* Remove default margin */
-}
-
-header h1:hover {
-    transform: scale(1.02);
 }
 
 nav {
@@ -223,8 +237,15 @@ img {
         gap: 1rem;
     }
     header {
-        margin: 0 0.5rem 0.5rem 0.5rem;
-        padding: 1rem;
+        margin: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+    .profile-pic {
+        width: 36px;
+        height: 36px;
+    }
+    header h1 {
+        font-size: 1.5rem;
     }
 }
 
