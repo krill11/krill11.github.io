@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <header>
@@ -19,22 +20,15 @@
     </header>
 
     <main>
-        <section class="blog-posts">
-            <!-- Example blog post -->
-            <article class="post">
-                <img src="images/example-image.jpg" alt="Nordic landscape">
-                <div class="post-content">
-                    <h2>Example Blog Post</h2>
-                    <div class="post-meta">Posted on January 1, 2024</div>
-                    <p>This is a preview of the blog post content...</p>
-                    <a href="posts/example-post.html" class="read-more">Read More →</a>
-                </div>
-            </article>
+        <section id="blog-posts" class="blog-posts">
+            <!-- Posts will be dynamically inserted here -->
         </section>
     </main>
 
     <footer>
         <p>© 2024 Polycarbonate. All rights reserved.</p>
     </footer>
+
+    <script src="scripts/main.js"></script>
 </body>
 </html>
