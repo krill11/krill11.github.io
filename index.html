@@ -2,17 +2,19 @@
 layout: default
 title: Home
 ---
+
 <div class="posts">
-  {% for post in site.posts %}
+    {% raw %}{% for post in site.posts %}{% endraw %}
     <article class="post-preview">
         <h2>
-            <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+            <a href="{{ "{{ post.url | relative_url }}" }}">
+                {{ "{{ post.title }}" }}
+            </a>
         </h2>
-        <time datetime="{{ post.date | date_to_xmlschema }}">
-            {{ post.date | date: '%B %d, %Y' }}
-        </time>
-        {{ post.excerpt }}
-        <a href="{{ post.url | relative_url }}">Read more...</a>
+        <div class="post-date">{{ "{{ post.date | date: '%B %d, %Y' }}" }}</div>
+        <div class="post-excerpt">
+            {{ "{{ post.excerpt }}" }}
+        </div>
     </article>
-  {% endfor %}
+    {% raw %}{% endfor %}{% endraw %}
 </div>

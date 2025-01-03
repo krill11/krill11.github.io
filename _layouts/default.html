@@ -5,14 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ "{{ page.title }} - {{ site.title }}" }}</title>
     <link rel="stylesheet" href="{{ "{{ '/assets/css/style.css' | relative_url }}" }}">
+    {% raw %}{% seo %}{% endraw %}
 </head>
 <body>
     <header>
-        <h1><a href="{{ "{{ '/' | relative_url }}" }}">{{ "{{ site.title }}" }}</a></h1>
+        <nav>
+            <a href="{{ "{{ '/' | relative_url }}" }}" class="site-title">{{ "{{ site.title }}" }}</a>
+        </nav>
     </header>
+
     <main>
         {{ "{{ content }}" }}
     </main>
+
     <footer>
         <p>&copy; {{ "{{ site.time | date: '%Y' }}" }} {{ "{{ site.title }}" }}</p>
     </footer>

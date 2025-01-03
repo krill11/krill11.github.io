@@ -1,12 +1,17 @@
-title: My Blog
-description: A simple black and white blog
-baseurl: ""
-url: "https://krill11.github.io"
+title: Nordic Minimalist Blog
+description: A clean, minimalist blog
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://krill11.github.io" # your site's URL
 
 # Build settings
 markdown: kramdown
-permalink: /:year/:month/:day/:title/
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
 
-collections:
-  posts:
-    output: true
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
