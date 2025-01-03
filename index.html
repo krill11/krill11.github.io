@@ -1,20 +1,40 @@
----
-layout: default
-title: Home
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polycarbonate's Nordic Blog</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Polycarbonate</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="#about">About</a>
+        </nav>
+    </header>
 
-<div class="posts">
-    {% raw %}{% for post in site.posts %}
-    <article class="post-preview">
-        <h2>
-            <a href="{{ post.url | relative_url }}">
-                {{ post.title }}
-            </a>
-        </h2>
-        <div class="post-date">{{ post.date | date: '%B %d, %Y' }}</div>
-        <div class="post-excerpt">
-            {{ post.excerpt }}
-        </div>
-    </article>
-    {% endfor %}{% endraw %}
-</div>
+    <main>
+        <section class="blog-posts">
+            <!-- Example blog post -->
+            <article class="post">
+                <img src="images/example-image.jpg" alt="Nordic landscape">
+                <div class="post-content">
+                    <h2>Example Blog Post</h2>
+                    <div class="post-meta">Posted on January 1, 2024</div>
+                    <p>This is a preview of the blog post content...</p>
+                    <a href="posts/example-post.html" class="read-more">Read More →</a>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2024 Polycarbonate. All rights reserved.</p>
+    </footer>
+</body>
+</html>
