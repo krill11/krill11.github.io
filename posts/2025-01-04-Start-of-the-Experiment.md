@@ -1,6 +1,6 @@
 ![Nordic Mountains](images/mountains.jpg)
 
-# Welcome to the Polycarbonate Blog
+# Welcome to Polycarbonate.live
 
 It's fascinating how technology shapes the way we live, work, and play. After years of tinkering with robots, diving deep into code, and spending countless hours exploring virtual worlds, I've decided to create this space where these passions can intersect and hopefully spark interesting discussions.
 
