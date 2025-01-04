@@ -1,3 +1,11 @@
+/* main a {
+    color:#98bcd1
+}
+
+main a:visited {
+    color: #c9a2d4;
+} */
+
 :root {
     --primary-bg: #ffffff;
     --secondary-bg: #fafafa;
@@ -295,6 +303,7 @@ img {
     box-shadow: 0 8px 20px rgba(227, 0, 0, 0.4);
 }
 
+
 footer {
     text-align: center;
     padding: 2rem;
@@ -403,4 +412,12 @@ footer p {
     .sign-up {
         display:none;
     }
+}
+
+iframe {
+    overflow-y: hidden;
+    border-radius: 24px;
+    width: 100%;
+    min-height: 540px;
+    height:fit-content;
 }
