@@ -239,9 +239,17 @@
         #masterVisualizer {
             margin-bottom: -0.37rem;
         }
+        a {
+                height: 51px;
+            }
         @media (max-width: 1200px) {
             .container{
                 max-width: 95%;
+            }
+        }
+        @media (max-width: 768px) {
+            a {
+                height: 39px;
             }
         }
     </style>
@@ -254,12 +262,10 @@
 </head>
 <body>
     <header>
-        <img src="../PFP.png" alt="PFP" class="profile-pic">
+        <a href="/"><img src="../PFP.png" alt="PFP" class="profile-pic"></a>
         <h1 class="poly-title">Polycarbonate</h1>
         <div class="header-content">
-            <div id="news-container">
-                <a href="mailto:me@polycarbonate.live" class="news-ticker">Want to contribute? Contact us here! ✉️</a>
-            </div>
+            
         </div>
         <div id="signup-container">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLScaMMo48-sgxpPqEOxG384aNtjcI3Yj2JjZYHizeayYubo7Ig/viewform?usp=preview" class="button sign-up" data-post="${this.filename}">Sign Up 🔥 →</a>
@@ -539,7 +545,7 @@
                             <input type="range" id="gain-${id}" class="gain" min="0" max="1" value="0.5" step="0.01">
                         </div>
                         <div class="control-group">
-                            <button class="remove" onclick="removeOscillator(${id})">Remove Oscillator</button>
+                            <button class="remove" onclick="removeOscillator(${id})">Remove Oscillator 🗑️</button>
                         </div>
                     </div>
                     <canvas id="visualizer-${id}" class="visualizer"></canvas>
