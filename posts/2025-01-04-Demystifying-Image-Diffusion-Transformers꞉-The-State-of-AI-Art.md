@@ -21,6 +21,8 @@ Curious to see how it works? Explore this interactive demo from Hugging Face, wh
 <iframe
 	src="https://videoprojector-stabilityai-stable-diffusion-2.hf.space"
 	frameborder="0"
+	style="min-height: 540px"
+	scrolling="no"
 ></iframe>
 
 Notice that more detailed prompts result in better output. This is due to the fact that adding keywords to the prompt utilizes more of the model, resulting in better outputs.

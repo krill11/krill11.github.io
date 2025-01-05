@@ -439,6 +439,38 @@ iframe {
     overflow-y: hidden;
     border-radius: 24px;
     width: 100%;
-    min-height: 540px;
-    height:fit-content;
+    min-height: 100px;
+    height:min-content;
+}
+
+.demo-frame {
+    height: 23rem;
+}
+
+@media (max-width: 1072px) {
+    .demo-frame {
+        height: 27rem;
+    }
+}
+
+@media (max-width: 642px) {
+    .demo-frame {
+        height: 35rem;
+    }
+}
+
+.demo-frame2 {
+    height: 26rem;
+}
+
+@media (max-width: 1072px) {
+    .demo-frame2 {
+        height: 30rem;
+    }
+}
+
+@media (max-width: 642px) {
+    .demo-frame2 {
+        height: 38rem;
+    }
 }
