@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 achievements: document.getElementById('achievements').value,
                 fun_facts: document.getElementById('funFacts').value,
             };
+            console.log('Saving card with details:', card);
 
             // Save to Supabase
             const { error } = await supabase
