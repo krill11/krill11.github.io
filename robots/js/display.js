@@ -46,7 +46,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Add click handler for card
-        cardElement.addEventListener('click', () => showCardDetails(card));
+        cardElement.addEventListener('click', () => {
+            console.log('Card clicked:', card.name);
+            showCardDetails(card);
+        });
     });
 
     // Add overlay close handlers
@@ -83,6 +86,7 @@ function generateCardHTML(card) {
 }
 
 function showCardDetails(card) {
+    console.log('Showing details for:', card.name);
     const overlay = document.getElementById('card-overlay');
     const overlayCard = overlay.querySelector('.overlay-card');
     const overlayContent = overlay.querySelector('.overlay-content');
@@ -99,6 +103,7 @@ function showCardDetails(card) {
     overlayContent.style.color = card.font_color;
     overlay.querySelector('.close-overlay').style.color = card.font_color;
     
+    console.log('Setting overlay display to flex');
     // Show overlay
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
