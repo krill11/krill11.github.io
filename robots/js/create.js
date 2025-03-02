@@ -185,6 +185,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     .filter(value => value.trim() !== ''),
                 is_holographic: document.getElementById('isHolographic').checked,
                 font_family: document.getElementById('fontFamily').value,
+                detailed_specs: document.getElementById('detailedSpecs').value,
+                achievements: document.getElementById('achievements').value,
+                fun_facts: document.getElementById('funFacts').value,
             };
 
             // Save to Supabase

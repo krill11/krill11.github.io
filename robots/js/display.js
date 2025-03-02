@@ -44,6 +44,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         cardElement.addEventListener('mouseleave', () => {
             cardElement.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
         });
+
+        // Add click handler for card
+        cardElement.addEventListener('click', () => showCardDetails(card));
+    });
+
+    // Add overlay close handlers
+    const overlay = document.getElementById('card-overlay');
+    overlay.addEventListener('click', (e) => {
+        // Close if clicking the dark overlay background, not the content
+        if (e.target === overlay) {
+            overlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
     });
 });
 
@@ -67,4 +80,26 @@ function generateCardHTML(card) {
             <p class="description">${card.description}</p>
         </div>
     `;
+}
+
+function showCardDetails(card) {
+    const overlay = document.getElementById('card-overlay');
+    const overlayCard = overlay.querySelector('.overlay-card');
+    const overlayContent = overlay.querySelector('.overlay-content');
+    
+    // Show the basic card info
+    overlayCard.innerHTML = generateCardHTML(card);
+    
+    // Update detailed info
+    overlay.querySelector('.detailed-specs').textContent = card.detailed_specs || 'No specifications available';
+    overlay.querySelector('.achievements').textContent = card.achievements || 'No achievements listed';
+    overlay.querySelector('.fun-facts').textContent = card.fun_facts || 'No fun facts available';
+    
+    // Apply card's font color to all text in the overlay
+    overlayContent.style.color = card.font_color;
+    overlay.querySelector('.close-overlay').style.color = card.font_color;
+    
+    // Show overlay
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 } 
