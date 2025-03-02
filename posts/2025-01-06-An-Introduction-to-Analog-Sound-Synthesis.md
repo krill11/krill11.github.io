@@ -63,7 +63,7 @@ Modern synthesizers are everywhere in music production:
 
 ## Want to Go Further?
 
-Check out our [complete multi-oscillator synthesizer](/vco_demo) to experiment with more complex sound design possibilities!
+Check out our [complete multi-oscillator synthesizer](https://polycarbonate.live/vco_demo) to experiment with more complex sound design possibilities!
 
 **References:**
 

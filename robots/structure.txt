@@ -1,0 +1,11 @@
+robots/
+  ├── index.html         # Homepage showing all cards
+  ├── create.html        # Form to create new cards
+  ├── css/
+  │   ├── style.css     # General styles
+  │   └── card.css      # Card-specific styles
+  ├── js/
+  │   ├── create.js     # Card creation logic
+  │   └── display.js    # Card display logic
+  └── data/
+      └── cards.json    # Store card data 
