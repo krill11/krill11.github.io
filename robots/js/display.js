@@ -97,7 +97,10 @@ function showCardDetails(card) {
     const overlayContent = overlay.querySelector('.overlay-content');
     
     if (!overlayCard || !overlayContent) {
-        console.error('Overlay child elements not found');
+        console.error('Overlay child elements not found:', {
+            overlayCard: !!overlayCard,
+            overlayContent: !!overlayContent
+        });
         return;
     }
     
@@ -111,16 +114,31 @@ function showCardDetails(card) {
     
     console.log('Setting details:', { specs, achievements, facts });
     
-    const detailedSpecs = overlay.querySelector('.detailed-specs');
-    const achievementsEl = overlay.querySelector('.achievements');
-    const funFactsEl = overlay.querySelector('.fun-facts');
-    
-    if (detailedSpecs) detailedSpecs.textContent = specs;
-    if (achievementsEl) achievementsEl.textContent = achievements;
-    if (funFactsEl) funFactsEl.textContent = facts;
+    // Get all elements first and check if they exist
+    const elements = {
+        detailedSpecs: overlay.querySelector('.detailed-specs'),
+        achievements: overlay.querySelector('.achievements'),
+        funFacts: overlay.querySelector('.fun-facts')
+    };
+
+    // Log which elements were found
+    console.log('Found elements:', {
+        detailedSpecs: !!elements.detailedSpecs,
+        achievements: !!elements.achievements,
+        funFacts: !!elements.funFacts
+    });
+
+    // Only update elements that exist
+    if (elements.detailedSpecs) elements.detailedSpecs.textContent = specs;
+    if (elements.achievements) elements.achievements.textContent = achievements;
+    if (elements.funFacts) elements.funFacts.textContent = facts;
     
     // Apply card's font color to all text in the overlay
-    overlayContent.style.color = card.font_color;
+    try {
+        overlayContent.style.color = card.font_color;
+    } catch (error) {
+        console.error('Error setting overlay color:', error);
+    }
     
     // Show overlay
     overlay.style.display = 'flex';
