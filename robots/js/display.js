@@ -25,7 +25,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         cardElement.style.backgroundColor = card.background;
         cardElement.style.color = card.font_color;
-        cardElement.style.fontFamily = card.font_family || "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+        
+        // Replace SF Pro with system font
+        const fontFamily = card.font_family === "'SF Pro Display', -apple-system" 
+            ? "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+            : card.font_family;
+        
+        cardElement.style.fontFamily = fontFamily;
         cardElement.innerHTML = generateCardHTML(card);
         gallery.appendChild(cardElement);
 
