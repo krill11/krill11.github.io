@@ -88,8 +88,18 @@ function generateCardHTML(card) {
 function showCardDetails(card) {
     console.log('Full card data:', card);
     const overlay = document.getElementById('card-overlay');
+    if (!overlay) {
+        console.error('Overlay element not found');
+        return;
+    }
+
     const overlayCard = overlay.querySelector('.overlay-card');
     const overlayContent = overlay.querySelector('.overlay-content');
+    
+    if (!overlayCard || !overlayContent) {
+        console.error('Overlay child elements not found');
+        return;
+    }
     
     // Show the basic card info
     overlayCard.innerHTML = generateCardHTML(card);
@@ -101,9 +111,13 @@ function showCardDetails(card) {
     
     console.log('Setting details:', { specs, achievements, facts });
     
-    overlay.querySelector('.detailed-specs').textContent = specs;
-    overlay.querySelector('.achievements').textContent = achievements;
-    overlay.querySelector('.fun-facts').textContent = facts;
+    const detailedSpecs = overlay.querySelector('.detailed-specs');
+    const achievementsEl = overlay.querySelector('.achievements');
+    const funFactsEl = overlay.querySelector('.fun-facts');
+    
+    if (detailedSpecs) detailedSpecs.textContent = specs;
+    if (achievementsEl) achievementsEl.textContent = achievements;
+    if (funFactsEl) funFactsEl.textContent = facts;
     
     // Apply card's font color to all text in the overlay
     overlayContent.style.color = card.font_color;
