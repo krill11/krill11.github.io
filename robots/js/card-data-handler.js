@@ -1,9 +1,13 @@
 // Function to check if a file exists locally
 async function checkFileExists(filePath) {
     try {
-        const response = await fetch(filePath, { method: 'HEAD' });
-        return response.ok;
+        console.log('Checking if file exists:', filePath);
+        const response = await fetch(filePath);
+        const exists = response.ok;
+        console.log(`File ${filePath} exists: ${exists}`);
+        return exists;
     } catch (error) {
+        console.log(`Error checking file ${filePath}:`, error);
         return false;
     }
 }
@@ -14,9 +18,12 @@ function getLocalFilePath(supabaseUrl) {
         const url = new URL(supabaseUrl);
         const pathParts = url.pathname.split('/');
         const fileName = pathParts[pathParts.length - 1];
-        // Use relative path from the robots directory
-        return `/robots/files/${fileName}`;
+        // Remove any URL encoding from filename
+        const decodedFileName = decodeURIComponent(fileName);
+        // Use absolute path from domain root
+        return `/robots/files/${decodedFileName}`;
     } catch (error) {
+        console.log('Error getting local path:', error);
         return null;
     }
 }
@@ -26,11 +33,17 @@ async function loadCardImage(supabaseUrl) {
     if (!supabaseUrl) return null;
     
     const localPath = getLocalFilePath(supabaseUrl);
-    if (localPath && await checkFileExists(localPath)) {
-        console.log(`Loading image from local file: ${localPath}`);
-        return localPath;
+    console.log('Trying local path:', localPath);
+    
+    if (localPath) {
+        // Try with absolute path from domain root
+        if (await checkFileExists(localPath)) {
+            console.log(`✅ Loading image from local file: ${localPath}`);
+            return localPath;
+        }
     }
-    console.log(`Loading image from Supabase: ${supabaseUrl}`);
+    
+    console.log(`❌ Falling back to Supabase URL: ${supabaseUrl}`);
     return supabaseUrl;
 }
 
@@ -101,10 +114,14 @@ async function loadCardData(cardId) {
 // Function to load all cards
 async function loadAllCards() {
     try {
-        // Try to load from local CSV with proper relative path
-        const response = await fetch('/robots/files/cards_rows.csv');
+        // Try to load CSV with absolute path
+        const csvPath = '/robots/files/cards_rows.csv';
+        console.log('Trying to load CSV from:', csvPath);
+        
+        const response = await fetch(csvPath);
+        
         if (response.ok) {
-            console.log('Loading all cards from local CSV file');
+            console.log('✅ Successfully loaded CSV from:', csvPath);
             const csvText = await response.text();
             const rows = csvText.split('\n').map(row => {
                 // Parse CSV, handling quoted values that may contain commas
@@ -117,6 +134,7 @@ async function loadAllCards() {
             
             // Find headers
             const headers = rows[0];
+            console.log('CSV Headers:', headers);
             
             // Process all rows except header
             const cards = [];
@@ -139,19 +157,22 @@ async function loadAllCards() {
                 }
             }
             
+            console.log(`Found ${cards.length} cards in CSV`);
+            
             // Process images for all cards
+            console.log('Processing card images...');
             for (const card of cards) {
                 card.image = await loadCardImage(card.image);
                 card.team_logo = await loadCardImage(card.team_logo);
                 card.background_art = await loadCardImage(card.background_art);
             }
             
-            console.log(`Loaded ${cards.length} cards from local CSV`);
+            console.log('✅ Successfully loaded all cards from CSV');
             return cards;
         }
         
         // Fallback to Supabase if local load fails
-        console.log('Loading all cards from Supabase');
+        console.log('❌ Failed to load CSV locally, falling back to Supabase');
         const { data, error } = await supabase
             .from('cards')
             .select('*');
@@ -160,23 +181,11 @@ async function loadAllCards() {
         return data;
         
     } catch (error) {
-        console.error('Error loading all cards:', error);
-        // Fallback to Supabase if local load fails
-        console.log('Falling back to Supabase');
-        try {
-            const { data, error } = await supabase
-                .from('cards')
-                .select('*');
-                
-            if (error) throw error;
-            return data;
-        } catch (supabaseError) {
-            console.error('Error loading from Supabase:', supabaseError);
-            return [];
-        }
+        console.error('Error loading cards:', error);
+        return [];
     }
 }
 
 // Make functions available globally
-window.loadCardData = loadAllCards; // We can use loadAllCards for both since we're not using individual card loading
+window.loadCardData = loadAllCards;
 window.loadAllCards = loadAllCards; 
