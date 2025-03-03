@@ -1,8 +1,20 @@
+/* Dark theme colors */
+:root {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --accent: #007bff;
+    --border: #3a3a3a;
+    --input-bg: #2a2a2a;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: #f0f0f0;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -13,9 +25,15 @@ header {
     justify-content: space-between;
     align-items: center;
     margin: 0;
-    padding: 10px 20px;
-    background: white;
+    padding: 20px 40px;
+    background: var(--bg-secondary);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+header a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
 }
 
 .create-button {
@@ -35,59 +53,149 @@ header {
     padding: 20px;
 }
 
-/* Form styles */
-.form-group {
-    margin-bottom: 15px;
+/* Form styling */
+#card-form {
+    width: 100%;
+    max-width: none;
+    background: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Update the general label style to exclude checkbox labels */
+.form-group {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
 label:not(.checkbox-label) {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
-input, textarea {
+input, textarea, select {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    box-sizing: border-box;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: border-color 0.2s;
 }
 
-button {
-    padding: 10px 20px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    outline: none;
 }
 
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Preview card styling */
 #preview-card {
-    margin-top: 20px;
+    position: sticky;
+    top: 60px;
+    margin: 0;
+    width: 300px;
+    height: 420px;
 }
 
+/* Button styling */
+button {
+    background: var(--accent);
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    background: #0056b3;
+}
+
+/* Ability inputs */
+#abilities-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ability-input {
+    margin-bottom: 8px;
+}
+
+#add-ability {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+#add-ability:hover {
+    background: var(--accent);
+    color: white;
+}
+
+/* File upload previews */
 .upload-preview {
-    max-width: 200px;
-    max-height: 200px;
-    margin-top: 10px;
-    border-radius: 4px;
+    margin-top: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
 }
 
-input[type="file"] {
-    padding: 0;
-}
-
-/* Update checkbox label styles */
+/* Checkbox styling */
 .checkbox-label {
-    display: inline-flex;  /* Changed to inline-flex */
+    display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    margin-bottom: 5px;
+    user-select: none;
 }
 
 .checkbox-label input[type="checkbox"] {
+    width: auto;
     margin: 0;
+}
+
+/* Color input styling */
+input[type="color"] {
+    height: 40px;
+    padding: 2px;
+}
+
+/* Submit button */
+button[type="submit"] {
+    width: 100%;
+    margin-top: 20px;
+    font-size: 16px;
+    padding: 16px;
+}
+
+/* Responsive design */
+@media (max-width: 1400px) {
+    .create-page main {
+        grid-template-columns: 1fr;
+        padding: 30px;
+    }
+    
+    #preview-card {
+        width: 300px;
+        height: 420px;
+        margin: 40px auto 0;
+        position: static;
+    }
 }
 
 .copyright {
@@ -197,4 +305,50 @@ input[type="file"] {
     background: rgba(255, 255, 255, 0.05);
     padding: 20px;
     border-radius: 10px;
+}
+
+/* Create page specific layout */
+.create-page main {
+    display: grid;
+    grid-template-columns: minmax(800px, 2fr) 300px;
+    gap: 80px;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 60px;
+    align-items: start;
+}
+
+/* Form container should take full width */
+#card-form {
+    width: 100%;
+    max-width: none;
+    background: var(--bg-secondary);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Make sure inputs take full width */
+.form-group {
+    width: 100%;
+}
+
+input, textarea, select {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+    .create-page main {
+        grid-template-columns: 1fr;
+        padding: 30px;
+    }
+    
+    #preview-card {
+        width: 300px;
+        height: 420px;
+        margin: 40px auto 0;
+        position: static;
+    }
 } 
