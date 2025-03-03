@@ -14,7 +14,8 @@ function getLocalFilePath(supabaseUrl) {
         const url = new URL(supabaseUrl);
         const pathParts = url.pathname.split('/');
         const fileName = pathParts[pathParts.length - 1];
-        return `files/${fileName}`;
+        // Use relative path from the robots directory
+        return `/robots/files/${fileName}`;
     } catch (error) {
         return null;
     }
@@ -37,7 +38,7 @@ async function loadCardImage(supabaseUrl) {
 async function loadCardData(cardId) {
     try {
         // First try to load from local CSV
-        const response = await fetch('files/cards_rows.csv');
+        const response = await fetch('/robots/files/cards_rows.csv');
         if (response.ok) {
             console.log('Loading cards data from local CSV file');
             const csvText = await response.text();
@@ -100,8 +101,8 @@ async function loadCardData(cardId) {
 // Function to load all cards
 async function loadAllCards() {
     try {
-        // First try to load from local CSV
-        const response = await fetch('files/cards_rows.csv');
+        // Try to load from local CSV with proper relative path
+        const response = await fetch('/robots/files/cards_rows.csv');
         if (response.ok) {
             console.log('Loading all cards from local CSV file');
             const csvText = await response.text();
@@ -121,7 +122,7 @@ async function loadAllCards() {
             const cards = [];
             for (let i = 1; i < rows.length; i++) {
                 const row = rows[i];
-                if (row.length === headers.length) {
+                if (row && row.length === headers.length) {
                     const cardData = {};
                     headers.forEach((header, index) => {
                         if (header === 'abilities') {
@@ -136,6 +137,13 @@ async function loadAllCards() {
                     });
                     cards.push(cardData);
                 }
+            }
+            
+            // Process images for all cards
+            for (const card of cards) {
+                card.image = await loadCardImage(card.image);
+                card.team_logo = await loadCardImage(card.team_logo);
+                card.background_art = await loadCardImage(card.background_art);
             }
             
             console.log(`Loaded ${cards.length} cards from local CSV`);
@@ -153,10 +161,22 @@ async function loadAllCards() {
         
     } catch (error) {
         console.error('Error loading all cards:', error);
-        return [];
+        // Fallback to Supabase if local load fails
+        console.log('Falling back to Supabase');
+        try {
+            const { data, error } = await supabase
+                .from('cards')
+                .select('*');
+                
+            if (error) throw error;
+            return data;
+        } catch (supabaseError) {
+            console.error('Error loading from Supabase:', supabaseError);
+            return [];
+        }
     }
 }
 
 // Make functions available globally
-window.loadCardData = loadCardData;
+window.loadCardData = loadAllCards; // We can use loadAllCards for both since we're not using individual card loading
 window.loadAllCards = loadAllCards; 
