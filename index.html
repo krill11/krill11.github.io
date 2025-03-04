@@ -157,15 +157,22 @@
         }
 
         @media (max-width: 768px) {
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                position: fixed;
+            }
+
             body {
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
-                padding: 0;
-                box-sizing: border-box;
-                height: 100vh;
-                overflow: hidden;
                 min-height: 0;
+                box-sizing: border-box;
+                width: 100%;
             }
 
             .title-container {
@@ -186,11 +193,29 @@
                 margin: 0;
                 gap: 15px;
                 padding: 20px;
+                box-sizing: border-box;
+                max-height: 100vh;
+                overflow: hidden;
             }
 
             .nav-links pre {
                 transform-origin: center center;
                 font-size: 16px;
+                width: 100%;
+                box-sizing: border-box;
+                text-align: center;
+                transform: none;
+                white-space: normal;
+                overflow: hidden;
+            }
+
+            .nav-links a {
+                display: inline-block;
+                padding: 10px;
+                width: auto;
+                box-sizing: border-box;
+                white-space: normal;
+                word-break: break-word;
             }
         }
     </style>
@@ -272,40 +297,31 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$
             const navLinks = document.querySelector('.nav-links');
             const isMobile = window.innerWidth <= 768;
             
-            // Start with a small font size
+            if (isMobile) {
+                // On mobile, just set a fixed font size for nav links
+                navLinks.style.fontSize = '16px';
+                return;
+            }
+            
+            // Desktop behavior remains the same
             let fontSize = 10;
             container.style.fontSize = fontSize + 'px';
             
-            // Increase font size until it's too big
-            if (isMobile) {
-                while (container.offsetWidth < window.innerWidth * 0.95 && 
-                       container.offsetHeight < window.innerHeight * 0.5) {
-                    fontSize++;
-                    container.style.fontSize = fontSize + 'px';
-                }
-            } else {
-                while (container.offsetWidth < window.innerWidth * 0.5 && 
-                       container.offsetHeight < window.innerHeight * 0.95) {
-                    fontSize++;
-                    container.style.fontSize = fontSize + 'px';
-                }
+            while (container.offsetWidth < window.innerWidth * 0.5 && 
+                   container.offsetHeight < window.innerHeight * 0.95) {
+                fontSize++;
+                container.style.fontSize = fontSize + 'px';
             }
             
-            // Step back one size to ensure fit
             fontSize--;
             container.style.fontSize = fontSize + 'px';
-
-            // Set title and nav links size to match main ASCII art
             titleContainer.style.fontSize = fontSize + 'px';
             navLinks.style.fontSize = fontSize + 'px';
 
-            // Center the title between ASCII art and right edge (desktop only)
-            if (!isMobile) {
-                const artWidth = container.offsetWidth;
-                const rightSpace = window.innerWidth - artWidth;
-                const centerPoint = artWidth + (rightSpace / 2);
-                titleContainer.style.left = centerPoint + 'px';
-            }
+            const artWidth = container.offsetWidth;
+            const rightSpace = window.innerWidth - artWidth;
+            const centerPoint = artWidth + (rightSpace / 2);
+            titleContainer.style.left = centerPoint + 'px';
         }
 
         // Adjust on load and resize
