@@ -38,6 +38,7 @@
             position: absolute;
             top: 50%;
             transform: translate(-50%, -50%) scaleX(1.2);
+            cursor: pointer;
         }
 
         .ascii-container {
@@ -155,6 +156,62 @@
                     0 0 15px rgba(255, 110, 0, 0.8),
                     0 0 25px rgba(255, 110, 0, 0.6);
             }
+        }
+
+        @keyframes titleClick {
+            0% {
+                color: #89CFF0;
+                text-shadow: 
+                    0 0 4px #ffffff,
+                    0 0 15px #89CFF0,
+                    0 0 30px #89CFF0,
+                    0 0 45px #89CFF0,
+                    0 0 60px #89CFF0;
+            }
+            25% {
+                color: #FFB6C1;
+                text-shadow: 
+                    0 0 4px #ffffff,
+                    0 0 15px #FFB6C1,
+                    0 0 30px #FFB6C1,
+                    0 0 45px #FFB6C1,
+                    0 0 60px #FFB6C1;
+            }
+            50% {
+                color: #ffffff;
+                text-shadow: 
+                    0 0 4px #ffffff,
+                    0 0 15px #ffffff,
+                    0 0 30px #ffffff,
+                    0 0 45px #ffffff,
+                    0 0 60px #ffffff;
+            }
+            75% {
+                color: #FFB6C1;
+                text-shadow: 
+                    0 0 4px #ffffff,
+                    0 0 15px #FFB6C1,
+                    0 0 30px #FFB6C1,
+                    0 0 45px #FFB6C1,
+                    0 0 60px #FFB6C1;
+            }
+            100% {
+                color: #89CFF0;
+                text-shadow: 
+                    0 0 4px #ffffff,
+                    0 0 15px #89CFF0,
+                    0 0 30px #89CFF0,
+                    0 0 45px #89CFF0,
+                    0 0 60px #89CFF0;
+            }
+        }
+
+        .title-container.clicked {
+            animation: titleClick 1s ease-in-out;
+        }
+
+        .title-container.clicked ~ .ascii-container {
+            animation: titleClick 1s ease-in-out;
         }
 
         @media (max-width: 768px) {
@@ -448,8 +505,24 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$
             });
 
             // Initialize and trigger scramble effect for the title
-            const titleScrambler = new TextScramble(document.getElementById('title-art'));
+            const titleContainer = document.getElementById('title-art');
+            const titleScrambler = new TextScramble(titleContainer);
             setTimeout(() => titleScrambler.startScramble(), 500); // Small delay for dramatic effect
+
+            // Add click handler for title on desktop
+            titleContainer.addEventListener('click', () => {
+                if (window.innerWidth > 768) {  // Only on desktop
+                    titleScrambler.startScramble();
+                    titleContainer.classList.remove('clicked');  // Reset animation
+                    void titleContainer.offsetWidth;  // Force reflow
+                    titleContainer.classList.add('clicked');
+                    
+                    // Remove the class after animation completes
+                    setTimeout(() => {
+                        titleContainer.classList.remove('clicked');
+                    }, 1000);
+                }
+            });
         });
     </script>
 </body>
