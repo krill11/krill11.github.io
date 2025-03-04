@@ -168,15 +168,28 @@
 
             body {
                 flex-direction: column;
-                justify-content: center;
+                justify-content: flex-start;
                 align-items: center;
                 min-height: 0;
                 box-sizing: border-box;
                 width: 100%;
+                position: relative;
             }
 
             .title-container {
-                display: none;
+                display: block;
+                position: relative;
+                top: auto;
+                left: 0 !important;
+                transform: none;
+                margin: 20px 0;
+                padding: 0 10px;
+                font-size: 7px !important;
+                width: 100%;
+                text-align: center;
+                white-space: pre;
+                overflow: hidden;
+                box-sizing: border-box;
             }
 
             .ascii-container {
@@ -190,7 +203,7 @@
                 align-items: center;
                 text-align: center;
                 width: 100%;
-                margin: 0;
+                margin: auto 0;
                 gap: 15px;
                 padding: 20px;
                 box-sizing: border-box;
@@ -247,7 +260,7 @@
                 XXXXXXXXXXXXX$XXXX$X$$X$XXX:.................::;;;xXX$$$x$$$$XXx+::::x              
                 xXXXXXXXXXXXXXX$$XXX$$X$$Xx...........::;;+$$$$x:;$$$$$Xx$$$+$$$$$x+;+              
                 XXXXXXX$XX$XXX$XX$$X$$X$XX;.......:+;+X;:::+XX$x:::++;::;X$$+X&&$$++x               
-                XXXXX$XXXX$$$X$$X$XX$$$$$$:::;;:::;;::;:::........;XXXXXx...+$&&&X++                
+                XXXXX$XXXX$$$X$$X$XX$$$$$$:::;;:::;;::;::........;XXXXXx...+$&&&X++                
                 xXXXX$XX$$X$$$X$$$$$X$$X$X+xX$$xXx;.             :x$$XX+;x.;$&&$$x++                
                 XXX$$X$$$$X$X$$X$$X$$$$X.;X+X$$XX;:                +XX+ .::$$x$x$+x                 
                 XX$$XX$$X$$$X$$X$$X+;x$: ;; :XXX:                ::   :: .x$x+++++                  
