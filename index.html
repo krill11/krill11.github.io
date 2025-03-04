@@ -36,8 +36,7 @@
             -ms-user-select: none;
             position: absolute;
             top: 50%;
-            right: 10%;
-            transform: translateY(-50%) scaleX(1.2);
+            transform: translate(-50%, -50%) scaleX(1.2);
         }
 
         .ascii-container {
@@ -252,6 +251,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$
             // Set title and nav links size to match main ASCII art
             titleContainer.style.fontSize = fontSize + 'px';
             navLinks.style.fontSize = fontSize + 'px';
+
+            // Center the title between ASCII art and right edge
+            const artWidth = container.offsetWidth;
+            const rightSpace = window.innerWidth - artWidth;
+            const centerPoint = artWidth + (rightSpace / 2);
+            titleContainer.style.left = centerPoint + 'px';
         }
 
         // Adjust on load and resize
