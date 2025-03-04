@@ -189,8 +189,22 @@ async function displayCards() {
         // Clear loading message
         gallery.innerHTML = '';
 
-        // Process images for all cards
+        // Process images and ensure abilities are arrays for all cards
         for (let card of cards) {
+            // Ensure abilities is an array
+            if (!Array.isArray(card.abilities)) {
+                try {
+                    card.abilities = typeof card.abilities === 'string' ? 
+                        JSON.parse(card.abilities) : [];
+                    if (!Array.isArray(card.abilities)) {
+                        card.abilities = [];
+                    }
+                } catch {
+                    card.abilities = [];
+                }
+            }
+
+            // Process images
             card.image = await loadCardImage(card.image);
             card.team_logo = await loadCardImage(card.team_logo);
             card.background_art = await loadCardImage(card.background_art);

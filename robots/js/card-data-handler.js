@@ -12,16 +12,33 @@ async function checkFileExists(filePath) {
     }
 }
 
-// Function to get the local file path from a Supabase URL
-function getLocalFilePath(supabaseUrl) {
+// Function to get the local file path from a Supabase URL or local path
+function getLocalFilePath(path) {
     try {
-        const url = new URL(supabaseUrl);
-        const pathParts = url.pathname.split('/');
+        // If it's already a local path starting with /robots/files/, return as is
+        if (path.startsWith('/robots/files/')) {
+            return path;
+        }
+
+        // If it's just a number or invalid, return null
+        if (!isNaN(path) || !path.includes('/')) {
+            return null;
+        }
+
+        // Try to parse as URL if it looks like one
+        if (path.startsWith('http')) {
+            const url = new URL(path);
+            const pathParts = url.pathname.split('/');
+            const fileName = pathParts[pathParts.length - 1];
+            // Remove any URL encoding from filename
+            const decodedFileName = decodeURIComponent(fileName);
+            return `/robots/files/${decodedFileName}`;
+        }
+
+        // For other paths, extract just the filename
+        const pathParts = path.split('/');
         const fileName = pathParts[pathParts.length - 1];
-        // Remove any URL encoding from filename
-        const decodedFileName = decodeURIComponent(fileName);
-        // Use absolute path from domain root
-        return `/robots/files/${decodedFileName}`;
+        return `/robots/files/${fileName}`;
     } catch (error) {
         console.log('Error getting local path:', error);
         return null;
@@ -124,35 +141,65 @@ async function loadAllCards() {
         if (response.ok) {
             console.log('✅ Successfully loaded CSV from:', csvPath);
             const csvText = await response.text();
-            const rows = csvText.split('\n').map(row => {
-                // Parse CSV, handling quoted values that may contain commas
-                const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-                if (values) {
-                    return values.map(val => val.replace(/^"|"$/g, ''));
-                }
-                return [];
-            });
             
-            // Find headers
-            const headers = rows[0];
-            console.log('CSV Headers:', headers);
+            // Split into lines and filter out empty lines
+            const lines = csvText.split('\n').filter(line => line.trim());
+            
+            // Parse CSV properly handling quoted values
+            const parseCSVLine = (line) => {
+                const values = [];
+                let currentValue = '';
+                let withinQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        if (withinQuotes && line[i + 1] === '"') {
+                            // Handle escaped quotes
+                            currentValue += '"';
+                            i++;
+                        } else {
+                            // Toggle quote state
+                            withinQuotes = !withinQuotes;
+                        }
+                    } else if (char === ',' && !withinQuotes) {
+                        // End of value
+                        values.push(currentValue);
+                        currentValue = '';
+                    } else {
+                        currentValue += char;
+                    }
+                }
+                
+                // Push the last value
+                values.push(currentValue);
+                return values;
+            };
+            
+            // Parse headers and data
+            const headers = parseCSVLine(lines[0]);
+            const cards = [];
             
             // Process all rows except header
-            const cards = [];
-            for (let i = 1; i < rows.length; i++) {
-                const row = rows[i];
-                if (row && row.length === headers.length) {
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                
+                if (values.length === headers.length) {
                     const cardData = {};
                     headers.forEach((header, index) => {
                         if (header === 'abilities') {
                             try {
-                                const parsed = JSON.parse(row[index]);
+                                // Remove any extra quotes and parse JSON
+                                const cleanedJson = values[index].replace(/^"+|"+$/g, '');
+                                const parsed = JSON.parse(cleanedJson);
                                 cardData[header] = Array.isArray(parsed) ? parsed : [];
-                            } catch {
+                            } catch (e) {
+                                console.error('Error parsing abilities:', e);
                                 cardData[header] = [];
                             }
                         } else {
-                            cardData[header] = row[index];
+                            cardData[header] = values[index];
                         }
                     });
                     cards.push(cardData);
