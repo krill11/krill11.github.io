@@ -160,10 +160,11 @@
             body {
                 flex-direction: column;
                 justify-content: space-between;
-                padding: 20px 0;
+                padding: 10px 0;
                 box-sizing: border-box;
                 height: 100vh;
                 overflow: hidden;
+                min-height: 0;
             }
 
             .title-container {
@@ -171,7 +172,7 @@
                 top: 0;
                 left: 50% !important;
                 transform: translateX(-50%) scaleX(1.2);
-                margin-top: 20px;
+                margin-top: 10px;
                 width: fit-content;
                 transform-origin: center center;
             }
@@ -184,7 +185,8 @@
                 align-items: center;
                 text-align: center;
                 width: 100%;
-                margin: 20px 0;
+                margin: 10px 0;
+                gap: 5px;
             }
 
             .nav-links pre {
@@ -196,7 +198,8 @@
                 align-self: center;
                 transform-origin: center bottom;
                 margin-bottom: 0;
-                max-height: 50vh;
+                max-height: calc(100vh - 200px);
+                font-size: 8px;
             }
         }
     </style>
