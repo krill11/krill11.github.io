@@ -155,6 +155,45 @@
                     0 0 25px rgba(255, 110, 0, 0.6);
             }
         }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 20px 0;
+                box-sizing: border-box;
+            }
+
+            .title-container {
+                position: relative;
+                top: 0;
+                left: 50% !important;
+                transform: translateX(-50%) scaleX(1.2);
+                margin-top: 20px;
+            }
+
+            .nav-links {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                order: 2;
+                align-items: center;
+                text-align: center;
+                width: 100%;
+                margin: 20px 0;
+            }
+
+            .nav-links pre {
+                transform-origin: center center;
+            }
+
+            .ascii-container {
+                order: 3;
+                align-self: center;
+                transform-origin: center bottom;
+                margin-bottom: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -232,16 +271,25 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$
             const container = document.getElementById('ascii-art');
             const titleContainer = document.getElementById('title-art');
             const navLinks = document.querySelector('.nav-links');
+            const isMobile = window.innerWidth <= 768;
             
             // Start with a small font size
             let fontSize = 10;
             container.style.fontSize = fontSize + 'px';
             
             // Increase font size until it's too big
-            while (container.offsetWidth < window.innerWidth * 0.5 && 
-                   container.offsetHeight < window.innerHeight * 0.95) {
-                fontSize++;
-                container.style.fontSize = fontSize + 'px';
+            if (isMobile) {
+                while (container.offsetWidth < window.innerWidth * 0.95 && 
+                       container.offsetHeight < window.innerHeight * 0.5) {
+                    fontSize++;
+                    container.style.fontSize = fontSize + 'px';
+                }
+            } else {
+                while (container.offsetWidth < window.innerWidth * 0.5 && 
+                       container.offsetHeight < window.innerHeight * 0.95) {
+                    fontSize++;
+                    container.style.fontSize = fontSize + 'px';
+                }
             }
             
             // Step back one size to ensure fit
@@ -252,11 +300,13 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$
             titleContainer.style.fontSize = fontSize + 'px';
             navLinks.style.fontSize = fontSize + 'px';
 
-            // Center the title between ASCII art and right edge
-            const artWidth = container.offsetWidth;
-            const rightSpace = window.innerWidth - artWidth;
-            const centerPoint = artWidth + (rightSpace / 2);
-            titleContainer.style.left = centerPoint + 'px';
+            // Center the title between ASCII art and right edge (desktop only)
+            if (!isMobile) {
+                const artWidth = container.offsetWidth;
+                const rightSpace = window.innerWidth - artWidth;
+                const centerPoint = artWidth + (rightSpace / 2);
+                titleContainer.style.left = centerPoint + 'px';
+            }
         }
 
         // Adjust on load and resize
