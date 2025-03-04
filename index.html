@@ -9,6 +9,7 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
+            height: 100vh; /* Add fixed height */
             display: flex;
             background-color: #000000; /* Warm dark grey */
             font-family: monospace;
@@ -22,20 +23,9 @@
             font-size: 10px;
             line-height: 1.1;
             padding: 0;
-            transform: scaleX(1.2);
-            transform-origin: left center;
-            text-shadow: 
-                0 0 2px #ffffff,
-                0 0 7px #ff6e00,
-                0 0 15px rgba(255, 110, 0, 0.8),
-                0 0 25px rgba(255, 110, 0, 0.6);
-            animation: glow 3s ease-in-out infinite alternate;
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
             position: absolute;
             top: 50%;
+            left: 75%; /* Adjust to be more centered between ASCII and right edge */
             transform: translate(-50%, -50%) scaleX(1.2);
         }
 
@@ -58,7 +48,9 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
-            align-self: flex-end;
+            position: absolute; /* Change to absolute positioning */
+            bottom: 0; /* Align to bottom */
+            left: 0; /* Align to left */
         }
 
         .nav-links {
@@ -162,6 +154,8 @@
                 justify-content: space-between;
                 padding: 20px 0;
                 box-sizing: border-box;
+                height: 100vh; /* Ensure full height on mobile */
+                overflow: hidden;
             }
 
             .title-container {
@@ -170,6 +164,14 @@
                 left: 50% !important;
                 transform: translateX(-50%) scaleX(1.2);
                 margin-top: 20px;
+            }
+
+            .ascii-container {
+                position: relative;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%) scaleX(1.2);
+                margin-bottom: 0;
             }
 
             .nav-links {
@@ -185,13 +187,6 @@
 
             .nav-links pre {
                 transform-origin: center center;
-            }
-
-            .ascii-container {
-                order: 3;
-                align-self: center;
-                transform-origin: center bottom;
-                margin-bottom: 0;
             }
         }
     </style>
@@ -280,12 +275,12 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$
             // Increase font size until it's too big
             if (isMobile) {
                 while (container.offsetWidth < window.innerWidth * 0.95 && 
-                       container.offsetHeight < window.innerHeight * 0.5) {
+                       container.offsetHeight < window.innerHeight * 0.45) {
                     fontSize++;
                     container.style.fontSize = fontSize + 'px';
                 }
             } else {
-                while (container.offsetWidth < window.innerWidth * 0.5 && 
+                while (container.offsetWidth < window.innerWidth * 0.45 &&
                        container.offsetHeight < window.innerHeight * 0.95) {
                     fontSize++;
                     container.style.fontSize = fontSize + 'px';
@@ -303,9 +298,9 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$
             // Center the title between ASCII art and right edge (desktop only)
             if (!isMobile) {
                 const artWidth = container.offsetWidth;
-                const rightSpace = window.innerWidth - artWidth;
-                const centerPoint = artWidth + (rightSpace / 2);
-                titleContainer.style.left = centerPoint + 'px';
+                const windowWidth = window.innerWidth;
+                const availableSpace = windowWidth - artWidth;
+                titleContainer.style.left = (artWidth + (availableSpace / 2)) + 'px';
             }
         }
 
