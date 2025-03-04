@@ -1,0 +1,55 @@
+                                                                                                    
+                                                                        +                           
+                                        +xxxXXXXXXXXXXXXXxxx+      xXXXXXXXXXXx                     
+                   ;+XXXXXXXx+      xXXXXXXXXXXXXXXXXXXXXXXXXXXx+xXXXXXXXXXXXXXXX+                  
+                 XXXXXXXXXXXXXX++XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX$XX+::::;xXXXXXx                 
+               xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX+:.....:xXXXXx                
+              XXXXXXXXXx++xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:.....;XXXX;               
+            xXXXXXXX;.     ..;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx:...:+XXXx               
+            xXXXXX+.         .:xXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX$$$$$X;..:+XXX+               
+           +XXXXX;.        ..;XXXXXXXXXXXXXX$$$$$XXXXXXXXXXXXXXXXXXXXXX$$$$$X;:;$$$X                
+           XXXXXx.        .:xXXXXXXXXXXXXXX$$$$$XXXXXXXXXXXXXXXXXXXX$X$XXXXXXXX$$$$x                
+           XXXXX+.       .;XXXXXXXXXXXXXXXX$$XXXXXXXXXXX+;::::::::;;;;::;X$XXX$$$$+                 
+           X$XXXX:.    .:+XXXXXXXXXXXXXXXXXXXXXXXXXX+:.......:x$$$$$$$+...:;XX$$X+                  
+           +X$$$XX+....:XXXXXXXXXXXXXXXXXXXXXXXXXX+:..     ..+X$$$$$$;:......;XXXx                  
+            XX$$$$$XX;;X$$$XXXXXXXXXXXXXXXXXXXXXX:.    ..  ....:+$$+:.........:XXX                  
+              xXX$$$$$$$$XXXXXXXXXXXXXXXXXXXXXXx... ..  ..    .................:XXx                 
+                 X$$$$$$XXXXXXXXXXXXXXXXXXXXXXx:.   .  .. ... ..  ..............:XX+                
+                xX$$$$$XXXXXXXXXXXXXXXXXXXXXXx..  ... .. .......................:+Xx                
+                 XXX$$XXXXXXXXXXXXXXXXXXXXXXX:...     ...... ....................:XX                
+                xXXXXXXXXXXXXXXXXXXXXXXXXXXX+.........  .. .......................:X+               
+                XXXXXXXXXXXXXXXXXXXXXXXXXXXX:... .................................:xX               
+                xXXXXXXXXXXXXXXXXXXXXX$XX$X+.......................................:X               
+                XXXXXXXXXXXXXXXXXXXXXXXXXXX:..........................:::::::.....::+x              
+                XXXXXXXXXXXXX$XXXX$X$$X$XXX:.................::;;;xXX$$$x$$$$XXx+::::x              
+                xXXXXXXXXXXXXXX$$XXX$$X$$Xx...........::;;+$$$$x:;$$$$$Xx$$$+$$$$$x+;+              
+                XXXXXXX$XX$XXX$XX$$X$$X$XX;.......:+;+X;:::+XX$x:::++;::;X$$+X&&$$++x               
+                XXXXX$XXXX$$$X$$X$XX$$$$$$:::;;:::;;::;:::........;XXXXXx...+$&&&X++                
+                xXXXX$XX$$X$$$X$$$$$X$$X$X+xX$$xXx;.             :x$$XX+;x.;$&&$$x++                
+                XXX$$X$$$$X$X$$X$$X$$$$X.;X+X$$XX;:                +XX+ .::$$x$x$+x                 
+                XX$$XX$$X$$$X$$X$$X+;x$: ;; :XXX:                ::   :: .x$x+++++                  
+                XXXX$$X$$X$$$$$$$$;::+x     ;;:::.                   ..  ;$+++++x                   
+                XX$$$$$$$X$X$$$+x+...::                                 .++++;++;                   
+                XX$$$$$$$$$$$$X.::                                      :+++;+++                    
+               x$$$$$$$$$$$$$$;                                         ;+++++x                     
+              XX$$$$$$$$$$$$$&$+                         :.            :++++++                      
+             X$$$$$$$$$$$$$$&&$+                        ::;::;        :+++++++                      
+            X$$$$$$$$$$$$$$X$&$;                          :.        .+++++++++                      
+          XX$$$$$$$$$$$$$$x++$X.   :;                             .x$+++++++++;                     
+         X$$$$$$$$$$$$$$$X+++X;      :;.                ..     .:x&&$++++++++Xx                     
+        X$$$$$$$$$$$$$$$X+++++        :;+;::.                .:X&&&&X+++++++++x                     
+        X$$$$$$$$$$$$$$++++++x.        .:;++::::.         .:+$&&&&&&x++++++++++x                    
+         X$$$$$$$$$$$$+++++++++         .:::;++;:::::::::;x+X&&&&&&$+++++++++++x                    
+          X$$$$$$$$$$$x+++++;:;;          ::::::;+++++++x+++X&&&&&&X+++++++++++xx                   
+        X$$$$$$$$$$$$$$+++++::::;.         .:::::::;++x+++++X&&&&&$x++++++++++++x                   
+     X$$$$$$$$$$$$$$$$$++++;:::::;.          .:::::+:.;x++++$&&&&&$++++++++++++++x                  
+   X$$$$$$$$$$$$$$$$$$$X+++;::::::;:.         ..::;;...;X+++X&&&&&$x++++++++++++xx                  
+ XX$$$$$$$$$$$$$$&&$$$$X+++:::::::::+:.......   ..;:. ..;x+++$&&&&&X+++++++++++xx                   
+X$$$$$$$$$$$$$$$$$$&&$$$x++:::::::::::+;.... .. .... ....+x+++&&&&&$++++++++++xx                    
+$$$$$$$$$$$$$$$$$$$$$&$$X++::::::::::::::;+;;:........::. ++++x&&&&&X++xxXXX$$X                     
+$$$$$$$$$$$$$$$$$$$$$$$&$x+:::::::::::::;;+X$X+:          ;++++X&&&&&&&&$$$$$$$                     
+$$$$$$$$$$$$$$$$$$$$&&$&&$x;:::::;;+X$$$$&&&$$$$$X;.      ;++++x$&&&&&&&$$$$$$$&                    
+$$$$$$$$$$$$$$$$$$$$$&&$&&$$X$$$$&&&&&&&&&$$$$$$$$$$X:    +++X$&&&&&&&$$$$$$$$$$                    
+$$$$$$$$$$$$$$$$$$$$$$&&&&&$&$$&$$&$$$$$$$$$$$$$$$$$$$+.  x$&&&&&&&&&$$$$$$$$$$$$                   
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+.;$$$$$$$$&&$$$$$$$$$$$$$&                  
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$+X$$$$$$$$$&$$$$$$$$$$$$$$                  
