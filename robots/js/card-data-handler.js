@@ -76,7 +76,8 @@ async function loadCardData(cardId) {
                 headers.forEach((header, index) => {
                     if (header === 'abilities') {
                         try {
-                            cardData[header] = JSON.parse(cardRow[index]);
+                            const parsed = JSON.parse(cardRow[index]);
+                            cardData[header] = Array.isArray(parsed) ? parsed : [];
                         } catch {
                             cardData[header] = [];
                         }
@@ -145,7 +146,8 @@ async function loadAllCards() {
                     headers.forEach((header, index) => {
                         if (header === 'abilities') {
                             try {
-                                cardData[header] = JSON.parse(row[index]);
+                                const parsed = JSON.parse(row[index]);
+                                cardData[header] = Array.isArray(parsed) ? parsed : [];
                             } catch {
                                 cardData[header] = [];
                             }

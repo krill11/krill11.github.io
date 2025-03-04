@@ -83,7 +83,7 @@ function generateCardHTML(card) {
         ${card.image ? `<img src="${card.image}" alt="${card.name}" class="robot-image">` : ''}
         <div class="card-content">
             <div class="abilities">
-                ${card.abilities ? card.abilities.map(ability => `
+                ${Array.isArray(card.abilities) ? card.abilities.map(ability => `
                     <span class="ability">${ability}</span>
                 `).join('') : ''}
             </div>
