@@ -159,8 +159,9 @@
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
-                justify-content: space-between;
-                padding: 10px 0;
+                justify-content: center;
+                align-items: center;
+                padding: 0;
                 box-sizing: border-box;
                 height: 100vh;
                 overflow: hidden;
@@ -168,38 +169,28 @@
             }
 
             .title-container {
-                position: relative;
-                top: 0;
-                left: 50% !important;
-                transform: translateX(-50%) scaleX(1.2);
-                margin-top: 10px;
-                width: fit-content;
-                transform-origin: center center;
+                display: none;
+            }
+
+            .ascii-container {
+                display: none;
             }
 
             .nav-links {
                 position: relative;
                 bottom: auto;
                 right: auto;
-                order: 2;
                 align-items: center;
                 text-align: center;
                 width: 100%;
-                margin: 10px 0;
-                gap: 5px;
+                margin: 0;
+                gap: 15px;
+                padding: 20px;
             }
 
             .nav-links pre {
                 transform-origin: center center;
-            }
-
-            .ascii-container {
-                order: 3;
-                align-self: center;
-                transform-origin: center bottom;
-                margin-bottom: 0;
-                max-height: calc(100vh - 200px);
-                font-size: 8px;
+                font-size: 16px;
             }
         }
     </style>
