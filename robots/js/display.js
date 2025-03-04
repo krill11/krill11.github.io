@@ -137,13 +137,62 @@ function shuffleArray(array) {
     return array;
 }
 
+// Function to load and display all cards
+async function displayCards() {
+    const gallery = document.getElementById('card-gallery');
+    
+    try {
+        // Load all cards using the card-data-handler
+        let cards = await loadAllCards();
+        
+        // Clear gallery
+        gallery.innerHTML = '';
+
+        // Process images and ensure abilities are arrays for all cards
+        for (let card of cards) {
+            // Ensure abilities is an array
+            if (!Array.isArray(card.abilities)) {
+                try {
+                    card.abilities = typeof card.abilities === 'string' ? 
+                        JSON.parse(card.abilities) : [];
+                    if (!Array.isArray(card.abilities)) {
+                        card.abilities = [];
+                    }
+                } catch {
+                    card.abilities = [];
+                }
+            }
+
+            // Process images
+            card.image = await loadCardImage(card.image);
+            card.team_logo = await loadCardImage(card.team_logo);
+            card.background_art = await loadCardImage(card.background_art);
+            
+            // Create and append card element
+            const cardElement = createCardElement(card);
+            
+            // Only add holographic class if the card is actually holographic
+            if (card.is_holographic === true || card.is_holographic === 'true') {
+                cardElement.classList.add('holographic');
+            }
+            
+            gallery.appendChild(cardElement);
+        }
+
+    } catch (error) {
+        console.error('Error displaying cards:', error);
+        gallery.innerHTML = '<div class="error">Error loading cards. Please try again later.</div>';
+    }
+}
+
 // Function to create a card element
 function createCardElement(cardData) {
     const card = document.createElement('div');
     card.className = 'robot-card';
     card.setAttribute('data-card-id', cardData.id);
     
-    if (cardData.is_holographic) {
+    // Only add holographic class if the card is actually holographic
+    if (cardData.is_holographic === true || cardData.is_holographic === 'true') {
         card.classList.add('holographic');
     }
 
@@ -175,49 +224,6 @@ function createCardElement(cardData) {
     card.addEventListener('click', () => showCardDetails(cardData));
     
     return card;
-}
-
-// Function to load and display all cards
-async function displayCards() {
-    const gallery = document.getElementById('card-gallery');
-    gallery.innerHTML = '<div class="loading">Loading cards...</div>';
-
-    try {
-        // Load all cards using the card-data-handler
-        let cards = await loadAllCards();
-        
-        // Clear loading message
-        gallery.innerHTML = '';
-
-        // Process images and ensure abilities are arrays for all cards
-        for (let card of cards) {
-            // Ensure abilities is an array
-            if (!Array.isArray(card.abilities)) {
-                try {
-                    card.abilities = typeof card.abilities === 'string' ? 
-                        JSON.parse(card.abilities) : [];
-                    if (!Array.isArray(card.abilities)) {
-                        card.abilities = [];
-                    }
-                } catch {
-                    card.abilities = [];
-                }
-            }
-
-            // Process images
-            card.image = await loadCardImage(card.image);
-            card.team_logo = await loadCardImage(card.team_logo);
-            card.background_art = await loadCardImage(card.background_art);
-            
-            // Create and append card element
-            const cardElement = createCardElement(card);
-            gallery.appendChild(cardElement);
-        }
-
-    } catch (error) {
-        console.error('Error displaying cards:', error);
-        gallery.innerHTML = '<div class="error">Error loading cards. Please try again later.</div>';
-    }
 }
 
 // Initialize the gallery when the page loads
