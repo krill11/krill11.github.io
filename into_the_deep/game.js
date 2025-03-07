@@ -3,6 +3,17 @@ const FIELD_SIZE = 12 * 12; // 12x12 feet in inches
 const CANVAS_SIZE = 800; // pixels
 const SCALE = CANVAS_SIZE / FIELD_SIZE;
 
+// Game timing constants
+const AUTONOMOUS_PERIOD = 30000; // 30 seconds in milliseconds
+const TELEOP_PERIOD = 120000; // 2 minutes in milliseconds
+
+// Game state tracking
+let gameStartTime = null;
+let autonomousEndTime = null;
+let gamePeriod = 'pre-game'; // 'pre-game', 'autonomous', 'teleop', 'ended'
+let autonomousScoring = []; // Track scoring during autonomous
+let gameActive = false;
+
 // Canvas setup (moved to global scope)
 let canvas;
 let ctx;
@@ -283,6 +294,9 @@ const keys = {
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
+    // Start game on first control input
+    startGame();
+
     if (e.key.toLowerCase() === 'w') keys.w = true;
     if (e.key.toLowerCase() === 'a') keys.a = true;
     if (e.key.toLowerCase() === 's') keys.s = true;
@@ -498,6 +512,8 @@ function handleIntake() {
 }
 
 function handleOuttake() {
+    if (!gameActive) return; // Don't allow scoring if game hasn't started or has ended
+
     // Calculate the position of the outtake end (extended from front of robot)
     const outtakeEndX = robot.x + Math.cos(robot.angle) * (ROBOT_SIZE/2 + OUTTAKE_LENGTH);
     const outtakeEndY = robot.y + Math.sin(robot.angle) * (ROBOT_SIZE/2 + OUTTAKE_LENGTH);
@@ -525,11 +541,19 @@ function handleOuttake() {
             // Score the pixel and add it to the basket's stack
             scoredPixel = true;
             // Apply score based on pixel color
+            let points = 0;
             if (robot.pixelColor === PIXEL_COLORS.BLUE) {
-                score -= 15; // Penalty for blue pixels
+                points = -15; // Penalty for blue pixels
             } else {
-                score += 8; // Normal score for other colors
+                points = 8; // Normal score for other colors
             }
+            
+            // Track scoring during autonomous
+            if (gamePeriod === 'autonomous') {
+                autonomousScoring.push(points);
+            }
+            
+            score += points;
             document.getElementById('score').textContent = score;
             
             // Constrain pixel position within basket bounds with margin
@@ -1649,6 +1673,22 @@ function gameLoop() {
     // Update
     updateRobot();
     
+    // Update period display
+    const periodElement = document.getElementById('period');
+    if (periodElement) {
+        let periodText = 'Not Started';
+        if (gamePeriod === 'autonomous') {
+            const timeLeft = Math.ceil((autonomousEndTime - Date.now()) / 1000);
+            periodText = `Autonomous (${timeLeft}s)`;
+        } else if (gamePeriod === 'teleop') {
+            const timeLeft = Math.ceil((gameStartTime + AUTONOMOUS_PERIOD + TELEOP_PERIOD - Date.now()) / 1000);
+            periodText = `TeleOp (${timeLeft}s)`;
+        } else if (gamePeriod === 'ended') {
+            periodText = 'Match Complete';
+        }
+        periodElement.textContent = periodText;
+    }
+    
     // Draw
     drawField();
     drawSubmersibleZone();
@@ -1899,4 +1939,31 @@ function lineIntersectsRect(lineStart, lineEnd, rect) {
 function isPointInRect(point, rect) {
     return point.x >= rect.x1 && point.x <= rect.x2 &&
            point.y >= rect.y1 && point.y <= rect.y2;
-} 
+}
+
+// Function to start the game periods
+function startGame() {
+    if (gameStartTime === null) {
+        gameStartTime = Date.now();
+        autonomousEndTime = gameStartTime + AUTONOMOUS_PERIOD;
+        gamePeriod = 'autonomous';
+        gameActive = true;
+        
+        // Set up period transitions
+        setTimeout(() => {
+            // End of autonomous
+            gamePeriod = 'teleop';
+            // Score autonomous points again
+            autonomousScoring.forEach(points => {
+                score += points;
+                document.getElementById('score').textContent = score;
+            });
+        }, AUTONOMOUS_PERIOD);
+
+        setTimeout(() => {
+            // End of teleop
+            gamePeriod = 'ended';
+            gameActive = false;
+        }, AUTONOMOUS_PERIOD + TELEOP_PERIOD);
+    }
+}
