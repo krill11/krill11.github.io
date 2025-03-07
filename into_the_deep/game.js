@@ -6,6 +6,8 @@ const SCALE = CANVAS_SIZE / FIELD_SIZE;
 // Game timing constants
 const AUTONOMOUS_PERIOD = 30000; // 30 seconds in milliseconds
 const TELEOP_PERIOD = 120000; // 2 minutes in milliseconds
+const CLIMB_ANIMATION_DURATION = 2500; // 2.5 seconds for climbing animation
+const CLIMB_DISTANCE = 20 * SCALE; // Distance to move under submersible zone
 
 // Game state tracking
 let gameStartTime = null;
@@ -44,26 +46,26 @@ const SAMPLE_EDGE_DISTANCE = 46.25 * SCALE; // 46.25 inches from edge (moved 1.7
 const TAPE_LINE_WIDTH = 4; // Same width as diagonal lines
 const TAPE_LINE_LENGTH = PIXEL_HEIGHT; // Same length as pixel height (3.5 inches)
 
-// Define sample positions
+// Define sample positions (mirrored)
 const leftSamples = [
-    { x: SAMPLE_EDGE_DISTANCE, y: CANVAS_SIZE - SAMPLE_WALL_DISTANCE },
-    { x: SAMPLE_EDGE_DISTANCE, y: CANVAS_SIZE - (SAMPLE_WALL_DISTANCE + SAMPLE_SPACING) },
-    { x: SAMPLE_EDGE_DISTANCE, y: CANVAS_SIZE - (SAMPLE_WALL_DISTANCE + SAMPLE_SPACING * 2) }
+    { x: SAMPLE_EDGE_DISTANCE, y: SAMPLE_WALL_DISTANCE }, // Mirrored to top
+    { x: SAMPLE_EDGE_DISTANCE, y: SAMPLE_WALL_DISTANCE + SAMPLE_SPACING },
+    { x: SAMPLE_EDGE_DISTANCE, y: SAMPLE_WALL_DISTANCE + SAMPLE_SPACING * 2 }
 ];
 
 const rightSamples = [
-    { x: CANVAS_SIZE - SAMPLE_EDGE_DISTANCE, y: SAMPLE_WALL_DISTANCE },
-    { x: CANVAS_SIZE - SAMPLE_EDGE_DISTANCE, y: SAMPLE_WALL_DISTANCE + SAMPLE_SPACING },
-    { x: CANVAS_SIZE - SAMPLE_EDGE_DISTANCE, y: SAMPLE_WALL_DISTANCE + SAMPLE_SPACING * 2 }
+    { x: CANVAS_SIZE - SAMPLE_EDGE_DISTANCE, y: CANVAS_SIZE - SAMPLE_WALL_DISTANCE }, // Mirrored to bottom
+    { x: CANVAS_SIZE - SAMPLE_EDGE_DISTANCE, y: CANVAS_SIZE - (SAMPLE_WALL_DISTANCE + SAMPLE_SPACING) },
+    { x: CANVAS_SIZE - SAMPLE_EDGE_DISTANCE, y: CANVAS_SIZE - (SAMPLE_WALL_DISTANCE + SAMPLE_SPACING * 2) }
 ];
 
 // Define mirrored sample positions for red and blue samples
-const rightRedSamples = rightSamples.map(sample => ({
+const leftRedSamples = leftSamples.map(sample => ({
     x: sample.x,
     y: CANVAS_SIZE - sample.y // Mirror across horizontal center line
 }));
 
-const leftBlueSamples = leftSamples.map(sample => ({
+const rightBlueSamples = rightSamples.map(sample => ({
     x: sample.x,
     y: CANVAS_SIZE - sample.y // Mirror across horizontal center line
 }));
@@ -85,7 +87,7 @@ const SUBMERSIBLE_ZONE_HEIGHT = 29 * SCALE; // 29 inch height
 // Game state
 let score = 0;
 let robot = {
-    x: CANVAS_SIZE-SCALE*0.5,
+    x: SCALE*0.5,
     y: CANVAS_SIZE / 4, // Start in the top half of the field
     angle: 3*Math.PI/2, // in radians, 0 is facing right
     velocityX: 0, // Current X velocity
@@ -101,7 +103,15 @@ let robot = {
     pixelPosition: 'front', // Set to 'front' since we're starting with a pixel
     transferAnimationStart: 0, // Timestamp for transfer animation
     transferProgress: 0, // Progress of transfer animation (0 to 1)
-    startExtension: 0 // Store current extension as starting point
+    startExtension: 0, // Store current extension as starting point
+    climbLevel: 0, // 0 = not climbing, 1 = first level, 2 = second level
+    climbAnimationStart: 0,
+    isClimbing: false,
+    climbStartPosition: null,
+    climbEndPosition: null,
+    climbingSide: null,
+    startAngle: undefined,
+    targetAngle: undefined
 };
 
 // Dropped pixels on the floor
@@ -273,11 +283,11 @@ function generatePixels() {
     pixels.push(...placedPixels);
 }
 
-// Baskets in opposite corners with 45-degree rotation
+// Baskets in opposite corners with 45-degree rotation (mirrored)
 const BASKET_DIAGONAL_OFFSET = (BASKET_WIDTH * Math.SQRT2) / 2; // Distance from corner to basket center
 const baskets = [
-    { x: CANVAS_SIZE - BASKET_DIAGONAL_OFFSET, y: BASKET_DIAGONAL_OFFSET, angle: Math.PI/4 }, // Top-right
-    { x: BASKET_DIAGONAL_OFFSET, y: CANVAS_SIZE - BASKET_DIAGONAL_OFFSET, angle: Math.PI/4 }  // Bottom-left
+    { x: BASKET_DIAGONAL_OFFSET, y: BASKET_DIAGONAL_OFFSET, angle: 3*Math.PI/4 }, // Top-left, rotated 135 degrees
+    { x: CANVAS_SIZE - BASKET_DIAGONAL_OFFSET, y: CANVAS_SIZE - BASKET_DIAGONAL_OFFSET, angle: 3*Math.PI/4 }  // Bottom-right, rotated 135 degrees
 ];
 
 // Input handling
@@ -289,7 +299,8 @@ const keys = {
     q: false,
     e: false,
     space: false,
-    i: false
+    i: false,
+    g: false
 };
 
 // Event listeners
@@ -317,6 +328,25 @@ document.addEventListener('keydown', (e) => {
             handleOuttake();
         }
     }
+    if (e.key.toLowerCase() === 'g') {
+        const isTouchingLongSide = isRobotTouchingSubmersibleLongSide();
+        const isInTeleop = gamePeriod === 'teleop';
+        const notCurrentlyClimbing = !robot.isClimbing;
+        const canClimb = isInTeleop && isTouchingLongSide && notCurrentlyClimbing;
+        
+        console.log('Climb conditions:', {
+            isTouchingLongSide,
+            isInTeleop,
+            notCurrentlyClimbing,
+            gamePeriod,
+            robotPosition: { x: robot.x, y: robot.y },
+            canClimb
+        });
+        
+        if (canClimb) {
+            startClimb();
+        }
+    }
 });
 
 document.addEventListener('keyup', (e) => {
@@ -335,6 +365,9 @@ document.addEventListener('keyup', (e) => {
     }
     if (e.key.toLowerCase() === 'i') {
         keys.i = false;
+    }
+    if (e.key.toLowerCase() === 'g') {
+        keys.g = false;
     }
 });
 
@@ -586,11 +619,25 @@ function handleOuttake() {
     
     if (!scoredPixel) {
         // Drop the pixel on the floor at the outtake end position
+        const isInScoring = isPointInScoringArea(outtakeEndX, outtakeEndY);
+        const points = robot.pixelColor === PIXEL_COLORS.BLUE ? -15 : 2;
+        
+        if (isInScoring) {
+            score += points;
+            document.getElementById('score').textContent = score;
+            
+            // Track scoring during autonomous
+            if (gamePeriod === 'autonomous') {
+                autonomousScoring.push(points);
+            }
+        }
+        
         droppedPixels.push({
             x: outtakeEndX,
             y: outtakeEndY,
             rotation: robot.angle + Math.PI/2,
-            color: robot.pixelColor
+            color: robot.pixelColor,
+            isScoring: isInScoring
         });
     }
     
@@ -917,10 +964,22 @@ function updateRobot() {
             const pixel = droppedPixels[move.index];
             const originalX = pixel.x;
             const originalY = pixel.y;
+            const wasScoring = pixel.isScoring;
             
             // Temporarily update position
             pixel.x = move.newX;
             pixel.y = move.newY;
+            
+            // Check if pixel is in scoring area
+            const isInScoring = isPointInScoringArea(pixel.x, pixel.y);
+            
+            // Update score if scoring state changed
+            if (isInScoring !== wasScoring) {
+                const points = pixel.color === PIXEL_COLORS.BLUE ? -15 : 2;
+                score += isInScoring ? points : -points; // Add points when entering, remove when leaving
+                document.getElementById('score').textContent = score;
+                pixel.isScoring = isInScoring;
+            }
             
             // Check collisions with other pixels
             let hasCollision = false;
@@ -1195,56 +1254,54 @@ function drawField() {
     // Draw diagonal lines
     ctx.lineWidth = 4;
     
-    // Draw diagonal line in top-right corner
-    // Start 2 feet from right wall, end 2 feet from top wall
+    // Draw diagonal line in top-left corner (mirrored)
     const twoFeet = 2 * 12 * SCALE; // 2 feet in canvas pixels
     ctx.strokeStyle = '#e74c3c';
     ctx.beginPath();
-    ctx.moveTo(CANVAS_SIZE - twoFeet, 0);
-    ctx.lineTo(CANVAS_SIZE, twoFeet);
+    ctx.moveTo(twoFeet, 0);
+    ctx.lineTo(0, twoFeet);
     ctx.stroke();
     
-    // Draw diagonal line in bottom-left corner
-    // Start 2 feet from bottom wall, end 2 feet from left wall
+    // Draw diagonal line in bottom-right corner (mirrored)
     ctx.strokeStyle = '#3498db';
     ctx.beginPath();
-    ctx.moveTo(0, CANVAS_SIZE - twoFeet);
-    ctx.lineTo(twoFeet, CANVAS_SIZE);
+    ctx.moveTo(CANVAS_SIZE - twoFeet, CANVAS_SIZE);
+    ctx.lineTo(CANVAS_SIZE, CANVAS_SIZE - twoFeet);
     ctx.stroke();
     
     // Draw human player areas in corners without baskets
-    ctx.strokeStyle = '#3498db';
+    ctx.strokeStyle = '#3498db'; // Blue for top-right (swapped from red)
     ctx.lineWidth = 4;
     
-    // Top-left corner human player area
+    // Top-right corner human player area
     const oneFoot = 12 * SCALE; // 1 foot in canvas pixels
     const twoFeetVertical = 24 * SCALE; // 2 feet vertical line
     
     // Vertical line
     ctx.beginPath();
-    ctx.moveTo(oneFoot, 0);
-    ctx.lineTo(oneFoot, twoFeetVertical);
+    ctx.moveTo(CANVAS_SIZE - oneFoot, 0);
+    ctx.lineTo(CANVAS_SIZE - oneFoot, twoFeetVertical);
     ctx.stroke();
     
-    // 45-degree line inward (changed from outward)
+    // 45-degree line inward
     ctx.beginPath();
-    ctx.moveTo(oneFoot, twoFeetVertical);
-    ctx.lineTo(0, oneFoot*3);
+    ctx.moveTo(CANVAS_SIZE - oneFoot, twoFeetVertical);
+    ctx.lineTo(CANVAS_SIZE, oneFoot * 3);
     ctx.stroke();
 
-    ctx.strokeStyle = '#e74c3c';
+    ctx.strokeStyle = '#e74c3c'; // Red for bottom-left (swapped from blue)
     
-    // Bottom-right corner human player area
+    // Bottom-left corner human player area
     // Vertical line
     ctx.beginPath();
-    ctx.moveTo(CANVAS_SIZE - oneFoot, CANVAS_SIZE);
-    ctx.lineTo(CANVAS_SIZE - oneFoot, CANVAS_SIZE - twoFeetVertical);
+    ctx.moveTo(oneFoot, CANVAS_SIZE);
+    ctx.lineTo(oneFoot, CANVAS_SIZE - twoFeetVertical);
     ctx.stroke();
     
-    // 45-degree line inward (changed from outward)
+    // 45-degree line inward
     ctx.beginPath();
-    ctx.moveTo(CANVAS_SIZE - oneFoot, CANVAS_SIZE - twoFeetVertical);
-    ctx.lineTo(CANVAS_SIZE, CANVAS_SIZE-oneFoot*3);
+    ctx.moveTo(oneFoot, CANVAS_SIZE - twoFeetVertical);
+    ctx.lineTo(0, CANVAS_SIZE - oneFoot * 3);
     ctx.stroke();
     
     // Draw tape lines and samples
@@ -1266,7 +1323,7 @@ function drawTapeLinesAndSamples() {
 
     // Draw tape lines for red samples
     ctx.strokeStyle = PIXEL_COLORS.RED;
-    rightRedSamples.forEach(sample => {
+    leftRedSamples.forEach(sample => {
         ctx.beginPath();
         ctx.moveTo(sample.x - TAPE_LINE_LENGTH/2, sample.y);
         ctx.lineTo(sample.x + TAPE_LINE_LENGTH/2, sample.y);
@@ -1275,7 +1332,7 @@ function drawTapeLinesAndSamples() {
 
     // Draw tape lines for blue samples
     ctx.strokeStyle = PIXEL_COLORS.BLUE;
-    leftBlueSamples.forEach(sample => {
+    rightBlueSamples.forEach(sample => {
         ctx.beginPath();
         ctx.moveTo(sample.x - TAPE_LINE_LENGTH/2, sample.y);
         ctx.lineTo(sample.x + TAPE_LINE_LENGTH/2, sample.y);
@@ -1412,29 +1469,115 @@ function drawBaskets() {
 }
 
 function drawRobot() {
+    // Roller configuration
+    const rollerRadius = 6;
+    const rollerOffset = ROBOT_SIZE * 0.1;
+    const rollerSpeed = Date.now() / 100; // Controls roller rotation speed
+
     ctx.save();
     ctx.translate(robot.x, robot.y);
     ctx.rotate(robot.angle);
     
     // Robot body with rounded corners
-    const cornerRadius = ROBOT_SIZE * 0.15; // 15% of robot size for rounded corners
-    ctx.fillStyle = '#e74c3c';
+    const cornerRadius = ROBOT_SIZE * 0.15;
+    
+    // Change color based on climbing state
+    if (robot.isClimbing) {
+        // Pulsing effect during climb
+        const pulseIntensity = Math.sin(Date.now() / 100) * 0.2 + 0.8;
+        ctx.fillStyle = `rgba(192, 57, 43, ${pulseIntensity})`;
+        
+        // Add climbing glow effect
+        ctx.shadowColor = '#e74c3c';
+        ctx.shadowBlur = 20;
+    } else if (robot.climbLevel > 0) {
+        ctx.fillStyle = '#c0392b'; // Darker red when climbed
+        // Add level-based glow
+        ctx.shadowColor = '#e74c3c';
+        ctx.shadowBlur = 10 * robot.climbLevel;
+    } else {
+        ctx.fillStyle = '#e74c3c';
+    }
+    
+    // Draw robot body
     ctx.beginPath();
     ctx.moveTo(-ROBOT_SIZE/2 + cornerRadius, -ROBOT_SIZE/2);
-    // Top edge and top-right corner
     ctx.lineTo(ROBOT_SIZE/2 - cornerRadius, -ROBOT_SIZE/2);
     ctx.arcTo(ROBOT_SIZE/2, -ROBOT_SIZE/2, ROBOT_SIZE/2, -ROBOT_SIZE/2 + cornerRadius, cornerRadius);
-    // Right edge and bottom-right corner
     ctx.lineTo(ROBOT_SIZE/2, ROBOT_SIZE/2 - cornerRadius);
     ctx.arcTo(ROBOT_SIZE/2, ROBOT_SIZE/2, ROBOT_SIZE/2 - cornerRadius, ROBOT_SIZE/2, cornerRadius);
-    // Bottom edge and bottom-left corner
     ctx.lineTo(-ROBOT_SIZE/2 + cornerRadius, ROBOT_SIZE/2);
     ctx.arcTo(-ROBOT_SIZE/2, ROBOT_SIZE/2, -ROBOT_SIZE/2, ROBOT_SIZE/2 - cornerRadius, cornerRadius);
-    // Left edge and top-left corner
     ctx.lineTo(-ROBOT_SIZE/2, -ROBOT_SIZE/2 + cornerRadius);
     ctx.arcTo(-ROBOT_SIZE/2, -ROBOT_SIZE/2, -ROBOT_SIZE/2 + cornerRadius, -ROBOT_SIZE/2, cornerRadius);
     ctx.closePath();
     ctx.fill();
+    
+    // Reset shadow for other drawings
+    ctx.shadowBlur = 0;
+    
+    // Draw climbing mechanism indicator on front of robot
+    const climbIndicatorWidth = ROBOT_SIZE * 0.25; // Reduced from 0.4 to 0.25
+    const climbIndicatorHeight = ROBOT_SIZE * 0.1; // Reduced from 0.15 to 0.1
+    
+    // Draw base plate on front face
+    ctx.fillStyle = '#95a5a6';
+    ctx.fillRect(ROBOT_SIZE/2, -climbIndicatorWidth/2, climbIndicatorHeight, climbIndicatorWidth);
+    
+    // Draw hooks on the climbing mechanism
+    const hookSize = climbIndicatorHeight * 0.8;
+    ctx.strokeStyle = '#7f8c8d';
+    ctx.lineWidth = 2; // Reduced from 3 to 2
+    
+    // Left hook (now on top of the front face)
+    ctx.beginPath();
+    ctx.moveTo(ROBOT_SIZE/2 + climbIndicatorHeight, -climbIndicatorWidth/4);
+    ctx.lineTo(ROBOT_SIZE/2 + climbIndicatorHeight + hookSize, -climbIndicatorWidth/4);
+    ctx.lineTo(ROBOT_SIZE/2 + climbIndicatorHeight + hookSize, -climbIndicatorWidth/4 + hookSize/2);
+    ctx.stroke();
+    
+    // Right hook (now on bottom of the front face)
+    ctx.beginPath();
+    ctx.moveTo(ROBOT_SIZE/2 + climbIndicatorHeight, climbIndicatorWidth/4);
+    ctx.lineTo(ROBOT_SIZE/2 + climbIndicatorHeight + hookSize, climbIndicatorWidth/4);
+    ctx.lineTo(ROBOT_SIZE/2 + climbIndicatorHeight + hookSize, climbIndicatorWidth/4 - hookSize/2);
+    ctx.stroke();
+    
+    // Add climbing indicator arrows when climbing
+    if (robot.isClimbing) {
+        const arrowSize = ROBOT_SIZE * 0.2;
+        const arrowSpacing = ROBOT_SIZE * 0.15;
+        const arrowCount = 3;
+        
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        
+        // Draw arrows pointing left (90 degrees counterclockwise from up)
+        for (let i = 0; i < arrowCount; i++) {
+            const x = i * arrowSpacing; // Now using x instead of y for spacing
+            const opacity = Math.sin((Date.now() / 200) + i * Math.PI/3) * 0.5 + 0.5;
+            ctx.globalAlpha = opacity;
+            
+            // Draw left pointing arrow
+            ctx.beginPath();
+            ctx.moveTo(x, -arrowSize/2);
+            ctx.lineTo(x - arrowSize/2, 0);
+            ctx.lineTo(x, arrowSize/2);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+    }
+    
+    // Add climb level indicator
+    if (robot.climbLevel > 0) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`L${robot.climbLevel + 1}`, 0, 0);
+        
+        // Remove the side hooks when climbed
+    }
     
     // LED strip indicator around the robot border
     if (robot.hasPixel) {
@@ -1525,7 +1668,7 @@ function drawRobot() {
             ctx.fillStyle = robot.pixelColor;
             ctx.save();
             ctx.translate(currentLength, 0);
-            ctx.rotate(Math.PI/2); // Keep consistent orientation throughout
+            ctx.rotate(Math.PI/2); // Only rotate 90 degrees since we're already in robot's rotated context
             ctx.fillRect(-PIXEL_WIDTH/2, -PIXEL_HEIGHT/2, PIXEL_WIDTH, PIXEL_HEIGHT);
             ctx.restore();
         } else if (robot.pixelPosition === 'front') {
@@ -1545,7 +1688,7 @@ function drawRobot() {
             ctx.fillStyle = robot.pixelColor;
             ctx.save();
             ctx.translate(ROBOT_SIZE/2 + OUTTAKE_LENGTH, 0);
-            ctx.rotate(Math.PI/2);
+            ctx.rotate(Math.PI/2); // Only rotate 90 degrees since we're already in robot's rotated context
             ctx.fillRect(-PIXEL_WIDTH/2, -PIXEL_HEIGHT/2, PIXEL_WIDTH, PIXEL_HEIGHT);
             ctx.restore();
         }
@@ -1648,7 +1791,36 @@ function drawRobot() {
         ctx.beginPath();
         ctx.arc(slideEndX, slideEndY, 8, 0, Math.PI * 2);
         ctx.fill();
-        
+
+        // Draw animated intake rollers at the end of the slides
+        [-1, 1].forEach(side => {
+            // Calculate roller position perpendicular to slide direction
+            const rollerX = slideEndX + Math.cos(robot.slideAngle + Math.PI/2) * (rollerOffset * side);
+            const rollerY = slideEndY + Math.sin(robot.slideAngle + Math.PI/2) * (rollerOffset * side);
+
+            // Draw roller base
+            ctx.fillStyle = '#95a5a6';
+            ctx.beginPath();
+            ctx.arc(rollerX, rollerY, rollerRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw roller "teeth" for spinning effect
+            ctx.strokeStyle = '#7f8c8d';
+            ctx.lineWidth = 2;
+            for (let j = 0; j < 4; j++) {
+                const angle = (j * Math.PI / 2) + rollerSpeed;
+                const startX = rollerX + Math.cos(angle) * rollerRadius;
+                const startY = rollerY + Math.sin(angle) * rollerRadius;
+                const endX = rollerX + Math.cos(angle) * (rollerRadius - 3);
+                const endY = rollerY + Math.sin(angle) * (rollerRadius - 3);
+                
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+            }
+        });
+
         // Draw intake range indicator (semi-transparent)
         ctx.fillStyle = 'rgba(127, 140, 141, 0.2)';
         ctx.beginPath();
@@ -1660,7 +1832,7 @@ function drawRobot() {
             ctx.fillStyle = robot.pixelColor;
             ctx.save();
             ctx.translate(slideEndX, slideEndY);
-            ctx.rotate(Math.PI/4);
+            ctx.rotate(robot.slideAngle + Math.PI/2); // Add 90 degrees to the rotation
             ctx.fillRect(-PIXEL_WIDTH/2, -PIXEL_HEIGHT/2, PIXEL_WIDTH, PIXEL_HEIGHT);
             ctx.restore();
         }
@@ -1669,9 +1841,22 @@ function drawRobot() {
     ctx.restore();
 }
 
+let lastBluePixelPenaltyTime = 0; // Track last penalty time for blue pixels
+
 function gameLoop() {
     // Update
     updateRobot();
+    updateClimbing();
+    
+    // Handle blue pixel penalties
+    if (gameActive && robot.hasPixel && robot.pixelColor === PIXEL_COLORS.BLUE) {
+        const currentTime = Date.now();
+        if (currentTime - lastBluePixelPenaltyTime >= 5000) { // Check every 5 seconds
+            score -= 5; // Deduct 5 points
+            document.getElementById('score').textContent = score;
+            lastBluePixelPenaltyTime = currentTime;
+        }
+    }
     
     // Update period display
     const periodElement = document.getElementById('period');
@@ -1739,8 +1924,9 @@ document.addEventListener('DOMContentLoaded', () => {
         droppedPixels.push({
             x: sample.x,
             y: sample.y,
-            rotation: Math.PI/2, // 90 degrees rotation
-            color: PIXEL_COLORS.YELLOW
+            rotation: Math.PI/2,
+            color: PIXEL_COLORS.YELLOW,
+            isScoring: false
         });
     });
     
@@ -1748,28 +1934,31 @@ document.addEventListener('DOMContentLoaded', () => {
         droppedPixels.push({
             x: sample.x,
             y: sample.y,
-            rotation: Math.PI/2, // 90 degrees rotation
-            color: PIXEL_COLORS.YELLOW
+            rotation: Math.PI/2,
+            color: PIXEL_COLORS.YELLOW,
+            isScoring: false
         });
     });
 
-    // Add red samples to droppedPixels array (now on right side)
-    rightRedSamples.forEach(sample => {
+    // Add red samples to droppedPixels array (now on left side)
+    leftRedSamples.forEach(sample => {
         droppedPixels.push({
             x: sample.x,
             y: sample.y,
-            rotation: Math.PI/2, // 90 degrees rotation
-            color: PIXEL_COLORS.RED
+            rotation: Math.PI/2,
+            color: PIXEL_COLORS.RED,
+            isScoring: false
         });
     });
     
-    // Add blue samples to droppedPixels array (now on left side)
-    leftBlueSamples.forEach(sample => {
+    // Add blue samples to droppedPixels array (now on right side)
+    rightBlueSamples.forEach(sample => {
         droppedPixels.push({
             x: sample.x,
             y: sample.y,
-            rotation: Math.PI/2, // 90 degrees rotation
-            color: PIXEL_COLORS.BLUE
+            rotation: Math.PI/2,
+            color: PIXEL_COLORS.BLUE,
+            isScoring: false
         });
     });
     
@@ -1952,6 +2141,7 @@ function startGame() {
         // Set up period transitions
         setTimeout(() => {
             // End of autonomous
+            checkParkingBonus(); // Check for parking bonus at end of autonomous
             gamePeriod = 'teleop';
             // Score autonomous points again
             autonomousScoring.forEach(points => {
@@ -1962,8 +2152,254 @@ function startGame() {
 
         setTimeout(() => {
             // End of teleop
-            gamePeriod = 'ended';
-            gameActive = false;
+            checkParkingBonus(); // Check for parking bonus at end of teleop
+            // If robot is climbing, let the animation finish before ending
+            if (!robot.isClimbing) {
+                gamePeriod = 'ended';
+                gameActive = false;
+                // Score climbing points
+                const climbPoints = robot.climbLevel * 15;
+                if (climbPoints > 0) {
+                    score += climbPoints;
+                    document.getElementById('score').textContent = score;
+                    const periodElement = document.getElementById('period');
+                    periodElement.textContent = `Match Complete (+${climbPoints} Climb L${robot.climbLevel})`;
+                }
+            }
         }, AUTONOMOUS_PERIOD + TELEOP_PERIOD);
     }
+}
+
+// Add parking zone check functions
+function isRobotInHumanPlayerArea(robotCorners) {
+    const oneFoot = 12 * SCALE;
+    const twoFeetVertical = 24 * SCALE;
+    
+    // Define the triangular area for top-right
+    const topRightArea = [
+        {x: CANVAS_SIZE, y: 0},
+        {x: CANVAS_SIZE - oneFoot, y: 0},
+        {x: CANVAS_SIZE - oneFoot, y: twoFeetVertical},
+        {x: CANVAS_SIZE, y: oneFoot * 3}
+    ];
+    
+    // Define the triangular area for bottom-left
+    const bottomLeftArea = [
+        {x: 0, y: CANVAS_SIZE},
+        {x: oneFoot, y: CANVAS_SIZE},
+        {x: oneFoot, y: CANVAS_SIZE - twoFeetVertical},
+        {x: 0, y: CANVAS_SIZE - oneFoot * 3}
+    ];
+    
+    // Check if any robot corner is in either area
+    for (const corner of robotCorners) {
+        if (isPointInPolygon(corner, topRightArea) || isPointInPolygon(corner, bottomLeftArea)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+function isRobotTouchingSubmersibleLongSide() {
+    // If already at level 1, allow climbing without touching the long side
+    if (robot.climbLevel === 1) {
+        return true;
+    }
+
+    const zoneLeft = submersibleZone.x - submersibleZone.width/2;
+    const zoneRight = submersibleZone.x + submersibleZone.width/2;
+    const zoneTop = submersibleZone.y - submersibleZone.height/2;
+    const zoneBottom = submersibleZone.y + submersibleZone.height/2;
+    
+    // Get robot corners
+    const robotCorners = getRobotCorners(robot.x, robot.y, robot.angle);
+    
+    // Define tolerances
+    const sideTolerance = ROBOT_SIZE * 0.75; // Tolerance for detecting proximity to long sides
+    const horizontalMargin = ROBOT_SIZE * 0.5; // Margin for horizontal bounds
+    
+    // Check if robot's orientation is correct (slides facing the submersible zone)
+    // The slide side is the back of the robot (angle + PI)
+    const slideAngle = (robot.angle + Math.PI) % (2 * Math.PI);
+    const isOrientedUp = Math.abs(slideAngle - Math.PI/2) < Math.PI/4; // Pointing up ±45°
+    const isOrientedDown = Math.abs(slideAngle - 3*Math.PI/2) < Math.PI/4; // Pointing down ±45°
+    
+    // Check if any robot corner is near the long sides (top and bottom) and within horizontal bounds
+    for (const corner of robotCorners) {
+        const distanceToTop = Math.abs(corner.y - zoneTop);
+        const distanceToBottom = Math.abs(corner.y - zoneBottom);
+        const withinHorizontalBounds = corner.x >= zoneLeft - horizontalMargin && 
+                                     corner.x <= zoneRight + horizontalMargin;
+        
+        // Only allow initial climb if the robot's slide side is facing the correct direction
+        if (distanceToTop < sideTolerance && withinHorizontalBounds && isOrientedDown) {
+            console.log('Robot touching top side with correct orientation');
+            return true;
+        }
+        if (distanceToBottom < sideTolerance && withinHorizontalBounds && isOrientedUp) {
+            console.log('Robot touching bottom side with correct orientation');
+            return true;
+        }
+    }
+    
+    // Log position and orientation data for debugging
+    console.log('Robot position check:', {
+        robotX: robot.x,
+        robotY: robot.y,
+        robotAngle: robot.angle,
+        slideAngle,
+        isOrientedUp,
+        isOrientedDown,
+        withinHorizontalBounds: robot.x >= zoneLeft - horizontalMargin && 
+                               robot.x <= zoneRight + horizontalMargin,
+        climbLevel: robot.climbLevel
+    });
+    
+    return false;
+}
+
+function isPointInPolygon(point, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x, yi = polygon[i].y;
+        const xj = polygon[j].x, yj = polygon[j].y;
+        
+        const intersect = ((yi > point.y) !== (yj > point.y))
+            && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+function checkParkingBonus() {
+    const robotCorners = getRobotCorners(robot.x, robot.y, robot.angle);
+    if (isRobotInHumanPlayerArea(robotCorners) || isRobotTouchingSubmersibleLongSide()) {
+        score += 3;
+        document.getElementById('score').textContent = score;
+        
+        // Show parking bonus in period display
+        const periodElement = document.getElementById('period');
+        const currentText = periodElement.textContent;
+        periodElement.textContent = currentText + ' (+3 Parking Bonus)';
+        
+        return true;
+    }
+    return false;
+}
+
+// Add climbing functions
+function startClimb() {
+    if (robot.climbLevel >= 2 || robot.isClimbing) return;
+    
+    const zoneTop = submersibleZone.y - submersibleZone.height/2;
+    const zoneBottom = submersibleZone.y + submersibleZone.height/2;
+    
+    // For level 1 to 2 climb, determine side based on current position
+    let isTopSide;
+    if (robot.climbLevel === 1) {
+        // If already at level 1, determine side based on position relative to zone center
+        isTopSide = robot.y < submersibleZone.y;
+    } else {
+        // For initial climb, determine side based on slide orientation
+        const slideAngle = (robot.angle + Math.PI) % (2 * Math.PI);
+        isTopSide = Math.abs(slideAngle - 3*Math.PI/2) < Math.PI/4; // Slides pointing down
+    }
+    
+    robot.isClimbing = true;
+    robot.climbAnimationStart = Date.now();
+    robot.climbStartPosition = {x: robot.x, y: robot.y};
+    robot.startAngle = robot.angle;
+    
+    // Always rotate to PI/2 (facing up) during climb
+    robot.targetAngle = Math.PI/2;
+    
+    // Calculate climb distance (1 inch)
+    const CLIMB_INCHES = 1;
+    const climbDistance = CLIMB_INCHES * SCALE;
+    
+    // Calculate end position (move into the submersible zone)
+    const targetY = isTopSide ? zoneTop + climbDistance : zoneBottom - climbDistance;
+    robot.climbEndPosition = {x: robot.x, y: targetY};
+    robot.climbingSide = isTopSide ? 'top' : 'bottom';
+    
+    console.log('Climb started:', {
+        startPos: robot.climbStartPosition,
+        endPos: robot.climbEndPosition,
+        startAngle: robot.startAngle,
+        targetAngle: robot.targetAngle,
+        side: robot.climbingSide,
+        climbLevel: robot.climbLevel
+    });
+}
+
+function updateClimbing() {
+    if (!robot.isClimbing) return;
+    
+    const currentTime = Date.now();
+    const elapsedTime = currentTime - robot.climbAnimationStart;
+    const progress = Math.min(elapsedTime / CLIMB_ANIMATION_DURATION, 1);
+    
+    // Use easeInOutCubic for smooth animation
+    const t = progress < 0.5 ? 4 * progress * progress * progress : 
+        1 - Math.pow(-2 * progress + 2, 3) / 2;
+    
+    // Update robot position with minimal horizontal movement
+    if (robot.climbStartPosition && robot.climbEndPosition) {
+        // Calculate vertical movement
+        robot.y = robot.climbStartPosition.y + (robot.climbEndPosition.y - robot.climbStartPosition.y) * t;
+        
+        // Add very slight horizontal stabilization (max 1/8 of robot size)
+        const stabilizeAmount = ROBOT_SIZE * 0.125;
+        const stabilizeOffset = Math.sin(progress * Math.PI) * stabilizeAmount;
+        robot.x = robot.climbStartPosition.x + stabilizeOffset;
+    }
+    
+    // Update robot rotation - rotate more quickly at start, then slow down
+    if (robot.startAngle !== undefined && robot.targetAngle !== undefined) {
+        // Use a modified easing for rotation (faster at start)
+        const rotationT = Math.pow(t, 0.7); // Adjust power for rotation speed
+        
+        // Calculate shortest rotation direction
+        let angleDiff = robot.targetAngle - robot.startAngle;
+        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+        
+        robot.angle = robot.startAngle + angleDiff * rotationT;
+    }
+    
+    if (progress >= 1) {
+        robot.isClimbing = false;
+        robot.climbLevel++;
+        // Ensure final angle is exactly the target angle
+        robot.angle = robot.targetAngle;
+        console.log('Climb completed:', {
+            newLevel: robot.climbLevel,
+            finalPosition: {x: robot.x, y: robot.y},
+            finalAngle: robot.angle
+        });
+    }
+}
+
+// Add function to check if a point is in scoring areas
+function isPointInScoringArea(x, y) {
+    const oneFoot = 12 * SCALE;
+    const twoFeet = 24 * SCALE;
+    
+    // Check top-left scoring area
+    const topLeftArea = [
+        {x: 0, y: 0},
+        {x: twoFeet, y: 0},
+        {x: 0, y: twoFeet}
+    ];
+    
+    // Check bottom-right scoring area
+    const bottomRightArea = [
+        {x: CANVAS_SIZE, y: CANVAS_SIZE},
+        {x: CANVAS_SIZE - twoFeet, y: CANVAS_SIZE},
+        {x: CANVAS_SIZE, y: CANVAS_SIZE - twoFeet}
+    ];
+    
+    const point = {x, y};
+    return isPointInPolygon(point, topLeftArea) || isPointInPolygon(point, bottomRightArea);
 }

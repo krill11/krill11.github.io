@@ -70,6 +70,13 @@ h1 {
     color: #ff9933;
 }
 
+.bonus-details {
+    font-size: 0.9em;
+    margin-left: 10px;
+    color: #ff9933;
+    opacity: 0.9;
+}
+
 .scoring-info span {
     margin: 0 5px;
 }
