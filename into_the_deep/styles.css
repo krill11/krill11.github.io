@@ -11,7 +11,9 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 90vh;
+    height: 90vh;
+    max-height: 90vh;
     padding: 20px;
 }
 
