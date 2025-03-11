@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Into The Deep - Auto Play</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #333;
+            margin: 20px;
+        }
+        
+        .game-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .score-display, .period-display {
+            background-color: #333;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #333;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-info">
+        <div class="score-display">Score: <span id="score">0</span></div>
+        <div class="period-display">Period: <span id="period">Not Started</span></div>
+    </div>
+    
+    <canvas id="gameCanvas"></canvas>
+    
+    <div class="controls">
+        <div class="slider-container">
+            <label for="sensitivity">Steering Sensitivity:</label>
+            <input type="range" id="sensitivity" min="0.1" max="2.0" step="0.1" value="0.8">
+            <span id="sensitivityValue">0.8</span>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        // CPU player logic
+        const CPU = {
+            // State tracking
+            state: 'DELIVERING', // Start in delivering state
+            targetPixel: null,
+            deliveryTarget: null,
+            lastStateChange: 0,
+            stateTimeout: 5000,
+            
+            // Movement parameters
+            angleThreshold: 0.1,
+            
+            // Initialize CPU
+            init() {
+                this.state = 'DELIVERING';
+                this.lastStateChange = Date.now();
+                startGame();
+            },
+            
+            // Get outtake position
+            getOuttakePosition() {
+                // Calculate position at the front of the robot
+                const slideExtension = robot.slidesExtended ? ROBOT_SIZE * 2 : ROBOT_SIZE;
+                return {
+                    x: robot.x + Math.cos(robot.angle) * slideExtension,
+                    y: robot.y + Math.sin(robot.angle) * slideExtension
+                };
+            },
+            
+            // Draw debug line to target
+            drawPathToTarget(ctx, target) {
+                ctx.save();
+                // Draw path to target
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(robot.x, robot.y);
+                ctx.lineTo(target.x, target.y);
+                ctx.stroke();
+                
+                // Draw debug info
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                const dist = this.getDistanceToTarget(target);
+                ctx.fillText(`Distance to basket: ${dist.toFixed(1)}`, 10, 20);
+                ctx.fillText(`Has pixel: ${robot.hasPixel}`, 10, 40);
+                ctx.fillText(`Robot angle: ${(robot.angle * 180 / Math.PI).toFixed(1)}°`, 10, 60);
+                ctx.fillText(`Robot pos: ${robot.x.toFixed(1)}, ${robot.y.toFixed(1)}`, 10, 80);
+                ctx.fillText(`Target pos: ${target.x.toFixed(1)}, ${target.y.toFixed(1)}`, 10, 100);
+                ctx.fillText(`Keys: ${Object.entries(keys).filter(([k,v]) => v).map(([k]) => k).join(', ')}`, 10, 120);
+                
+                // Draw robot direction
+                ctx.strokeStyle = 'blue';
+                ctx.beginPath();
+                ctx.moveTo(robot.x, robot.y);
+                ctx.lineTo(
+                    robot.x + Math.cos(robot.angle) * ROBOT_SIZE,
+                    robot.y + Math.sin(robot.angle) * ROBOT_SIZE
+                );
+                ctx.stroke();
+                
+                // Draw target area
+                ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+                ctx.beginPath();
+                ctx.arc(target.x, target.y, ROBOT_SIZE, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.restore();
+            },
+            
+            // Calculate angle to target
+            getAngleToTarget(target) {
+                return Math.atan2(target.y - robot.y, target.x - robot.x);
+            },
+            
+            // Get distance to target
+            getDistanceToTarget(target) {
+                return Math.sqrt(
+                    Math.pow(target.x - robot.x, 2) + 
+                    Math.pow(target.y - robot.y, 2)
+                );
+            },
+            
+            // Find the nearest pixel to the robot
+            findNearestPixel() {
+                let bestPixel = null;
+                let bestScore = -Infinity;
+                
+                // Score function that considers both distance and angle
+                const scorePixel = (pixel) => {
+                    const dist = Math.sqrt(
+                        Math.pow(pixel.x - robot.x, 2) + 
+                        Math.pow(pixel.y - robot.y, 2)
+                    );
+                    
+                    // Calculate angle to pixel relative to current robot angle
+                    const angleToPixel = Math.atan2(pixel.y - robot.y, pixel.x - robot.x);
+                    let angleDiff = angleToPixel - (robot.angle + Math.PI); // Add PI because we want intake facing pixel
+                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                    
+                    // Prefer pixels that are:
+                    // 1. Closer to the robot
+                    // 2. More aligned with current robot orientation
+                    // 3. Not too close to walls
+                    const distanceScore = 1000 - dist;
+                    const alignmentScore = 500 * (1 - Math.abs(angleDiff) / Math.PI);
+                    const wallScore = -200 * (
+                        Math.exp(-pixel.x / (ROBOT_SIZE * 2)) + 
+                        Math.exp(-pixel.y / (ROBOT_SIZE * 2)) +
+                        Math.exp(-(CANVAS_SIZE - pixel.x) / (ROBOT_SIZE * 2)) +
+                        Math.exp(-(CANVAS_SIZE - pixel.y) / (ROBOT_SIZE * 2))
+                    );
+                    
+                    return distanceScore + alignmentScore + wallScore;
+                };
+                
+                // Check dropped pixels (ignore blue ones)
+                for (const pixel of droppedPixels) {
+                    if (pixel.color === PIXEL_COLORS.BLUE) continue;
+                    const score = scorePixel(pixel);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestPixel = pixel;
+                    }
+                }
+                
+                // Check all sample arrays (except blue samples)
+                const allSamples = [
+                    ...leftSamples,
+                    ...rightSamples,
+                    ...leftRedSamples
+                ];
+                
+                for (const sample of allSamples) {
+                    const score = scorePixel(sample);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestPixel = sample;
+                    }
+                }
+                
+                return bestPixel;
+            },
+            
+            // Simple movement towards target
+            moveTowardsTarget(target, backwards = false) {
+                // Calculate predicted position based on current velocity
+                const PREDICTION_TIME = 0.3; // Reduced prediction time for more responsive movement
+                const predictedX = robot.x + robot.velocityX * PREDICTION_TIME;
+                const predictedY = robot.y + robot.velocityY * PREDICTION_TIME;
+                
+                // Use predicted position for calculations
+                const dx = target.x - predictedX;
+                const dy = target.y - predictedY;
+                const distanceToTarget = this.getDistanceToTarget(target);
+                
+                // Reset all keys
+                Object.keys(keys).forEach(key => keys[key] = false);
+                
+                // Calculate angle difference
+                let targetAngle = this.getAngleToTarget(target);
+                if (backwards) targetAngle += Math.PI;
+                
+                let angleDiff = targetAngle - robot.angle;
+                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                
+                // Always try to move unless we're very misaligned
+                if (Math.abs(angleDiff) < Math.PI / 2) {
+                    if (backwards) {
+                        keys.s = true;
+                    } else {
+                        keys.w = true;
+                    }
+                }
+                
+                // Aggressive turning
+                if (angleDiff > this.angleThreshold) {
+                    keys.d = true;
+                } else if (angleDiff < -this.angleThreshold) {
+                    keys.a = true;
+                }
+                
+                // Use strafing for fine adjustments when close
+                if (distanceToTarget < ROBOT_SIZE * 4) {
+                    const robotPerpendicular = robot.angle + Math.PI/2;
+                    const lineAngle = Math.atan2(dy, dx);
+                    const lateralOffset = Math.sin(robotPerpendicular - lineAngle) * distanceToTarget;
+                    
+                    if (lateralOffset > ROBOT_SIZE * 0.1) {
+                        keys.q = true;
+                    } else if (lateralOffset < -ROBOT_SIZE * 0.1) {
+                        keys.e = true;
+                    }
+                }
+            },
+            
+            // Main update function
+            update() {
+                // Reset all keys first
+                Object.keys(keys).forEach(key => keys[key] = false);
+                
+                // Always target the basket
+                const target = baskets[0];
+                
+                // Draw path to target
+                this.drawPathToTarget(ctx, target);
+                
+                // Get distance to basket
+                const distToBasket = this.getDistanceToTarget(target);
+                
+                // If we just deposited, aggressively back away
+                if (this.state === 'RECOVERING') {
+                    if (Date.now() - this.lastStateChange > 1000 || distToBasket > ROBOT_SIZE * 3) {
+                        this.state = 'COLLECTING';
+                    } else {
+                        // Aggressively back away from basket
+                        keys.s = true;
+                        keys.e = true; // Add strafing to help break free
+                        return;
+                    }
+                }
+                
+                // If we have a pixel, try to deposit
+                if (robot.hasPixel) {
+                    if (distToBasket < ROBOT_SIZE * 1.0) {
+                        // When close enough, stop and deposit
+                        keys.i = true;
+                        if (robot.hasPixel && robot.pixelPosition === 'front') {
+                            handleOuttake();
+                            // Enter recovery state
+                            this.state = 'RECOVERING';
+                            this.lastStateChange = Date.now();
+                            return;
+                        }
+                    } else {
+                        // Move towards basket facing forward
+                        this.moveTowardsTarget(target, false);
+                    }
+                } else {
+                    // Find nearest pixel
+                    const nearestPixel = this.findNearestPixel();
+                    
+                    // If too close to basket, back away first
+                    if (distToBasket < ROBOT_SIZE * 2 && this.state !== 'RECOVERING') {
+                        // Back away from basket
+                        keys.s = true;
+                        keys.q = true; // Add strafing to help break free
+                    } 
+                    // If we have a valid pixel target and we're not too close to basket
+                    else if (nearestPixel) {
+                        // Move towards pixel backwards (intake facing pixel)
+                        this.moveTowardsTarget(nearestPixel, true);
+                        
+                        // If close enough, try to intake
+                        if (this.getDistanceToTarget(nearestPixel) < ROBOT_SIZE * 3) {
+                            keys.space = true;
+                        }
+                    } else {
+                        // No pixel found, move towards center
+                        const centerTarget = {
+                            x: CANVAS_SIZE / 2,
+                            y: CANVAS_SIZE / 2
+                        };
+                        this.moveTowardsTarget(centerTarget, true);
+                    }
+                }
+            }
+        };
+        
+        // Initialize CPU and start auto-play
+        document.addEventListener('DOMContentLoaded', () => {
+            CPU.init();
+            
+            // Add CPU update to game loop
+            const originalGameLoop = gameLoop;
+            window.gameLoop = function() {
+                CPU.update();
+                originalGameLoop();
+            };
+        });
+    </script>
+</body>
+</html> 
