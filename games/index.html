@@ -102,6 +102,30 @@
             background: #4CAF50;
         }
 
+        .retroarch {
+            background: #1a1a1a;
+        }
+
+        .retroarch::before {
+            background: #7B1FA2;
+        }
+
+        .ruffle {
+            background: #1a1a1a;
+        }
+
+        .ruffle::before {
+            background: #FF5722;
+        }
+
+        .fnf {
+            background: #1a1a1a;
+        }
+
+        .fnf::before {
+            background: #7C4DFF;
+        }
+
         .expansion-overlay {
             position: fixed;
             top: 50%;
@@ -141,6 +165,15 @@
         </a>
         <a href="mc/" class="game-icon minecraft" onclick="expandAndRedirect(event, '#4CAF50', 'mc')">
             <img src="mc.png" alt="Minecraft">
+        </a>
+        <a href="retroarch/" class="game-icon retroarch" onclick="expandAndRedirect(event, '#7B1FA2', 'retroarch')">
+            <img src="retroarch.png" alt="RetroArch">
+        </a>
+        <a href="ruffle/" class="game-icon ruffle" onclick="expandAndRedirect(event, '#FF5722', 'ruffle')">
+            <img src="ruffle.png" alt="Ruffle">
+        </a>
+        <a href="fridaynightfunkin/" class="game-icon fnf" onclick="expandAndRedirect(event, '#7C4DFF', 'fridaynightfunkin')">
+            <img src="fnf.png" alt="Friday Night Funkin">
         </a>
     </div>
     <script>
