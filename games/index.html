@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Launcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #background-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        .game-grid {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-icon {
+            aspect-ratio: 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            width: 100px;
+            height: 100px;
+            border-radius: 22%;
+        }
+
+        .game-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            opacity: 0.3;
+            transition: opacity 0.2s ease;
+        }
+
+        .game-icon:hover::before {
+            opacity: 0.5;
+        }
+
+        .game-icon:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .game-icon img {
+            width: 60%;
+            height: 60%;
+            object-fit: contain;
+            position: relative;
+            z-index: 2;
+            transition: opacity 0.3s ease;
+        }
+
+        .celeste {
+            background: #1a1a1a;
+        }
+
+        .celeste::before {
+            background: #64B5F6;
+        }
+
+        .minecraft {
+            background: #1a1a1a;
+        }
+
+        .minecraft::before {
+            background: #4CAF50;
+        }
+
+        .expansion-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .expansion-overlay.active {
+            width: 300vh;
+            height: 300vh;
+        }
+
+        @media (max-width: 600px) {
+            .game-grid {
+                gap: 1.5rem;
+            }
+            
+            .game-icon {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    <div id="expansion-overlay" class="expansion-overlay"></div>
+    <div class="game-grid">
+        <a href="celeste/" class="game-icon celeste" onclick="expandAndRedirect(event, '#64B5F6', 'celeste')">
+            <img src="celeste.png" alt="Celeste">
+        </a>
+        <a href="mc/" class="game-icon minecraft" onclick="expandAndRedirect(event, '#4CAF50', 'mc')">
+            <img src="mc.png" alt="Minecraft">
+        </a>
+    </div>
+    <script>
+        const canvas = document.getElementById('background-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Node class
+        class Node {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Bounce off edges
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.fill();
+            }
+        }
+
+        // Create nodes
+        const nodes = Array.from({ length: 50 }, () => new Node());
+
+        // Animation
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update and draw nodes
+            nodes.forEach(node => {
+                node.update();
+                node.draw();
+            });
+
+            // Draw connections
+            ctx.beginPath();
+            nodes.forEach((node, i) => {
+                nodes.slice(i + 1).forEach(otherNode => {
+                    const dx = node.x - otherNode.x;
+                    const dy = node.y - otherNode.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < 150) {
+                        ctx.moveTo(node.x, node.y);
+                        ctx.lineTo(otherNode.x, otherNode.y);
+                    }
+                });
+            });
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.stroke();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // Expansion animation
+        function expandAndRedirect(event, color, destination) {
+            event.preventDefault();
+            const overlay = document.getElementById('expansion-overlay');
+            const clickedIcon = event.currentTarget.querySelector('img');
+            
+            overlay.style.backgroundColor = color;
+            overlay.classList.add('active');
+            clickedIcon.style.opacity = '0';
+            
+            // Reset page state and redirect after animation
+            setTimeout(() => {
+                // Reset overlay
+                overlay.style.backgroundColor = '';
+                overlay.classList.remove('active');
+                
+                // Reset icon
+                clickedIcon.style.opacity = '1';
+                
+                // Small delay to ensure reset is complete before redirect
+                setTimeout(() => {
+                    window.location.href = destination;
+                }, 50);
+            }, 500);
+        }
+    </script>
+</body>
+</html> 
