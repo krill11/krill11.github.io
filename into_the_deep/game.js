@@ -502,19 +502,19 @@ function updateTransferAnimation() {
 
 function handleIntake() {
     // Try to intake a pixel with the linear slides
-    const slideEndX = robot.x + Math.cos(robot.slideAngle) * (LINEAR_SLIDE_LENGTH * robot.slideExtension);
-    const slideEndY = robot.y + Math.sin(robot.slideAngle) * (LINEAR_SLIDE_LENGTH * robot.slideExtension);
-    
+            const slideEndX = robot.x + Math.cos(robot.slideAngle) * (LINEAR_SLIDE_LENGTH * robot.slideExtension);
+            const slideEndY = robot.y + Math.sin(robot.slideAngle) * (LINEAR_SLIDE_LENGTH * robot.slideExtension);
+            
     // First check active pixels in the submersible zone
-    for (const pixel of pixels) {
-        if (!pixel.active) continue;
-        
+            for (const pixel of pixels) {
+                if (!pixel.active) continue;
+                
         // Calculate distance from slide end to pixel
-        const distance = Math.sqrt(
-            Math.pow(slideEndX - pixel.x, 2) + 
-            Math.pow(slideEndY - pixel.y, 2)
-        );
-        
+                const distance = Math.sqrt(
+                    Math.pow(slideEndX - pixel.x, 2) + 
+                    Math.pow(slideEndY - pixel.y, 2)
+                );
+                
         if (distance < INTAKE_RANGE) {
             robot.hasPixel = true;
             robot.pixelColor = pixel.color;
@@ -525,15 +525,15 @@ function handleIntake() {
     }
     
     // Then check dropped pixels on the floor
-    for (let i = 0; i < droppedPixels.length; i++) {
-        const pixel = droppedPixels[i];
+            for (let i = 0; i < droppedPixels.length; i++) {
+                const pixel = droppedPixels[i];
         
         // Calculate distance from slide end to pixel
-        const distance = Math.sqrt(
-            Math.pow(slideEndX - pixel.x, 2) + 
-            Math.pow(slideEndY - pixel.y, 2)
-        );
-        
+                const distance = Math.sqrt(
+                    Math.pow(slideEndX - pixel.x, 2) + 
+                    Math.pow(slideEndY - pixel.y, 2)
+                );
+                
         if (distance < INTAKE_RANGE) {
             robot.hasPixel = true;
             robot.pixelColor = pixel.color;
@@ -577,7 +577,7 @@ function handleOuttake() {
             let points = 0;
             if (robot.pixelColor === PIXEL_COLORS.BLUE) {
                 points = -15; // Penalty for blue pixels
-            } else {
+                } else {
                 points = 8; // Normal score for other colors
             }
             
@@ -670,7 +670,7 @@ function updateRobot() {
     updateTransferAnimation();
     
     // Get time delta for smooth movement (assuming 60 FPS if not available)
-    const deltaTime = 1/60;
+    const deltaTime = 1/120;
     
     // Calculate desired velocities based on input
     let targetVelocityX = 0;
@@ -1850,7 +1850,7 @@ function gameLoop() {
     
     // Handle blue pixel penalties
     if (gameActive && robot.hasPixel && robot.pixelColor === PIXEL_COLORS.BLUE) {
-        const currentTime = Date.now();
+    const currentTime = Date.now();
         if (currentTime - lastBluePixelPenaltyTime >= 5000) { // Check every 5 seconds
             score -= 5; // Deduct 5 points
             document.getElementById('score').textContent = score;

@@ -69,128 +69,60 @@
     <script>
         // CPU player logic
         const CPU = {
-            // State tracking
-            state: 'DELIVERING', // Start in delivering state
-            targetPixel: null,
-            deliveryTarget: null,
-            lastStateChange: 0,
-            stateTimeout: 5000,
-            
-            // Movement parameters
-            angleThreshold: 0.1,
-            
             // Initialize CPU
             init() {
-                this.state = 'DELIVERING';
-                this.lastStateChange = Date.now();
+                this.isRecovering = false;
+                this.recoveryStartTime = 0;
+                this.extendingSlides = false;
+                this.submersibleRecoveryStartTime = 0;
+                this.isSubmersibleRecovering = false;
+                this.recoveryAngle = 0;
                 startGame();
-            },
-            
-            // Get outtake position
-            getOuttakePosition() {
-                // Calculate position at the front of the robot
-                const slideExtension = robot.slidesExtended ? ROBOT_SIZE * 2 : ROBOT_SIZE;
-                return {
-                    x: robot.x + Math.cos(robot.angle) * slideExtension,
-                    y: robot.y + Math.sin(robot.angle) * slideExtension
-                };
-            },
-            
-            // Draw debug line to target
-            drawPathToTarget(ctx, target) {
-                ctx.save();
-                // Draw path to target
-                ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(robot.x, robot.y);
-                ctx.lineTo(target.x, target.y);
-                ctx.stroke();
-                
-                // Draw debug info
-                ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
-                const dist = this.getDistanceToTarget(target);
-                ctx.fillText(`Distance to basket: ${dist.toFixed(1)}`, 10, 20);
-                ctx.fillText(`Has pixel: ${robot.hasPixel}`, 10, 40);
-                ctx.fillText(`Robot angle: ${(robot.angle * 180 / Math.PI).toFixed(1)}°`, 10, 60);
-                ctx.fillText(`Robot pos: ${robot.x.toFixed(1)}, ${robot.y.toFixed(1)}`, 10, 80);
-                ctx.fillText(`Target pos: ${target.x.toFixed(1)}, ${target.y.toFixed(1)}`, 10, 100);
-                ctx.fillText(`Keys: ${Object.entries(keys).filter(([k,v]) => v).map(([k]) => k).join(', ')}`, 10, 120);
-                
-                // Draw robot direction
-                ctx.strokeStyle = 'blue';
-                ctx.beginPath();
-                ctx.moveTo(robot.x, robot.y);
-                ctx.lineTo(
-                    robot.x + Math.cos(robot.angle) * ROBOT_SIZE,
-                    robot.y + Math.sin(robot.angle) * ROBOT_SIZE
-                );
-                ctx.stroke();
-                
-                // Draw target area
-                ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
-                ctx.beginPath();
-                ctx.arc(target.x, target.y, ROBOT_SIZE, 0, Math.PI * 2);
-                ctx.stroke();
-                
-                ctx.restore();
-            },
-            
-            // Calculate angle to target
-            getAngleToTarget(target) {
-                return Math.atan2(target.y - robot.y, target.x - robot.x);
-            },
-            
-            // Get distance to target
-            getDistanceToTarget(target) {
-                return Math.sqrt(
-                    Math.pow(target.x - robot.x, 2) + 
-                    Math.pow(target.y - robot.y, 2)
-                );
             },
             
             // Find the nearest pixel to the robot
             findNearestPixel() {
-                let bestPixel = null;
-                let bestScore = -Infinity;
+                let nearest = null;
+                let minDist = Infinity;
                 
-                // Score function that considers both distance and angle
-                const scorePixel = (pixel) => {
-                    const dist = Math.sqrt(
-                        Math.pow(pixel.x - robot.x, 2) + 
-                        Math.pow(pixel.y - robot.y, 2)
-                    );
+                // Helper to check if a pixel is too close to braces
+                const isTooCloseToSubmersibleBraces = (pixel) => {
+                    const SAFE_DISTANCE = ROBOT_SIZE * 1.0; // Keep 2 robot lengths away from braces
+                    const zoneLeft = submersibleZone.x - submersibleZone.width/2;
+                    const zoneRight = submersibleZone.x + submersibleZone.width/2;
+                    const zoneTop = submersibleZone.y - submersibleZone.height/2;
+                    const zoneBottom = submersibleZone.y + submersibleZone.height/2;
                     
-                    // Calculate angle to pixel relative to current robot angle
-                    const angleToPixel = Math.atan2(pixel.y - robot.y, pixel.x - robot.x);
-                    let angleDiff = angleToPixel - (robot.angle + Math.PI); // Add PI because we want intake facing pixel
-                    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
-                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                    // Check distance to each brace
+                    const braces = [
+                        {x: zoneLeft, y: zoneTop}, // Top left
+                        {x: zoneRight, y: zoneTop}, // Top right
+                        {x: zoneLeft, y: zoneBottom}, // Bottom left
+                        {x: zoneRight, y: zoneBottom} // Bottom right
+                    ];
                     
-                    // Prefer pixels that are:
-                    // 1. Closer to the robot
-                    // 2. More aligned with current robot orientation
-                    // 3. Not too close to walls
-                    const distanceScore = 1000 - dist;
-                    const alignmentScore = 500 * (1 - Math.abs(angleDiff) / Math.PI);
-                    const wallScore = -200 * (
-                        Math.exp(-pixel.x / (ROBOT_SIZE * 2)) + 
-                        Math.exp(-pixel.y / (ROBOT_SIZE * 2)) +
-                        Math.exp(-(CANVAS_SIZE - pixel.x) / (ROBOT_SIZE * 2)) +
-                        Math.exp(-(CANVAS_SIZE - pixel.y) / (ROBOT_SIZE * 2))
-                    );
-                    
-                    return distanceScore + alignmentScore + wallScore;
+                    for (const brace of braces) {
+                        const dist = Math.sqrt(
+                            Math.pow(pixel.x - brace.x, 2) + 
+                            Math.pow(pixel.y - brace.y, 2)
+                        );
+                        if (dist < SAFE_DISTANCE) return true;
+                    }
+                    return false;
                 };
                 
                 // Check dropped pixels (ignore blue ones)
                 for (const pixel of droppedPixels) {
                     if (pixel.color === PIXEL_COLORS.BLUE) continue;
-                    const score = scorePixel(pixel);
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestPixel = pixel;
+                    if (isTooCloseToSubmersibleBraces(pixel)) continue;
+                    
+                    const dist = Math.sqrt(
+                        Math.pow(pixel.x - robot.x, 2) + 
+                        Math.pow(pixel.y - robot.y, 2)
+                    );
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = pixel;
                     }
                 }
                 
@@ -202,137 +134,394 @@
                 ];
                 
                 for (const sample of allSamples) {
-                    const score = scorePixel(sample);
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestPixel = sample;
+                    // Skip if sample has been collected or scored
+                    if (!sample.active || sample.scored) continue;
+                    if (isTooCloseToSubmersibleBraces(sample)) continue;
+                    
+                    const dist = Math.sqrt(
+                        Math.pow(sample.x - robot.x, 2) + 
+                        Math.pow(sample.y - robot.y, 2)
+                    );
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = sample;
+                    }
+                }
+
+                // Check pixels in submersible zone
+                for (const pixel of pixels) {
+                    // Skip if pixel is not active
+                    if (!pixel.active) continue;
+                    // Skip blue pixels
+                    if (pixel.color === PIXEL_COLORS.BLUE) continue;
+                    // Skip if too close to braces
+                    if (isTooCloseToSubmersibleBraces(pixel)) continue;
+                    
+                    const dist = Math.sqrt(
+                        Math.pow(pixel.x - robot.x, 2) + 
+                        Math.pow(pixel.y - robot.y, 2)
+                    );
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = pixel;
                     }
                 }
                 
-                return bestPixel;
+                return nearest;
+            },
+            
+            // Check if a pixel is within intake range of the slide end
+            isPixelInIntakeRange(pixel) {
+                // Don't intake pixels in scoring zone
+                const basket = baskets[0];
+                if (pixel.y < basket.y + ROBOT_SIZE) return false;
+                
+                // Get the actual slide end position - slides come out the BACK so we subtract
+                const slideEndX = robot.x - Math.cos(robot.angle) * (LINEAR_SLIDE_LENGTH * robot.slideExtension);
+                const slideEndY = robot.y - Math.sin(robot.angle) * (LINEAR_SLIDE_LENGTH * robot.slideExtension);
+                
+                // Check if slide path intersects with braces
+                const slideStart = {x: robot.x, y: robot.y};
+                const slideEnd = {x: slideEndX, y: slideEndY};
+                if (lineIntersectsBraces(slideStart, slideEnd)) return false;
+                
+                const dist = Math.sqrt(
+                    Math.pow(slideEndX - pixel.x, 2) + 
+                    Math.pow(slideEndY - pixel.y, 2)
+                );
+                
+                // Check if we're moving towards the sample (moving backwards and aligned)
+                const dx = pixel.x - robot.x;
+                const dy = pixel.y - robot.y;
+                const targetAngle = Math.atan2(dy, dx) + Math.PI; // Add PI since we want back to point at sample
+                let angleDiff = targetAngle - robot.angle;
+                while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                const isAligned = Math.abs(angleDiff) < Math.PI/4; // More forgiving angle check
+                const isMovingTowards = keys.s && isAligned;
+                
+                // Use a larger threshold if we're actively moving towards the sample
+                const threshold = isMovingTowards ? ROBOT_SIZE * 0.35 : ROBOT_SIZE * 0.35;
+                
+                return dist < threshold;
             },
             
             // Simple movement towards target
             moveTowardsTarget(target, backwards = false) {
-                // Calculate predicted position based on current velocity
-                const PREDICTION_TIME = 0.3; // Reduced prediction time for more responsive movement
-                const predictedX = robot.x + robot.velocityX * PREDICTION_TIME;
-                const predictedY = robot.y + robot.velocityY * PREDICTION_TIME;
+                // Reset movement keys only, never touch space
+                keys.w = false;
+                keys.a = false;
+                keys.s = false;
+                keys.d = false;
+                keys.q = false;
+                keys.e = false;
                 
-                // Use predicted position for calculations
-                const dx = target.x - predictedX;
-                const dy = target.y - predictedY;
-                const distanceToTarget = this.getDistanceToTarget(target);
+                // Calculate angle to target based on where we want the intake to be
+                const dx = target.x - robot.x;
+                const dy = target.y - robot.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
                 
-                // Reset all keys
-                Object.keys(keys).forEach(key => keys[key] = false);
+                // Check if we're too close to any brace
+                const BRACE_DANGER_ZONE = ROBOT_SIZE * 1.5;
+                const SLIDE_EXTENSION_BLOCK_ZONE = ROBOT_SIZE * 1.0;
+                const PRE_EXTEND_DISTANCE = ROBOT_SIZE * 4.0; // Increased from 3.0 to 4.0 to start extending earlier
+                const zoneLeft = submersibleZone.x - submersibleZone.width/2;
+                const zoneRight = submersibleZone.x + submersibleZone.width/2;
+                const zoneTop = submersibleZone.y - submersibleZone.height/2;
+                const zoneBottom = submersibleZone.y + submersibleZone.height/2;
+                
+                // Check distance to each brace
+                const braces = [
+                    {x: zoneLeft, y: zoneTop}, // Top left
+                    {x: zoneRight, y: zoneTop}, // Top right
+                    {x: zoneLeft, y: zoneBottom}, // Bottom left
+                    {x: zoneRight, y: zoneBottom} // Bottom right
+                ];
+                
+                let nearestBrace = null;
+                let minBraceDist = Infinity;
+                let pathIntersectsBrace = false;
+                
+                for (const brace of braces) {
+                    const dist = Math.sqrt(
+                        Math.pow(robot.x - brace.x, 2) + 
+                        Math.pow(robot.y - brace.y, 2)
+                    );
+                    if (dist < minBraceDist) {
+                        minBraceDist = dist;
+                        nearestBrace = brace;
+                    }
+                    
+                    // Check if path to target intersects with this brace
+                    const robotToTarget = {
+                        x: target.x - robot.x,
+                        y: target.y - robot.y
+                    };
+                    const robotToBrace = {
+                        x: brace.x - robot.x,
+                        y: brace.y - robot.y
+                    };
+                    
+                    // Project brace onto path to target
+                    const pathLength = Math.sqrt(robotToTarget.x * robotToTarget.x + robotToTarget.y * robotToTarget.y);
+                    const dot = (robotToBrace.x * robotToTarget.x + robotToBrace.y * robotToTarget.y) / pathLength;
+                    const projection = {
+                        x: (dot * robotToTarget.x) / pathLength,
+                        y: (dot * robotToTarget.y) / pathLength
+                    };
+                    
+                    // Calculate distance from brace to path
+                    const perpDist = Math.sqrt(
+                        Math.pow(robotToBrace.x - projection.x, 2) + 
+                        Math.pow(robotToBrace.y - projection.y, 2)
+                    );
+                    
+                    // Check if projection point is between robot and target
+                    const projectionDist = Math.sqrt(projection.x * projection.x + projection.y * projection.y);
+                    if (perpDist < ROBOT_SIZE * 1.0 && projectionDist < pathLength && dot > 0) {
+                        pathIntersectsBrace = true;
+                        break;
+                    }
+                }
+                
+                // If path intersects with a brace, strafe right
+                if (pathIntersectsBrace) {
+                    keys.e = true;
+                    return distance;
+                }
+                
+                // If we're too close to a brace, strafe away from it
+                if (minBraceDist < BRACE_DANGER_ZONE) {
+                    // Calculate vector from brace to robot
+                    const braceDx = robot.x - nearestBrace.x;
+                    const braceDy = robot.y - nearestBrace.y;
+                    
+                    // Calculate dot product with robot's right vector to determine which side the brace is on
+                    const robotRightX = Math.cos(robot.angle + Math.PI/2);
+                    const robotRightY = Math.sin(robot.angle + Math.PI/2);
+                    
+                    const dotProduct = braceDx * robotRightX + braceDy * robotRightY;
+                    
+                    // If dot product is positive, brace is on our right, so strafe right (e)
+                    // If dot product is negative, brace is on our left, so strafe left (q)
+                    // if (dotProduct > 0) {
+                    //     keys.e = true; // Strafe right
+                    // } else {
+                    //     keys.q = true; // Strafe left
+                    // }
+                    return distance;
+                }
+                
+                // Normal movement logic when not near braces
+                const targetAngle = backwards ?
+                    Math.atan2(dy, dx) + Math.PI :
+                    Math.atan2(dy, dx);
                 
                 // Calculate angle difference
-                let targetAngle = this.getAngleToTarget(target);
-                if (backwards) targetAngle += Math.PI;
-                
                 let angleDiff = targetAngle - robot.angle;
                 while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
                 while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
                 
-                // Always try to move unless we're very misaligned
-                if (Math.abs(angleDiff) < Math.PI / 2) {
+                // Turn if not aligned
+                if (angleDiff > 0.3) {
+                    keys.d = true;
+                    return distance;
+                } else if (angleDiff < -0.3) {
+                    keys.a = true;
+                    return distance;
+                }
+                
+                // Move if aligned
+                if (distance > ROBOT_SIZE * 0.5) {
                     if (backwards) {
+                        // For samples, always move backwards
                         keys.s = true;
+                        
+                        // Only extend slides if we're close, well-aligned, no obstacles, and not too close to braces
+                        if (distance < ROBOT_SIZE * 3 && !this.extendingSlides && 
+                            robot.slideExtension === 0 && Math.abs(angleDiff) < Math.PI/6 &&
+                            minBraceDist > SLIDE_EXTENSION_BLOCK_ZONE) {
+                            // Check if slide extension would intersect with braces
+                            const slideEnd = {
+                                x: robot.x - Math.cos(robot.angle) * LINEAR_SLIDE_LENGTH,
+                                y: robot.y - Math.sin(robot.angle) * LINEAR_SLIDE_LENGTH
+                            };
+                            if (!lineIntersectsBraces({x: robot.x, y: robot.y}, slideEnd)) {
+                                this.extendingSlides = true;
+                                keys.space = true;
+                                if (robot.slideAnimationDirection === 'none' || robot.slideAnimationDirection === 'retract') {
+                                    startSlideExtension();
+                                }
+                            }
+                        }
                     } else {
+                        // For basket, always move forwards
                         keys.w = true;
                     }
                 }
                 
-                // Aggressive turning
-                if (angleDiff > this.angleThreshold) {
-                    keys.d = true;
-                } else if (angleDiff < -this.angleThreshold) {
-                    keys.a = true;
-                }
-                
-                // Use strafing for fine adjustments when close
-                if (distanceToTarget < ROBOT_SIZE * 4) {
-                    const robotPerpendicular = robot.angle + Math.PI/2;
-                    const lineAngle = Math.atan2(dy, dx);
-                    const lateralOffset = Math.sin(robotPerpendicular - lineAngle) * distanceToTarget;
-                    
-                    if (lateralOffset > ROBOT_SIZE * 0.1) {
-                        keys.q = true;
-                    } else if (lateralOffset < -ROBOT_SIZE * 0.1) {
-                        keys.e = true;
-                    }
-                }
+                return distance;
             },
             
             // Main update function
             update() {
-                // Reset all keys first
-                Object.keys(keys).forEach(key => keys[key] = false);
-                
-                // Always target the basket
-                const target = baskets[0];
-                
-                // Draw path to target
-                this.drawPathToTarget(ctx, target);
-                
-                // Get distance to basket
-                const distToBasket = this.getDistanceToTarget(target);
-                
-                // If we just deposited, aggressively back away
-                if (this.state === 'RECOVERING') {
-                    if (Date.now() - this.lastStateChange > 1000 || distToBasket > ROBOT_SIZE * 3) {
-                        this.state = 'COLLECTING';
-                    } else {
-                        // Aggressively back away from basket
-                        keys.s = true;
-                        keys.e = true; // Add strafing to help break free
+                // ALWAYS check for samples first, before doing anything else
+                if (!robot.hasPixel) {
+                    const nearestPixel = this.findNearestPixel();
+                    // If slides are extending and we're over a sample, IMMEDIATELY retract
+                    // But only outside the submersible zone
+                    if (nearestPixel && robot.slideAnimationDirection === 'extend' && !isPointInSubmersibleZone(robot)) {
+                        const dist = Math.sqrt(
+                            Math.pow(robot.x - nearestPixel.x, 2) + 
+                            Math.pow(robot.y - nearestPixel.y, 2)
+                        );
+                        // Very aggressive check - if we're anywhere near a sample while extending, stop
+                        if (dist < ROBOT_SIZE * 1.5) {
+                            console.log('EMERGENCY SLIDE RETRACTION!');
+                            this.extendingSlides = false;
+                            keys.space = false;
+                            startSlideRetraction();
+                            return;
+                        }
+                    }
+                    
+                    // Normal intake range check
+                    if (nearestPixel && this.isPixelInIntakeRange(nearestPixel)) {
+                        console.log('IMMEDIATE SPACE RELEASE!');
+                        this.extendingSlides = false;
+                        keys.space = false;
+                        startSlideRetraction();
+                        
+                        // Only do recovery movement if we're in the submersible zone
+                        if (isPointInSubmersibleZone(robot)) {
+                            console.log('Starting submersible recovery!');
+                            this.isSubmersibleRecovering = true;
+                            this.submersibleRecoveryStartTime = Date.now();
+                            this.recoveryAngle = robot.angle;
+                            // Reset ALL movement keys
+                            keys.w = false;
+                            keys.a = false;
+                            keys.s = false;
+                            keys.d = false;
+                            keys.q = false;
+                            keys.e = false;
+                            // Start moving forward
+                            keys.w = true;
+                            return;
+                        }
                         return;
                     }
                 }
                 
-                // If we have a pixel, try to deposit
+                // Handle recovery state - takes precedence over EVERYTHING
+                if (this.isSubmersibleRecovering) {
+                    const timeInRecovery = Date.now() - this.submersibleRecoveryStartTime;
+                    if (timeInRecovery > 750) { // Reduced from 1000ms to 750ms since we're doing this for all intakes
+                        this.isSubmersibleRecovering = false;
+                    } else {
+                        // Reset ALL movement keys
+                        keys.w = false;
+                        keys.a = false;
+                        keys.s = false;
+                        keys.d = false;
+                        keys.q = false;
+                        keys.e = false;
+                        
+                        // Lock to our original angle
+                        const angleDiff = robot.angle - this.recoveryAngle;
+                        if (Math.abs(angleDiff) > 0.1) {
+                            if (angleDiff > 0) {
+                                keys.a = true;
+                            } else {
+                                keys.d = true;
+                            }
+                        }
+                        
+                        // Always move forward
+                        keys.w = true;
+                        return;
+                    }
+                }
+                
+                // Reset movement keys only, never touch space
+                keys.w = false;
+                keys.a = false;
+                keys.s = false;
+                keys.d = false;
+                keys.q = false;
+                keys.e = false;
+                
+                const basket = baskets[0];
+                const distToBasket = Math.sqrt(
+                    Math.pow(basket.x - robot.x, 2) + 
+                    Math.pow(basket.y - robot.y, 2)
+                );
+                
+                // Handle normal recovery state
+                if (this.isRecovering) {
+                    const timeInRecovery = Date.now() - this.recoveryStartTime;
+                    if (timeInRecovery > 250 || distToBasket > ROBOT_SIZE * 1.5) {
+                        this.isRecovering = false;
+                    } else {
+                        keys.s = true;
+                        return;
+                    }
+                }
+                
                 if (robot.hasPixel) {
-                    if (distToBasket < ROBOT_SIZE * 1.0) {
-                        // When close enough, stop and deposit
+                    // If we have a pixel, try to deliver it
+                    if (distToBasket < ROBOT_SIZE * 1.2) {
+                        // When close enough, deposit
                         keys.i = true;
+                        
                         if (robot.hasPixel && robot.pixelPosition === 'front') {
                             handleOuttake();
-                            // Enter recovery state
-                            this.state = 'RECOVERING';
-                            this.lastStateChange = Date.now();
-                            return;
+                            // Start recovery after depositing
+                            this.isRecovering = true;
+                            this.recoveryStartTime = Date.now();
                         }
                     } else {
-                        // Move towards basket facing forward
-                        this.moveTowardsTarget(target, false);
+                        // Move towards basket
+                        this.moveTowardsTarget(basket, false);
                     }
                 } else {
-                    // Find nearest pixel
+                    // Always get fresh position of nearest pixel
                     const nearestPixel = this.findNearestPixel();
                     
-                    // If too close to basket, back away first
-                    if (distToBasket < ROBOT_SIZE * 2 && this.state !== 'RECOVERING') {
-                        // Back away from basket
-                        keys.s = true;
-                        keys.q = true; // Add strafing to help break free
-                    } 
-                    // If we have a valid pixel target and we're not too close to basket
-                    else if (nearestPixel) {
-                        // Move towards pixel backwards (intake facing pixel)
-                        this.moveTowardsTarget(nearestPixel, true);
+                    if (nearestPixel) {
+                        // Move towards the current position
+                        const distance = this.moveTowardsTarget(nearestPixel, true);
                         
-                        // If close enough, try to intake
-                        if (this.getDistanceToTarget(nearestPixel) < ROBOT_SIZE * 3) {
-                            keys.space = true;
+                        // Calculate angle to target for slide extension check
+                        const dx = nearestPixel.x - robot.x;
+                        const dy = nearestPixel.y - robot.y;
+                        const targetAngle = Math.atan2(dy, dx) + Math.PI; // Add PI since we're going backwards
+                        let angleDiff = targetAngle - robot.angle;
+                        while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+                        while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                        
+                        // Debug state when near a sample
+                        if (distance < ROBOT_SIZE * 3) {
+                            console.log('Near sample state:', {
+                                distance,
+                                slideExtension: robot.slideExtension,
+                                slideAnimationDirection: robot.slideAnimationDirection,
+                                extendingSlides: this.extendingSlides,
+                                spacePressed: keys.space,
+                                angleDiff: angleDiff * 180 / Math.PI,
+                                inIntakeRange: this.isPixelInIntakeRange(nearestPixel)
+                            });
                         }
-                    } else {
-                        // No pixel found, move towards center
-                        const centerTarget = {
-                            x: CANVAS_SIZE / 2,
-                            y: CANVAS_SIZE / 2
-                        };
-                        this.moveTowardsTarget(centerTarget, true);
+                        
+                        // Start extending slides when getting close and well-aligned
+                        if (distance < ROBOT_SIZE * 4.0 && !this.extendingSlides && robot.slideExtension === 0 && Math.abs(angleDiff) < Math.PI/6) {
+                            console.log('Starting slide extension!');
+                            this.extendingSlides = true;
+                            keys.space = true;
+                            if (robot.slideAnimationDirection === 'none' || robot.slideAnimationDirection === 'retract') {
+                                startSlideExtension();
+                            }
+                        }
                     }
                 }
             }
