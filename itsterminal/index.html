@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Visual Experience</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="northern-lights"></canvas>
+    <div class="circle-container">
+        <div class="circle">
+            <div class="face">:3</div>
+            <div class="image-container"></div>
+            <!-- Particles -->
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <!-- Electric sparks -->
+            <div class="spark"></div>
+            <div class="spark"></div>
+            <div class="spark"></div>
+            <div class="spark"></div>
+            <div class="spark"></div>
+        </div>
+    </div>
+    <audio id="audio-player" preload="auto"></audio>
+    <canvas id="border-canvas"></canvas>
+
+    <script>
+        // Load audio and image only after page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            const audioPlayer = document.getElementById('audio-player');
+            audioPlayer.src = 'lpdl.mp3';
+            
+            // Create and add image element when needed
+            const imageContainer = document.querySelector('.image-container');
+            const img = new Image();
+            img.src = 'img.png';
+            img.className = 'hidden-image';
+            img.alt = 'Visual';
+            imageContainer.appendChild(img);
+        });
+    </script>
+    <script src="script.js"></script>
+</body>
+</html> 
