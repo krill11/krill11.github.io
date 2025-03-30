@@ -243,8 +243,8 @@
         }
 
         #bio-bg-canvas {
-            width: 100%;
-            height: 100%;
+                width: 100%;
+                height: 100%;
             image-rendering: pixelated;
         }
 
@@ -255,7 +255,7 @@
         }
 
         .robotics-wrapper {
-            position: fixed;
+                position: fixed;
             top: 25%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -310,7 +310,7 @@
             image-rendering: pixelated;
             transform: scale(4);
             transform-origin: center;
-            display: block;
+                display: block;
             height: 10px;
         }
 
@@ -359,7 +359,7 @@
         }
 
         #robotics-bg-canvas {
-            width: 100%;
+                width: 100%;
             height: 100%;
             image-rendering: pixelated;
         }
@@ -540,10 +540,15 @@
         let touchEndY = 0;
         const minSwipeDistance = 50;
 
-        // Scroll handling
+        // Scroll handling variables
         let lastWheelTime = 0;
         let wheelTimeout = null;
         let accumulatedDelta = 0;
+        let isScrollLocked = false;
+        const scrollLockDuration = 800; // Time to lock scrolling after a section change
+        const scrollResetTimeout = 300; // Time to reset accumulated delta if no new scroll events
+        const minDeltaThreshold = 10;  // Minimum delta to start accumulating
+        const sectionChangeThreshold = 35; // Delta threshold to trigger section change
 
         // Film noise effect functions
         function setupNoise() {
@@ -851,28 +856,63 @@
             
             const currentTime = Date.now();
             
-            // If we're animating, ignore the scroll
-            if (isAnimating) {
+            // If we're animating or scroll is locked, ignore the scroll
+            if (isAnimating || isScrollLocked) {
                 return;
             }
 
-            // If we're in cooldown, queue the next scroll
-            if (currentTime - lastScrollTime < scrollCooldown) {
-                return;
+            // Normalize the delta based on deltaMode
+            let normalizedDelta;
+            switch (e.deltaMode) {
+                case 0: // Pixels
+                    normalizedDelta = e.deltaY * 0.3; // Reduce sensitivity for pixel-based delta
+                    break;
+                case 1: // Lines
+                    normalizedDelta = e.deltaY * 8;
+                    break;
+                case 2: // Pages
+                    normalizedDelta = e.deltaY * 24;
+                    break;
             }
 
-            const scrollDown = e.deltaY > 0;
-            let nextSection = currentSection;
-            
-            if (scrollDown && currentSection < sections.length - 1) {
-                nextSection++;
-            } else if (!scrollDown && currentSection > 0) {
-                nextSection--;
+            // Only accumulate if the delta is significant enough
+            if (Math.abs(normalizedDelta) > minDeltaThreshold) {
+                accumulatedDelta += normalizedDelta;
             }
-            
-            if (nextSection !== currentSection) {
-                updateSection(nextSection);
-                lastScrollTime = currentTime;
+
+            // Clear existing timeout
+            if (wheelTimeout) {
+                clearTimeout(wheelTimeout);
+            }
+
+            // Set timeout to reset accumulated delta if no scroll occurs
+            wheelTimeout = setTimeout(() => {
+                accumulatedDelta = 0;
+            }, scrollResetTimeout);
+
+            // Check if we should trigger a section change
+            if (Math.abs(accumulatedDelta) >= sectionChangeThreshold) {
+                const scrollDown = accumulatedDelta > 0;
+                let nextSection = currentSection;
+                
+                if (scrollDown && currentSection < sections.length - 1) {
+                    nextSection++;
+                } else if (!scrollDown && currentSection > 0) {
+                    nextSection--;
+                }
+                
+                if (nextSection !== currentSection) {
+                    updateSection(nextSection);
+                    
+                    // Lock scrolling temporarily
+                    isScrollLocked = true;
+                    setTimeout(() => {
+                        isScrollLocked = false;
+                    }, scrollLockDuration);
+                }
+
+                // Reset accumulated delta after triggering
+                accumulatedDelta = 0;
             }
         }, { passive: false });
 
@@ -1289,7 +1329,7 @@
                 y >= roboticsWrapper.clickArea.y && 
                 y <= roboticsWrapper.clickArea.y + roboticsWrapper.clickArea.height) {
                 roboticsWrapper.style.cursor = 'pointer';
-            } else {
+                } else {
                 roboticsWrapper.style.cursor = 'default';
             }
         });
