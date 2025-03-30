@@ -259,6 +259,11 @@
             titleCtx.textBaseline = 'middle';
             titleCtx.font = '20px "Crimson Text"';
 
+            // Draw dark outline first
+            titleCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+            titleCtx.lineWidth = 3;
+            titleCtx.strokeText(text, centerX, centerY);
+            
             // Draw outer glow layers
             titleCtx.fillStyle = 'rgba(255, 140, 0, 0.3)';
             titleCtx.shadowColor = 'rgba(255, 140, 0, 0.3)';
