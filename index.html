@@ -28,6 +28,8 @@
             transform-origin: 0 0;
             image-rendering: pixelated;
             z-index: 1;
+            opacity: 0;
+            transition: opacity 1s ease-in;
         }
 
         .layer {
@@ -128,6 +130,10 @@
             transform-origin: 0 0;
             image-rendering: pixelated;
         }
+
+        .fade-in {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -150,63 +156,32 @@
     <div class="content"></div>
 
     <script>
-        const container = document.querySelector('.parallax-container');
-        const layers = document.querySelectorAll('.layer');
-        
-        let mouseX = 0;
-        let mouseY = 0;
-        let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
-
-        let currentX = 0;
-        let currentY = 0;
-        let targetX = 0;
-        let targetY = 0;
-
-        window.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX - windowWidth / 2);
-            mouseY = (e.clientY - windowHeight / 2);
-            
-            targetX = (mouseX / windowWidth) * 6;
-            targetY = (mouseY / windowHeight) * 6;
-        });
-
-        window.addEventListener('resize', () => {
-            windowWidth = window.innerWidth;
-            windowHeight = window.innerHeight;
-        });
-
-        function animate() {
-            currentX += (targetX - currentX) * 0.1;
-            currentY += (targetY - currentY) * 0.1;
-
-            layers.forEach((layer, index) => {
-                const moveX = currentX * (index + 1);
-                const moveY = currentY * (index + 1);
-                
-                layer.style.transform = `translate(-50%, -50%) 
-                    translateX(${moveX}px) 
-                    translateY(${moveY}px) 
-                    scale(1.2)`;
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        animate();
-
-        // Film noise effect
+        // Noise effect variables
         const noise = document.getElementById('noise');
         const ctx = noise.getContext('2d', { antialias: false });
         const FPS = 30;
         const frameDelay = 1000 / FPS;
         let lastDrawTime = 0;
+
+        // Parallax variables
+        const container = document.querySelector('.parallax-container');
+        const layers = document.querySelectorAll('.layer');
+        const images = document.querySelectorAll('img');
+        const parallaxContainer = document.querySelector('.parallax-container');
         
+        let mouseX = 0;
+        let mouseY = 0;
+        let windowWidth = window.innerWidth;
+        let windowHeight = window.innerHeight;
+        let currentX = 0;
+        let currentY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        // Film noise effect functions
         function setupNoise() {
-            // Set canvas to 1/4 of screen dimensions
             noise.width = Math.floor(window.innerWidth / 4);
             noise.height = Math.floor(window.innerHeight / 4);
-            // Disable image smoothing for crisp pixels
             ctx.imageSmoothingEnabled = false;
         }
         
@@ -233,10 +208,59 @@
             requestAnimationFrame(drawNoise);
         }
 
+        // Initialize noise effect
         setupNoise();
         requestAnimationFrame(drawNoise);
-        
-        window.addEventListener('resize', setupNoise);
+
+        // Wait for both fonts and images
+        Promise.all([
+            document.fonts.ready,
+            ...Array.from(images).map(img => {
+                return new Promise((resolve, reject) => {
+                    if (img.complete) resolve();
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+            })
+        ]).then(() => {
+            setupText();
+            parallaxContainer.classList.add('fade-in');
+            animate();
+        }).catch(error => {
+            console.error('Error loading resources:', error);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - windowWidth / 2);
+            mouseY = (e.clientY - windowHeight / 2);
+            
+            targetX = (mouseX / windowWidth) * 6;
+            targetY = (mouseY / windowHeight) * 6;
+        });
+
+        window.addEventListener('resize', () => {
+            windowWidth = window.innerWidth;
+            windowHeight = window.innerHeight;
+            setupNoise();
+            setupText();
+        });
+
+        function animate() {
+            currentX += (targetX - currentX) * 0.1;
+            currentY += (targetY - currentY) * 0.1;
+
+            layers.forEach((layer, index) => {
+                const moveX = currentX * (index + 1);
+                const moveY = currentY * (index + 1);
+                
+                layer.style.transform = `translate(-50%, -50%) 
+                    translateX(${moveX}px) 
+                    translateY(${moveY}px) 
+                    scale(1.2)`;
+            });
+
+            requestAnimationFrame(animate);
+        }
 
         // Text rendering
         const titleCanvas = document.getElementById('title-canvas');
