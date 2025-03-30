@@ -18,8 +18,7 @@
         body {
             background: #000;
             min-height: 100vh;
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow: hidden;
         }
 
         .parallax-container {
@@ -195,6 +194,13 @@
             z-index: 998;
             transition: all 0.3s ease;
             opacity: 1;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
         }
 
         #chevron-canvas {
@@ -210,6 +216,7 @@
         .chevron-hidden {
             opacity: 0;
             transform: translate(-50%, 100%);
+            pointer-events: none;
         }
 
         .bio-wrapper {
@@ -220,6 +227,25 @@
             z-index: 998;
             opacity: 0;
             transition: opacity 0.3s ease;
+        }
+
+        .bio-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            image-rendering: pixelated;
+            pointer-events: none;
+        }
+
+        #bio-bg-canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
         }
 
         #bio-canvas {
@@ -266,19 +292,76 @@
         }
 
         .indicator-wrapper {
-                position: fixed;
+            position: fixed;
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 998;
             opacity: 0;
             transition: opacity 0.3s ease;
+            cursor: pointer;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         #indicator-canvas {
             image-rendering: pixelated;
             transform: scale(4);
             transform-origin: center;
+            display: block;
+            height: 10px;
+        }
+
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            display: flex;
+                flex-direction: column;
+            gap: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .nav-dot {
+            width: 32px;
+            height: 32px;
+                position: relative;
+            cursor: pointer;
+            image-rendering: pixelated;
+        }
+
+        .nav-dot canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+                width: 100%;
+            height: 100%;
+            transform-origin: center;
+            image-rendering: pixelated;
+        }
+
+        .robotics-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            image-rendering: pixelated;
+            pointer-events: none;
+        }
+
+        #robotics-bg-canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
         }
 
         @media (max-width: 768px) {
@@ -314,6 +397,15 @@
 
             body {
                 overflow: hidden;
+            }
+
+            .nav-dots {
+                right: 16px;
+            }
+            
+            .nav-dot {
+                width: 28px;
+                height: 28px;
             }
         }
     </style>
@@ -359,33 +451,67 @@
         <section class="content-section"></section>
         <section class="content-section"></section>
     </div>
+    <div class="nav-dots">
+        <div class="nav-dot" data-section="0"><canvas></canvas></div>
+        <div class="nav-dot" data-section="1"><canvas></canvas></div>
+        <div class="nav-dot" data-section="2"><canvas></canvas></div>
+    </div>
+    <div class="bio-background">
+        <canvas id="bio-bg-canvas"></canvas>
+    </div>
+    <div class="robotics-background">
+        <canvas id="robotics-bg-canvas"></canvas>
+    </div>
 
     <script>
-        // Noise effect variables
+        // DOM Element References - moved to top
         const noise = document.getElementById('noise');
         const ctx = noise.getContext('2d', { antialias: false });
         const staticNoise = document.querySelector('.static-noise');
         const staticCtx = staticNoise.getContext('2d', { antialias: false });
-        const FPS = 30;
-        const frameDelay = 1000 / FPS;
-        let lastDrawTime = 0;
-
-        // Parallax variables
         const container = document.querySelector('.parallax-container');
         const layers = document.querySelectorAll('.layer');
         const images = document.querySelectorAll('img');
         const parallaxCanvas = document.getElementById('parallax-canvas');
         const parallaxCtx = parallaxCanvas.getContext('2d', { antialias: false });
         const parallaxContainer = document.querySelector('.parallax-container');
-        
+        const titleCanvas = document.getElementById('title-canvas');
+        const titleCtx = titleCanvas.getContext('2d');
+        const bioCanvas = document.getElementById('bio-canvas');
+        const bioCtx = bioCanvas.getContext('2d');
+        const bioWrapper = document.querySelector('.bio-wrapper');
+        const roboticsCanvas = document.getElementById('robotics-canvas');
+        const roboticsCtx = roboticsCanvas.getContext('2d');
+        const roboticsWrapper = document.querySelector('.robotics-wrapper');
+        const kanaCanvas = document.getElementById('kana-canvas');
+        const kanaCtx = kanaCanvas.getContext('2d');
+        const kanaWrapper = document.querySelector('.kana-wrapper');
+        const chevronCanvas = document.getElementById('chevron-canvas');
+        const chevronCtx = chevronCanvas.getContext('2d');
+        const indicatorCanvas = document.getElementById('indicator-canvas');
+        const indicatorCtx = indicatorCanvas.getContext('2d');
+        const indicatorWrapper = document.querySelector('.indicator-wrapper');
+        const titleWrapper = document.querySelector('.title-wrapper');
+        const darkeningOverlay = document.querySelector('.darkening-overlay');
+        const chevronWrapper = document.querySelector('.chevron-wrapper');
+        const bioBackground = document.querySelector('.bio-background');
+        const bioBgCanvas = document.getElementById('bio-bg-canvas');
+        const bioBgCtx = bioBgCanvas.getContext('2d');
+        const roboticsBackground = document.querySelector('.robotics-background');
+        const roboticsBgCanvas = document.getElementById('robotics-bg-canvas');
+        const roboticsBgCtx = roboticsBgCanvas.getContext('2d');
+
+        // Animation and State Variables
+        const FPS = 30;
+        const frameDelay = 1000 / FPS;
         const PARALLAX_FPS = 24;
         const PARALLAX_FRAME_DELAY = 1000 / PARALLAX_FPS;
+        let lastDrawTime = 0;
         let lastParallaxTime = 0;
         let needsParallaxUpdate = false;
         let rafId = null;
         let isMoving = false;
         let moveTimeout = null;
-        
         let mouseX = 0;
         let mouseY = 0;
         let windowWidth = window.innerWidth;
@@ -394,6 +520,30 @@
         let currentY = 0;
         let targetX = 0;
         let targetY = 0;
+        let chevronOffset = 0;
+
+        // Section Navigation Variables
+        let currentSection = 0;
+        const sections = [
+            { name: 'title', position: 0 },
+            { name: 'bio', position: 1 },
+            { name: 'robotics', position: 2 }
+        ];
+        let isScrolling = false;
+        let scrollTimeout = null;
+        let lastScrollTime = 0;
+        const scrollCooldown = 300;
+        let isAnimating = false;
+
+        // Touch Variables
+        let touchStartY = 0;
+        let touchEndY = 0;
+        const minSwipeDistance = 50;
+
+        // Scroll handling
+        let lastWheelTime = 0;
+        let wheelTimeout = null;
+        let accumulatedDelta = 0;
 
         // Film noise effect functions
         function setupNoise() {
@@ -463,7 +613,7 @@
                 }
                 return;
             }
-
+            
             if (!lastParallaxTime) lastParallaxTime = currentTime;
             const elapsed = currentTime - lastParallaxTime;
             
@@ -542,11 +692,127 @@
             })
         ]).then(() => {
             setupText();
+            setupBio();
+            setupRobotics();
+            setupIndicator();
+            setupChevron();
             setupParallaxCanvas();
+            setupNavDots();
             parallaxContainer.classList.add('fade-in');
             animate();
+
+            // Start chevron animation
+            requestAnimationFrame(drawChevron);
         }).catch(error => {
             console.error('Error loading resources:', error);
+        });
+
+        function drawChevron() {
+            // Clear the canvas
+            chevronCtx.clearRect(0, 0, chevronCanvas.width, chevronCanvas.height);
+            
+            // Calculate vertical offset using sine wave
+            chevronOffset = Math.sin(Date.now() / 500) * 2;
+            
+            // Draw the chevron
+            chevronCtx.strokeStyle = '#ffd280';
+            chevronCtx.lineWidth = 2;
+            chevronCtx.beginPath();
+            chevronCtx.moveTo(4, 6 + chevronOffset);
+            chevronCtx.lineTo(10, 12 + chevronOffset);
+            chevronCtx.lineTo(16, 6 + chevronOffset);
+            chevronCtx.stroke();
+
+            // Add glow effect
+            chevronCtx.shadowColor = 'rgba(255, 176, 0, 0.9)';
+            chevronCtx.shadowBlur = 2;
+            chevronCtx.stroke();
+
+            requestAnimationFrame(drawChevron);
+        }
+
+        // Update section handling
+        function updateSection(newSection) {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            const vh = window.innerHeight;
+            currentSection = newSection;
+            
+            // Title movement and darkening
+            if (currentSection >= 1) {
+                titleWrapper.style.top = '10%';
+                darkeningOverlay.style.opacity = '0.85';
+                chevronWrapper.classList.add('chevron-hidden');
+                parallaxContainer.style.opacity = '0';
+                noise.style.opacity = '0';
+                staticNoise.style.opacity = '0';
+                document.querySelector('.nav-dots').style.opacity = '1';
+            } else {
+                titleWrapper.style.top = '50%';
+                darkeningOverlay.style.opacity = '0';
+                chevronWrapper.classList.remove('chevron-hidden');
+                parallaxContainer.style.opacity = '1';
+                noise.style.opacity = '0.05';
+                staticNoise.style.opacity = '0.1';
+                document.querySelector('.nav-dots').style.opacity = '0';
+            }
+            
+            // Bio section
+            if (currentSection === 1) {
+                bioWrapper.style.opacity = '1';
+                bioWrapper.style.top = '55%';
+                roboticsWrapper.style.opacity = '0';
+                kanaWrapper.style.opacity = '0';
+                indicatorWrapper.style.opacity = '1';
+                bioBackground.style.opacity = '1';
+                roboticsBackground.style.opacity = '0';
+                setupBio(); // Re-render bio text
+            }
+            // Robotics section
+            else if (currentSection === 2) {
+                bioWrapper.style.opacity = '0';
+                roboticsWrapper.style.opacity = '1';
+                roboticsWrapper.style.top = '25%';
+                kanaWrapper.style.opacity = '1';
+                kanaWrapper.style.top = '65%';
+                indicatorWrapper.style.opacity = '0';
+                bioBackground.style.opacity = '0';
+                roboticsBackground.style.opacity = '1';
+                setupRobotics(); // Re-render robotics text
+            }
+            // Title section
+            else {
+                bioWrapper.style.opacity = '0';
+                roboticsWrapper.style.opacity = '0';
+                kanaWrapper.style.opacity = '0';
+                indicatorWrapper.style.opacity = '0';
+                bioBackground.style.opacity = '0';
+                roboticsBackground.style.opacity = '0';
+            }
+            
+            // Re-render indicator text
+            setupIndicator();
+            
+            // After animation completes
+            setTimeout(() => {
+                isAnimating = false;
+            }, 300); // Match this with your CSS transition duration
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            windowWidth = window.innerWidth;
+            windowHeight = window.innerHeight;
+            setupNoise();
+            setupText();
+            setupBio();
+            setupRobotics();
+            setupIndicator();
+            setupChevron();
+            setupParallaxCanvas();
+            setupBioBackground();
+            setupRoboticsBackground();
         });
 
         window.addEventListener('mousemove', (e) => {
@@ -579,132 +845,79 @@
             }, 100);
         });
 
-        window.addEventListener('resize', () => {
-            windowWidth = window.innerWidth;
-            windowHeight = window.innerHeight;
-            setupNoise();
-            setupText();
-            setupParallaxCanvas();
+        // Scroll handling
+        window.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            
+            const currentTime = Date.now();
+            
+            // If we're animating, ignore the scroll
+            if (isAnimating) {
+                return;
+            }
+
+            // If we're in cooldown, queue the next scroll
+            if (currentTime - lastScrollTime < scrollCooldown) {
+                return;
+            }
+
+            const scrollDown = e.deltaY > 0;
+            let nextSection = currentSection;
+            
+            if (scrollDown && currentSection < sections.length - 1) {
+                nextSection++;
+            } else if (!scrollDown && currentSection > 0) {
+                nextSection--;
+            }
+            
+            if (nextSection !== currentSection) {
+                updateSection(nextSection);
+                lastScrollTime = currentTime;
+            }
+        }, { passive: false });
+
+        // Handle touch events for mobile
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
         });
 
-        // Scroll handling
-        const titleWrapper = document.querySelector('.title-wrapper');
-        const darkeningOverlay = document.querySelector('.darkening-overlay');
-        const chevronWrapper = document.querySelector('.chevron-wrapper');
-        
-        window.addEventListener('scroll', () => {
-            const vh = window.innerHeight;
-            const scrollY = window.scrollY;
-
-            // Title movement (0-100% over 0.15 viewport heights)
-            const titleScrollPercent = scrollY / (vh * 0.15);
-            const clampedTitlePercent = Math.min(1, Math.max(0, titleScrollPercent));
+        document.addEventListener('touchend', (e) => {
+            const currentTime = Date.now();
             
-            // Background darkening (0-100% over 0.1 viewport heights)
-            const darkenScrollPercent = scrollY / (vh * 0.1);
-            const clampedDarkenPercent = Math.min(1, Math.max(0, darkenScrollPercent));
+            // If we're in cooldown, ignore the touch
+            if (currentTime - lastScrollTime < scrollCooldown) {
+                return;
+            }
             
-            // Bio text fade in
-            const bioFadeStart = vh * 0.05;
-            const bioFadeEnd = vh * 0.15;
-            const bioFadePercent = (scrollY - bioFadeStart) / (bioFadeEnd - bioFadeStart);
-            const bioWrapper = document.querySelector('.bio-wrapper');
-            const bioOpacity = Math.min(1, Math.max(0, bioFadePercent));
-            bioWrapper.style.opacity = bioOpacity;
+            touchEndY = e.changedTouches[0].clientY;
+            const swipeDistance = touchEndY - touchStartY;
             
-            // Move title up
-            const startTop = 50;
-            const endTop = 10;
-            const newTop = startTop - (clampedTitlePercent * (startTop - endTop));
-            titleWrapper.style.top = `${newTop}%`;
-            
-            // Darken background and fade out parallax/noise
-            darkeningOverlay.style.opacity = clampedDarkenPercent * 0.85;
-            
-            // When title reaches top position, start fading out parallax and noise
-            if (clampedTitlePercent === 1) {
-                // Additional scroll progress after title reaches top
-                const additionalScroll = (scrollY - vh * 0.15) / (vh * 0.2);
-                const fadeOutPercent = Math.min(1, Math.max(0, additionalScroll));
+            if (Math.abs(swipeDistance) >= minSwipeDistance) {
+                const scrollDown = swipeDistance < 0;
                 
-                // Fade out parallax and both noise effects
-                parallaxContainer.style.opacity = 1 - fadeOutPercent;
-                noise.style.opacity = Math.max(0, 0.05 * (1 - fadeOutPercent));
-                staticNoise.style.opacity = Math.max(0, 0.1 * (1 - fadeOutPercent));
-
-                // Stop parallax rendering when fully faded out
-                needsParallaxUpdate = fadeOutPercent < 1;
-            } else {
-                // Reset opacities when scrolling back up and resume parallax
-                parallaxContainer.style.opacity = 1;
-                noise.style.opacity = 0.05;
-                staticNoise.style.opacity = 0.1;
-                needsParallaxUpdate = true;
-            }
-
-            // Hide chevron immediately when scrolling starts
-            if (scrollY > 10) {
-                chevronWrapper.classList.add('chevron-hidden');
-                    } else {
-                chevronWrapper.classList.remove('chevron-hidden');
-            }
-
-            // Sequence of text elements
-            const sequence = [
-                {
-                    element: bioWrapper,
-                    startFade: vh * 0.05,     // Bio starts fading in
-                    endFade: vh * 0.15,       // Bio fully visible
-                    fadeOutStart: vh * 1.4875,  // Bio starts fading out (0.875 * 1.7)
-                    fadeOutEnd: vh * 1.5875,    // Bio fully invisible (0.975 * 1.7)
-                    startPos: 55,
-                    endPos: 55
-                },
-                {
-                    element: roboticsWrapper,
-                    startFade: vh * 1.4875,    // Robotics starts fading in as bio starts fading out
-                    endFade: vh * 1.5875,      // Robotics fully visible as bio disappears
-                    startPos: 25,             // Moved up to 25% to be closer to title
-                    endPos: 25
-                },
-                {
-                    element: kanaWrapper,
-                    startFade: vh * 1.4875,    // Kana starts fading in with robotics text
-                    endFade: vh * 1.5875,      // Kana fully visible with robotics text
-                    startPos: 65,             // Position further below robotics text
-                    endPos: 65
-                }
-            ];
-
-            // Handle each text element in sequence
-            sequence.forEach((item, index) => {
-                let opacity;
-                if (index === 0) { // Bio text
-                    // Calculate fade in
-                    const fadeInPercent = (scrollY - item.startFade) / (item.endFade - item.startFade);
-                    const fadeInOpacity = Math.min(1, Math.max(0, fadeInPercent));
-                    
-                    // Calculate fade out
-                    const fadeOutPercent = (scrollY - item.fadeOutStart) / (item.fadeOutEnd - item.fadeOutStart);
-                    const fadeOutOpacity = 1 - Math.min(1, Math.max(0, fadeOutPercent));
-                    
-                    // Use fade in until fadeOutStart, then use fade out
-                    opacity = scrollY < item.fadeOutStart ? fadeInOpacity : fadeOutOpacity;
-                } else { // Robotics text
-                    const fadePercent = (scrollY - item.startFade) / (item.endFade - item.startFade);
-                    opacity = Math.min(1, Math.max(0, fadePercent));
+                let nextSection = currentSection;
+                if (scrollDown && currentSection < sections.length - 1) {
+                    nextSection++;
+                } else if (!scrollDown && currentSection > 0) {
+                    nextSection--;
                 }
                 
-                item.element.style.opacity = opacity;
-
-                if (opacity > 0) {
-                    const positionPercent = Math.min(1, (scrollY - item.startFade) / (item.endFade - item.startFade));
-                    const currentPos = item.startPos - (positionPercent * (item.startPos - item.endPos));
-                    item.element.style.top = `${currentPos}%`;
-                } else {
-                    item.element.style.top = `${item.startPos}%`;
+                if (nextSection !== currentSection) {
+                    updateSection(nextSection);
+                    lastScrollTime = currentTime;
                 }
-            });
+            }
+        });
+
+        // Add smooth transitions to elements
+        const elementsToTransition = [
+            titleWrapper, bioWrapper, roboticsWrapper, 
+            kanaWrapper, indicatorWrapper, parallaxContainer,
+            darkeningOverlay, noise, staticNoise
+        ];
+
+        elementsToTransition.forEach(element => {
+            element.style.transition = 'all 0.3s ease-out';
         });
 
         function animate(currentTime) {
@@ -725,48 +938,6 @@
         }
 
         // Text rendering
-        const titleCanvas = document.getElementById('title-canvas');
-        const titleCtx = titleCanvas.getContext('2d');
-        
-        // Chevron rendering
-        const chevronCanvas = document.getElementById('chevron-canvas');
-        const chevronCtx = chevronCanvas.getContext('2d');
-        let chevronOffset = 0;
-        
-        function setupChevron() {
-            chevronCanvas.width = 20;
-            chevronCanvas.height = 20;
-            chevronCtx.imageSmoothingEnabled = false;
-        }
-
-        function drawChevron() {
-            // Clear the canvas
-            chevronCtx.clearRect(0, 0, chevronCanvas.width, chevronCanvas.height);
-            
-            // Calculate vertical offset using sine wave
-            chevronOffset = Math.sin(Date.now() / 500) * 2;
-            
-            // Draw the chevron
-            chevronCtx.strokeStyle = '#ffd280';
-            chevronCtx.lineWidth = 2;
-            chevronCtx.beginPath();
-            chevronCtx.moveTo(4, 6 + chevronOffset);
-            chevronCtx.lineTo(10, 12 + chevronOffset);
-            chevronCtx.lineTo(16, 6 + chevronOffset);
-            chevronCtx.stroke();
-
-            // Add glow effect
-            chevronCtx.shadowColor = 'rgba(255, 176, 0, 0.9)';
-            chevronCtx.shadowBlur = 2;
-            chevronCtx.stroke();
-
-            requestAnimationFrame(drawChevron);
-        }
-
-        // Initialize chevron
-        setupChevron();
-        drawChevron();
-
         function setupText() {
             const isMobile = window.innerWidth <= 768;
             const fontSize = isMobile ? 24 : 20;
@@ -815,11 +986,14 @@
             titleCtx.fillText(text, centerX, centerY);
         }
 
+        // Chevron rendering
+        function setupChevron() {
+            chevronCanvas.width = 20;
+            chevronCanvas.height = 20;
+            chevronCtx.imageSmoothingEnabled = false;
+        }
+
         // Bio text rendering
-        const bioCanvas = document.getElementById('bio-canvas');
-        const bioCtx = bioCanvas.getContext('2d');
-        const bioWrapper = document.querySelector('.bio-wrapper');
-        
         function setupBio() {
             const isMobile = window.innerWidth <= 768;
             const fontSize = isMobile ? 11 : 20;
@@ -855,40 +1029,91 @@
                     
                     parts.forEach(part => {
                         if (part === 'grass') {
-                            const scrollPercent = Math.min(1, Math.max(0, (window.scrollY - window.innerHeight * 0.35) / (window.innerHeight * 0.9)));
-                            const color = interpolateColor('#90EE90', '#FFFFFF', scrollPercent);
-                            bioCtx.fillStyle = color;
-                            bioCtx.shadowColor = color.replace('rgb', 'rgba').replace(')', ', 0.8)');
+                            bioCtx.fillStyle = '#90EE90';
+                            bioCtx.shadowColor = 'rgba(144, 238, 144, 0.8)';
                             
                             // Draw the text
                             const grassX = currentX + bioCtx.measureText(part).width / 2;
                             bioCtx.fillText(part, grassX, centerY);
                             
-                            // Draw grass blades
-                            if (scrollPercent < 0.5) { // Only show grass blades when word is still greenish
-                                bioCtx.strokeStyle = color;
-                                bioCtx.lineWidth = 1;
-                                const bladeCount = 12; // Increased from 5 to 12
-                                const wordWidth = bioCtx.measureText(part).width;
+                            // Draw animated grass blades
+                            bioCtx.strokeStyle = '#90EE90';
+                            bioCtx.lineWidth = 1;
+                            const bladeCount = 24;
+                            const wordWidth = bioCtx.measureText(part).width;
+                            
+                            // Create natural clumps of grass
+                            const clumpCount = 5;
+                            const bladesPerClump = Math.floor(bladeCount / clumpCount);
+                            
+                            // Shift entire grass effect right (reduced from 6 to 3)
+                            const grassShift = 3;
+                            
+                            for (let clump = 0; clump < clumpCount; clump++) {
+                                // Alternate base angles for clumps to create natural variation
+                                const clumpBaseAngle = (clump % 2 === 0 ? 1 : -1) * 
+                                    (0.3 + Math.sin(clump * 8.123) * 0.2); // Alternating left/right angles
                                 
-                                for (let j = 0; j < bladeCount; j++) {
-                                    // Position blades across the full width of the word
-                                    const bladeX = grassX - wordWidth/2 + (j * wordWidth/bladeCount) + 1;
-                                    const bladeHeight = 3 + Math.sin(Date.now()/800 + j) * 1.5;
+                                // Calculate clump center with organic variation
+                                const clumpCenter = grassX - wordWidth/2 + 
+                                    (clump * wordWidth/clumpCount) + 
+                                    (Math.sin(clump * 3.789) * wordWidth/clumpCount * 0.2) + 
+                                    grassShift; // Add right shift
+                                
+                                // Each clump has slightly different height characteristics
+                                const clumpHeight = 3 + Math.sin(clump * 5.234) * 1;
+                                
+                                for (let j = 0; j < bladesPerClump; j++) {
+                                    // Create tight clusters within each clump
+                                    const clusterOffset = (j - bladesPerClump/2) * 1.2;
+                                    const randomOffset = Math.sin(j * 8.37 + clump * 2.54) * 1.2;
+                                    
+                                    // Add some random spread to each blade within the clump
+                                    const spreadX = Math.sin(j * 7.123 + clump * 4.567) * 1.5;
+                                    const spreadY = Math.abs(Math.sin(j * 9.234 + clump * 3.456)) * 1;
+                                    
+                                    const bladeX = clumpCenter + clusterOffset + randomOffset + spreadX;
+                                    
+                                    // Multiple wave patterns for organic movement
+                                    const time = Date.now() / 1000;
+                                    const fastWave = Math.sin(time * 2 + j * 0.7 + clump * 0.5) * 0.3;
+                                    const slowWave = Math.sin(time * 0.5 + j * 0.4 + clump * 0.3) * 0.5;
+                                    const microWave = Math.sin(time * 4 + j * 1.2 + clump * 0.8) * 0.1;
+                                    
+                                    // Each blade has its own angle variation
+                                    const individualAngle = (Math.sin(j * 7.89 + clump * 3.45) * 0.3) * 
+                                        (j % 2 === 0 ? 1 : -1); // Alternate angles within clump
+                                    const totalAngle = clumpBaseAngle + individualAngle;
+                                    
+                                    // Varied heights within the clump
+                                    const bladeHeight = clumpHeight + spreadY + 
+                                        fastWave + slowWave + Math.abs(microWave) * 2;
+                                    
+                                    // Combine waves for natural swaying
+                                    const swayX = (fastWave + slowWave * 0.7 + microWave) * 
+                                        (1 + Math.abs(totalAngle));
                                     
                                     bioCtx.beginPath();
                                     bioCtx.moveTo(bladeX, centerY - 3);
                                     
-                                    // Randomize blade curve direction
-                                    const curveX = (j % 2 === 0) ? 1 : -1;
-                                    bioCtx.quadraticCurveTo(
-                                        bladeX + curveX, centerY - 3 - bladeHeight,
-                                        bladeX + curveX * 0.5, centerY - 3 - bladeHeight - 1
+                                    // Create curved blade with natural bending
+                                    const cp1x = bladeX + Math.cos(totalAngle) * 2 + swayX;
+                                    const cp1y = centerY - 3 - bladeHeight * 0.4;
+                                    const cp2x = bladeX + Math.cos(totalAngle) * 3 + swayX * 0.7;
+                                    const cp2y = centerY - 3 - bladeHeight * 0.8;
+                                    
+                                    const endX = bladeX + Math.cos(totalAngle) * 4 + swayX * 0.3;
+                                    const endY = centerY - 3 - bladeHeight - 1;
+                                    
+                                    bioCtx.bezierCurveTo(
+                                        cp1x, cp1y,
+                                        cp2x, cp2y,
+                                        endX, endY
                                     );
                                     bioCtx.stroke();
                                 }
-                            }
-                        } else {
+                        }
+                    } else {
                             bioCtx.fillStyle = '#ffffff';
                             bioCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
                             bioCtx.fillText(part, currentX + bioCtx.measureText(part).width / 2, centerY);
@@ -914,12 +1139,7 @@
                     let currentX = centerX - bioCtx.measureText(line).width / 2;
                     
                     parts.forEach(part => {
-                        if (part === 'grass') {
-                            const scrollPercent = Math.min(1, Math.max(0, (window.scrollY - window.innerHeight * 0.35) / (window.innerHeight * 0.9)));
-                            bioCtx.fillStyle = interpolateColor('#90EE90', '#FFFFFF', scrollPercent);
-                        } else {
-                            bioCtx.fillStyle = '#ffffff';
-                        }
+                        bioCtx.fillStyle = part === 'grass' ? '#90EE90' : '#ffffff';
                         bioCtx.fillText(part, currentX + bioCtx.measureText(part).width / 2, centerY);
                         currentX += bioCtx.measureText(part).width;
                     });
@@ -928,52 +1148,12 @@
                     bioCtx.fillText(line, centerX, centerY);
                 }
             });
-        }
 
-        function interpolateColor(color1, color2, factor) {
-            const c1 = hexToRgb(color1);
-            const c2 = hexToRgb(color2);
-            
-            const r = Math.round(c1.r + (c2.r - c1.r) * factor);
-            const g = Math.round(c1.g + (c2.g - c1.g) * factor);
-            const b = Math.round(c1.b + (c2.b - c1.b) * factor);
-            
-            return `rgb(${r}, ${g}, ${b})`;
+            // Request next animation frame for continuous grass animation
+            requestAnimationFrame(setupBio);
         }
-
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : null;
-        }
-
-        // Initialize bio text
-        document.fonts.ready.then(() => {
-            setupBio();
-            setupText();
-            setupRobotics();
-            setupIndicator();
-        });
-        window.addEventListener('resize', () => {
-            setupBio();
-            setupIndicator();
-        });
-        window.addEventListener('scroll', () => {
-            setupBio();
-            setupRobotics();
-            setupIndicator();
-        });
 
         // Setup robotics text and kana image
-        const roboticsCanvas = document.getElementById('robotics-canvas');
-        const roboticsCtx = roboticsCanvas.getContext('2d');
-        const roboticsWrapper = document.querySelector('.robotics-wrapper');
-        const kanaCanvas = document.getElementById('kana-canvas');
-        const kanaCtx = kanaCanvas.getContext('2d');
-        const kanaWrapper = document.querySelector('.kana-wrapper');
         const kanaImage = new Image();
         kanaImage.src = 'kana.png';
 
@@ -984,7 +1164,7 @@
 
         function setupKana() {
             // Calculate dimensions to fit the image within 65vh while maintaining aspect ratio
-            const maxHeight = Math.floor(window.innerHeight * 0.65 / 4); // Divide by 4 because we're scaling up later
+            const maxHeight = Math.floor(window.innerHeight * 0.65 / 4);
             const scale = maxHeight / kanaImage.height;
             const targetWidth = Math.floor(kanaImage.width * scale);
 
@@ -1034,11 +1214,11 @@
             
             // Store click area for triple fault
             const tfWidth = roboticsCtx.measureText(text[1]).width;
-            const clickArea = {
-                x: (tfX - tfWidth/2) * 2, // Adjusted multiplier to match new scale
-                y: (centerY - 10) * 2,
-                width: tfWidth * 2,
-                height: 20 * 2
+            roboticsWrapper.clickArea = {
+                x: tfX - tfWidth/2,
+                y: centerY - fontSize/2,
+                width: tfWidth,
+                height: fontSize
             };
             
             currentX += roboticsCtx.measureText(text[1]).width;
@@ -1046,9 +1226,6 @@
             // Draw colon
             roboticsCtx.font = `${fontSize}px "Crimson Text"`;
             drawTextWithGlow(text[2], currentX + roboticsCtx.measureText(text[2]).width / 2, centerY, false);
-
-            // Store click area for event listener
-            roboticsWrapper.clickArea = clickArea;
         }
 
         function drawTextWithGlow(text, x, y, isBold) {
@@ -1088,8 +1265,8 @@
         // Add click handler for robotics text
         roboticsWrapper.addEventListener('click', (e) => {
             const rect = roboticsCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const x = (e.clientX - rect.left) / 4; // Divide by 4 to account for scale
+            const y = (e.clientY - rect.top) / 4;  // Divide by 4 to account for scale
             
             if (roboticsWrapper.clickArea && 
                 x >= roboticsWrapper.clickArea.x && 
@@ -1103,8 +1280,8 @@
         // Add cursor change on hover
         roboticsWrapper.addEventListener('mousemove', (e) => {
             const rect = roboticsCanvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const x = (e.clientX - rect.left) / 4; // Divide by 4 to account for scale
+            const y = (e.clientY - rect.top) / 4;  // Divide by 4 to account for scale
             
             if (roboticsWrapper.clickArea && 
                 x >= roboticsWrapper.clickArea.x && 
@@ -1124,19 +1301,25 @@
         content.appendChild(spacer);
 
         // Setup indicator text
-        const indicatorCanvas = document.getElementById('indicator-canvas');
-        const indicatorCtx = indicatorCanvas.getContext('2d');
-        const indicatorWrapper = document.querySelector('.indicator-wrapper');
-
         function setupIndicator() {
             const isMobile = window.innerWidth <= 768;
             const fontSize = isMobile ? 10 : 16;
             
-            indicatorCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.5 : 0.9));
-            indicatorCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.05 : 0.1));
+            // Calculate text width first
+            const text = currentSection === 1 ? "up next: robotics" : "";
+            if (!text) return;
+
+            // Create temporary context to measure text
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.font = `${fontSize}px "Crimson Text"`;
+            const textWidth = tempCtx.measureText(text).width;
+            
+            // Set canvas dimensions based on text size
+            indicatorCanvas.width = Math.ceil(textWidth) + 8;
+            indicatorCanvas.height = Math.ceil(fontSize * 1.2);
             indicatorCtx.imageSmoothingEnabled = false;
             
-            const text = "up next: robotics";
             const centerX = indicatorCanvas.width / 2;
             const centerY = indicatorCanvas.height / 2;
 
@@ -1149,44 +1332,158 @@
             indicatorCtx.lineWidth = 3;
             indicatorCtx.strokeText(text, centerX, centerY);
             
+            // Purple theme for robotics section
+            const nextSectionColor = { color: '#e0d5ff', alpha: '190, 170, 255' };
+            
             // Draw outer glow layers
-            indicatorCtx.fillStyle = 'rgba(190, 170, 255, 0.3)';
-            indicatorCtx.shadowColor = 'rgba(190, 170, 255, 0.3)';
+            indicatorCtx.fillStyle = `rgba(${nextSectionColor.alpha}, 0.3)`;
+            indicatorCtx.shadowColor = `rgba(${nextSectionColor.alpha}, 0.3)`;
             indicatorCtx.shadowBlur = 8;
             indicatorCtx.fillText(text, centerX, centerY);
 
-            indicatorCtx.fillStyle = 'rgba(190, 170, 255, 0.5)';
-            indicatorCtx.shadowColor = 'rgba(190, 170, 255, 0.5)';
+            indicatorCtx.fillStyle = `rgba(${nextSectionColor.alpha}, 0.5)`;
+            indicatorCtx.shadowColor = `rgba(${nextSectionColor.alpha}, 0.5)`;
             indicatorCtx.shadowBlur = 6;
             indicatorCtx.fillText(text, centerX, centerY);
 
-            indicatorCtx.fillStyle = 'rgba(190, 170, 255, 0.7)';
-            indicatorCtx.shadowColor = 'rgba(190, 170, 255, 0.7)';
+            indicatorCtx.fillStyle = `rgba(${nextSectionColor.alpha}, 0.7)`;
+            indicatorCtx.shadowColor = `rgba(${nextSectionColor.alpha}, 0.7)`;
             indicatorCtx.shadowBlur = 4;
             indicatorCtx.fillText(text, centerX, centerY);
 
             // Draw main text with brightest glow
-            indicatorCtx.fillStyle = '#e0d5ff';
-            indicatorCtx.shadowColor = 'rgba(190, 170, 255, 0.9)';
+            indicatorCtx.fillStyle = nextSectionColor.color;
+            indicatorCtx.shadowColor = `rgba(${nextSectionColor.alpha}, 0.9)`;
             indicatorCtx.shadowBlur = 2;
             indicatorCtx.fillText(text, centerX, centerY);
 
             // Final pass without shadow for crisp text
             indicatorCtx.shadowBlur = 0;
             indicatorCtx.fillText(text, centerX, centerY);
-
-            // Update indicator visibility based on scroll position
-            const vh = window.innerHeight;
-            const scrollY = window.scrollY;
-            const bioFadeStart = vh * 0.15;  // When bio is fully visible
-            const bioFadeEnd = vh * 1.4875;  // Just before bio starts to fade out
-            
-            if (scrollY >= bioFadeStart && scrollY <= bioFadeEnd) {
-                indicatorWrapper.style.opacity = '1';
-            } else {
-                indicatorWrapper.style.opacity = '0';
-            }
         }
+
+        // Navigation dot setup and drawing
+        const navDots = document.querySelectorAll('.nav-dot');
+        
+        function setupNavDots() {
+            navDots.forEach((dot, index) => {
+                const canvas = dot.querySelector('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Set canvas size to match display size for proper pixel density
+                canvas.width = 8;
+                canvas.height = 8;
+                ctx.imageSmoothingEnabled = false;
+
+                // Draw the dot
+                function drawDot(active) {
+                    ctx.clearRect(0, 0, 8, 8);
+                    
+                    // Colors for each section
+                    const colors = [
+                        { fill: '#b3d9ff', glow: 'rgba(179, 217, 255, 0.8)' },  // Pastel blue
+                        { fill: '#90EE90', glow: 'rgba(144, 238, 144, 0.8)' },  // Green
+                        { fill: '#e0d5ff', glow: 'rgba(190, 170, 255, 0.8)' }   // Purple
+                    ];
+                    
+                    // Draw glow if active
+                    if (active) {
+                        ctx.shadowColor = colors[index].glow;
+                        ctx.shadowBlur = 1;
+                    }
+                    
+                    // Draw dot
+                    ctx.fillStyle = colors[index].fill;
+                    ctx.beginPath();
+                    ctx.arc(4, 4, active ? 3 : 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Clear shadow
+                    ctx.shadowBlur = 0;
+                }
+
+                // Initial draw
+                drawDot(currentSection === index);
+
+                // Add click handler
+                dot.addEventListener('click', () => {
+                    if (currentSection !== index) {
+                        updateSection(index);
+                    }
+                });
+
+                // Store draw function for updates
+                dot.draw = drawDot;
+            });
+        }
+
+        // Update dots when section changes
+        const originalUpdateSection = updateSection;
+        updateSection = function(newSection) {
+            originalUpdateSection(newSection);
+            
+            // Update dot appearances
+            navDots.forEach((dot, index) => {
+                dot.draw(index === newSection);
+            });
+        };
+
+        // Load bliss background
+        const blissImage = new Image();
+        blissImage.src = 'bliss.png';
+        blissImage.onload = function() {
+            setupBioBackground();
+        };
+
+        function setupBioBackground() {
+            // Set canvas size to 1/4 of screen resolution
+            bioBgCanvas.width = Math.floor(window.innerWidth / 4);
+            bioBgCanvas.height = Math.floor(window.innerHeight / 4);
+            bioBgCtx.imageSmoothingEnabled = false;
+
+            // Draw and darken the image
+            bioBgCtx.drawImage(blissImage, 0, 0, bioBgCanvas.width, bioBgCanvas.height);
+            
+            // Apply darkening effect
+            bioBgCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            bioBgCtx.fillRect(0, 0, bioBgCanvas.width, bioBgCanvas.height);
+        }
+
+        // Load ocean background
+        const oceanImage = new Image();
+        oceanImage.src = 'ocean.jpg';
+        oceanImage.onload = function() {
+            setupRoboticsBackground();
+        };
+
+        function setupRoboticsBackground() {
+            // Set canvas size to 1/4 of screen resolution
+            roboticsBgCanvas.width = Math.floor(window.innerWidth / 4);
+            roboticsBgCanvas.height = Math.floor(window.innerHeight / 4);
+            roboticsBgCtx.imageSmoothingEnabled = false;
+
+            // Draw and darken the image
+            roboticsBgCtx.drawImage(oceanImage, 0, 0, roboticsBgCanvas.width, roboticsBgCanvas.height);
+            
+            // Apply darkening effect
+            roboticsBgCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            roboticsBgCtx.fillRect(0, 0, roboticsBgCanvas.width, roboticsBgCanvas.height);
+        }
+
+        // Make indicator text clickable
+        indicatorWrapper.style.cursor = 'pointer';
+        indicatorWrapper.addEventListener('click', () => {
+            if (currentSection < sections.length - 1) {
+                updateSection(currentSection + 1);
+            }
+        });
+
+        // Add click handler for chevron
+        chevronWrapper.addEventListener('click', () => {
+            if (currentSection === 0) {
+                updateSection(1);
+            }
+        });
     </script>
 </body>
 </html>
