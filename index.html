@@ -113,6 +113,12 @@
             object-position: center;
             pointer-events: none;
             backface-visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .layer img.loaded {
+            opacity: 1;
         }
 
         .content {
@@ -652,6 +658,12 @@
 
             // Get optimized paths
             const resolution = getImageResolution();
+            
+            // Add load handlers before setting src
+            [layer1, layer2, layer3].forEach(img => {
+                img.onload = () => img.classList.add('loaded');
+            });
+
             layer1.src = `optimized/layer1_${resolution}.png`;
             layer2.src = `optimized/layer2_${resolution}.png`;
             layer3.src = `optimized/layer3_${resolution}.png`;
