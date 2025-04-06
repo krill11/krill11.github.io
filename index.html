@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polycarbonate</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Preload font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -16,10 +19,36 @@
             font-family: "Crimson Text", "Times New Roman", serif;
         }
 
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         body {
             background: #000;
             min-height: 100vh;
             overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        body.loaded {
+            opacity: 1;
         }
 
         .parallax-container {
@@ -464,6 +493,7 @@
     </style>
 </head>
 <body>
+    <div class="loading-screen"></div>
     <div class="title-wrapper">
         <canvas id="title-canvas"></canvas>
     </div>
@@ -515,26 +545,18 @@
     <div class="robotics-background">
         <canvas id="robotics-bg-canvas"></canvas>
     </div>
-    <div class="loading-overlay"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Set up canvas dimensions first
-            setupNoise();
-            setupTitle();
-            setupChevron();
-
-            // Initialize title and noise immediately
-            requestAnimationFrame(drawNoise);
-            requestAnimationFrame(drawChevron);
-            
-            // Show title and chevron with a slight delay to ensure smooth fade
-            setTimeout(() => {
-                document.querySelector('.title-wrapper').style.opacity = '1';
-                document.querySelector('.chevron-wrapper').style.opacity = '1';
-            }, 100);
-
             try {
+                // Wait for font to load
+                await document.fonts.ready;
+                
+                // Set up initial elements
+                setupNoise();
+                setupTitle();
+                setupChevron();
+                
                 // Start loading images in the background
                 const loadedImages = await loadOptimizedImages();
                 
@@ -544,8 +566,9 @@
                 // Initialize other elements
                 setupParallax(loadedImages);
                 
-                // Show content after images are loaded
-                document.querySelector('.parallax-container').style.opacity = '1';
+                // Remove loading screen and show content
+                document.querySelector('.loading-screen').classList.add('hidden');
+                document.body.classList.add('loaded');
                 
                 // Initialize remaining elements
                 setupBio();
@@ -553,6 +576,10 @@
                 setupIndicator();
                 setupParallaxCanvas();
                 setupNavDots();
+                
+                // Start animations
+                requestAnimationFrame(drawNoise);
+                requestAnimationFrame(drawChevron);
                 animate();
             } catch (error) {
                 console.error('Error during initialization:', error);
