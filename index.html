@@ -6,53 +6,40 @@
     <title>Polycarbonate</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     
-    <!-- Critical font loading -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Font loading -->
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
-        @font-face {
-            font-family: 'Crimson Text';
-            font-style: normal;
-            font-weight: 400;
-            font-display: block;
-            src: url(https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2) format('woff2');
-        }
-        @font-face {
-            font-family: 'Crimson Text';
-            font-style: normal;
-            font-weight: 700;
-            font-display: block;
-            src: url(https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJX1C1GA9N.woff2) format('woff2');
-        }
-
-        /* Font loading behavior */
-        .fonts-loading {
-            font-family: Arial, sans-serif;
-        }
-        
-        .fonts-loaded {
-            font-family: "Crimson Text", "Times New Roman", serif;
-        }
-
-        /* Hide content until fonts are ready */
-        .loading {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .ready {
-            opacity: 1;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: "Crimson Text", "Times New Roman", serif;
         }
 
         body {
             background: #000;
             min-height: 100vh;
             overflow: hidden;
+        }
+
+        .title-wrapper {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 998;
+            transition: top 0.3s ease;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .title-wrapper.visible {
+            opacity: 1;
         }
 
         body.loaded {
@@ -206,6 +193,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         #title-canvas {
@@ -561,41 +550,11 @@
     <div class="loading-overlay"></div>
 
     <script>
-        // Immediate font loading check
-        (function() {
-            // Check if mobile
-            const isMobile = window.innerWidth <= 768;
-            
-            // Force font download
-            const fontLoader = new FontFace('Crimson Text', 'url(https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2)', {
-                weight: '400',
-                display: 'block'
-            });
-            
-            const boldFontLoader = new FontFace('Crimson Text', 'url(https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJX1C1GA9N.woff2)', {
-                weight: '700',
-                display: 'block'
-            });
-
-            Promise.all([
-                fontLoader.load(),
-                boldFontLoader.load()
-            ]).then(fonts => {
-                fonts.forEach(font => document.fonts.add(font));
-                document.documentElement.classList.remove('fonts-loading');
-                document.documentElement.classList.add('fonts-loaded');
-                document.body.classList.add('ready');
-                if (typeof setupTitle === 'function') {
-                    setupTitle();
-                }
-            }).catch(err => {
-                console.warn('Font loading failed:', err);
-                document.body.classList.add('ready');
-            });
-
-            // Add loading class immediately
-            document.documentElement.classList.add('fonts-loading');
-        })();
+        // Simple font loading check
+        document.fonts.ready.then(() => {
+            setupTitle();
+            document.querySelector('.title-wrapper').classList.add('visible');
+        });
 
         // Preload images before DOM content loads
         const imagesToPreload = [
