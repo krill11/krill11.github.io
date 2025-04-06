@@ -6,17 +6,24 @@
     <title>Polycarbonate</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     
-    <!-- Preload font files -->
-    <link rel="preload" href="https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJX1C1GA9N.woff2" as="font" type="font/woff2" crossorigin>
-    
-    <!-- Load font stylesheet with high priority -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap">
-    </noscript>
-    
+    <!-- Critical font loading -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <style>
+        @font-face {
+            font-family: 'Crimson Text';
+            font-style: normal;
+            font-weight: 400;
+            font-display: block;
+            src: url(https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2) format('woff2');
+        }
+        @font-face {
+            font-family: 'Crimson Text';
+            font-style: normal;
+            font-weight: 700;
+            font-display: block;
+            src: url(https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJX1C1GA9N.woff2) format('woff2');
+        }
+
         /* Font loading behavior */
         .fonts-loading {
             font-family: Arial, sans-serif;
@@ -554,31 +561,40 @@
     <div class="loading-overlay"></div>
 
     <script>
-        // Font loading detection - moved to top before any other initialization
+        // Immediate font loading check
         (function() {
-            if ("fonts" in document) {
-                // Add loading class immediately
-                document.documentElement.classList.add('fonts-loading');
-                
-                // Pre-load both font weights
-                Promise.all([
-                    document.fonts.load('1em "Crimson Text"'),
-                    document.fonts.load('bold 1em "Crimson Text"')
-                ]).then(() => {
-                    document.documentElement.classList.remove('fonts-loading');
-                    document.documentElement.classList.add('fonts-loaded');
-                    document.body.classList.add('ready');
-                    // Re-render title after fonts are loaded
-                    if (typeof setupTitle === 'function') {
-                        setupTitle();
-                    }
-                }).catch(err => {
-                    console.warn('Font loading failed:', err);
-                    document.body.classList.add('ready');
-                });
-            } else {
+            // Check if mobile
+            const isMobile = window.innerWidth <= 768;
+            
+            // Force font download
+            const fontLoader = new FontFace('Crimson Text', 'url(https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2)', {
+                weight: '400',
+                display: 'block'
+            });
+            
+            const boldFontLoader = new FontFace('Crimson Text', 'url(https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJX1C1GA9N.woff2)', {
+                weight: '700',
+                display: 'block'
+            });
+
+            Promise.all([
+                fontLoader.load(),
+                boldFontLoader.load()
+            ]).then(fonts => {
+                fonts.forEach(font => document.fonts.add(font));
+                document.documentElement.classList.remove('fonts-loading');
+                document.documentElement.classList.add('fonts-loaded');
                 document.body.classList.add('ready');
-            }
+                if (typeof setupTitle === 'function') {
+                    setupTitle();
+                }
+            }).catch(err => {
+                console.warn('Font loading failed:', err);
+                document.body.classList.add('ready');
+            });
+
+            // Add loading class immediately
+            document.documentElement.classList.add('fonts-loading');
         })();
 
         // Preload images before DOM content loads
