@@ -278,9 +278,11 @@
             z-index: 998;
             opacity: 0;
             transition: opacity 0.3s ease;
-                width: 100%;
+            width: 100%;
             display: flex;
             justify-content: center;
+            cursor: pointer;
+            pointer-events: auto;
         }
 
         #kana-canvas {
@@ -370,18 +372,21 @@
             }
 
             .content {
-                display: none;
+                min-height: 400vh;
             }
 
-            .bio-wrapper,
-            .robotics-wrapper,
-            .indicator-wrapper,
-            .chevron-wrapper {
-                display: none !important;
+            #title-canvas,
+            #bio-canvas,
+            #robotics-canvas,
+            #indicator-canvas {
+                transform: scale(2) !important;
+                transform-origin: center;
+                margin: 0 auto;
             }
 
-            #title-canvas {
-                transform: scale(1) !important;
+            #kana-canvas {
+                transform: scale(2) !important;
+                transform-origin: center;
                 margin: 0 auto;
             }
 
@@ -390,9 +395,21 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
+                transform: translate(-50%, -50%);
+            }
+
+            .title-wrapper.moved {
+                top: 5% !important;
+                transform: translate(-50%, 0);
+            }
+
+            .bio-wrapper,
+            .robotics-wrapper,
+            .indicator-wrapper {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             body {
@@ -406,6 +423,32 @@
             .nav-dot {
                 width: 28px;
                 height: 28px;
+            }
+
+            .bio-wrapper {
+                top: 55% !important;
+            }
+
+            .robotics-wrapper {
+                top: 35% !important;
+            }
+
+            .kana-wrapper {
+                top: 65% !important;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+
+            .indicator-wrapper {
+                bottom: 20px;
+            }
+
+            .chevron-wrapper {
+                bottom: 20px;
+                width: 100%;
+                display: flex;
+                justify-content: center;
             }
         }
     </style>
@@ -742,11 +785,16 @@
             isAnimating = true;
             
             const vh = window.innerHeight;
+            const isMobile = window.innerWidth <= 768;
             currentSection = newSection;
             
             // Title movement and darkening
             if (currentSection >= 1) {
-                titleWrapper.style.top = '10%';
+                if (isMobile) {
+                    titleWrapper.classList.add('moved');
+                } else {
+                    titleWrapper.style.top = '10%';
+                }
                 darkeningOverlay.style.opacity = '0.85';
                 chevronWrapper.classList.add('chevron-hidden');
                 parallaxContainer.style.opacity = '0';
@@ -754,7 +802,11 @@
                 staticNoise.style.opacity = '0';
                 document.querySelector('.nav-dots').style.opacity = '1';
             } else {
-                titleWrapper.style.top = '50%';
+                if (isMobile) {
+                    titleWrapper.classList.remove('moved');
+                } else {
+                    titleWrapper.style.top = '50%';
+                }
                 darkeningOverlay.style.opacity = '0';
                 chevronWrapper.classList.remove('chevron-hidden');
                 parallaxContainer.style.opacity = '1';
@@ -980,50 +1032,56 @@
         // Text rendering
         function setupText() {
             const isMobile = window.innerWidth <= 768;
-            const fontSize = isMobile ? 24 : 20;
+            const fontSize = isMobile ? 18 : 20;
             
-            titleCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.95 : 0.9));
-            titleCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.15 : 0.15));
+            titleCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.8 : 0.9));
+            titleCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.2 : 0.15));
             titleCtx.imageSmoothingEnabled = false;
             
-            const text = "hey, i'm polycarbonate";
-            const centerX = titleCanvas.width / 2;
-            const centerY = titleCanvas.height / 2;
+            const text = isMobile ? ["hey, i'm", "polycarbonate"] : ["hey, i'm polycarbonate"];
+            const lineHeight = fontSize * 1.5;
+            const totalHeight = text.length * lineHeight;
+            const startY = titleCanvas.height / 2 - (totalHeight / 2) + (lineHeight / 2);
 
             titleCtx.textAlign = 'center';
             titleCtx.textBaseline = 'middle';
             titleCtx.font = `${fontSize}px "Crimson Text"`;
 
-            // Draw dark outline first
-            titleCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-            titleCtx.lineWidth = 3;
-            titleCtx.strokeText(text, centerX, centerY);
-            
-            // Draw outer glow layers
-            titleCtx.fillStyle = 'rgba(255, 140, 0, 0.3)';
-            titleCtx.shadowColor = 'rgba(255, 140, 0, 0.3)';
-            titleCtx.shadowBlur = 8;
-            titleCtx.fillText(text, centerX, centerY);
+            text.forEach((line, i) => {
+                const centerX = titleCanvas.width / 2;
+                const centerY = startY + (i * lineHeight);
 
-            titleCtx.fillStyle = 'rgba(255, 140, 0, 0.5)';
-            titleCtx.shadowColor = 'rgba(255, 140, 0, 0.5)';
-            titleCtx.shadowBlur = 6;
-            titleCtx.fillText(text, centerX, centerY);
+                // Draw dark outline first
+                titleCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                titleCtx.lineWidth = 3;
+                titleCtx.strokeText(line, centerX, centerY);
+                
+                // Draw outer glow layers
+                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.3)';
+                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.3)';
+                titleCtx.shadowBlur = 8;
+                titleCtx.fillText(line, centerX, centerY);
 
-            titleCtx.fillStyle = 'rgba(255, 140, 0, 0.7)';
-            titleCtx.shadowColor = 'rgba(255, 140, 0, 0.7)';
-            titleCtx.shadowBlur = 4;
-            titleCtx.fillText(text, centerX, centerY);
+                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.5)';
+                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.5)';
+                titleCtx.shadowBlur = 6;
+                titleCtx.fillText(line, centerX, centerY);
 
-            // Draw main text with brightest glow
-            titleCtx.fillStyle = '#ffd280';
-            titleCtx.shadowColor = 'rgba(255, 176, 0, 0.9)';
-            titleCtx.shadowBlur = 2;
-            titleCtx.fillText(text, centerX, centerY);
+                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.7)';
+                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.7)';
+                titleCtx.shadowBlur = 4;
+                titleCtx.fillText(line, centerX, centerY);
 
-            // Final pass without shadow for crisp text
-            titleCtx.shadowBlur = 0;
-            titleCtx.fillText(text, centerX, centerY);
+                // Draw main text with brightest glow
+                titleCtx.fillStyle = '#ffd280';
+                titleCtx.shadowColor = 'rgba(255, 176, 0, 0.9)';
+                titleCtx.shadowBlur = 2;
+                titleCtx.fillText(line, centerX, centerY);
+
+                // Final pass without shadow for crisp text
+                titleCtx.shadowBlur = 0;
+                titleCtx.fillText(line, centerX, centerY);
+            });
         }
 
         // Chevron rendering
@@ -1036,14 +1094,20 @@
         // Bio text rendering
         function setupBio() {
             const isMobile = window.innerWidth <= 768;
-            const fontSize = isMobile ? 11 : 20;
-            const lineHeight = isMobile ? 16 : 25;
+            const fontSize = isMobile ? 14 : 20;
+            const lineHeight = isMobile ? 20 : 25;
             
-            bioCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.5 : 0.9));
-            bioCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.15 : 0.25));
+            bioCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.7 : 0.9));
+            bioCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.2 : 0.25));
             bioCtx.imageSmoothingEnabled = false;
             
-            const text = [
+            const text = isMobile ? [
+                "an aspiring and passionate",
+                "mechanical engineer based",
+                "in California. I love robots,",
+                "computers, music, and",
+                "touching grass."
+            ] : [
                 "an aspiring and passionate mechanical engineer",
                 "based in California. I love robots, computers,",
                 "music, and touching grass."
@@ -1062,7 +1126,7 @@
 
                 bioCtx.shadowBlur = 4;
                 
-                if (i === 2) {
+                if (line.includes('grass')) {
                     // Split the line at 'grass'
                     const parts = line.split(/\b(grass)\b/);
                     let currentX = centerX - bioCtx.measureText(line).width / 2;
@@ -1152,8 +1216,8 @@
                                     );
                                     bioCtx.stroke();
                                 }
-                        }
-                    } else {
+                            }
+                        } else {
                             bioCtx.fillStyle = '#ffffff';
                             bioCtx.shadowColor = 'rgba(255, 255, 255, 0.8)';
                             bioCtx.fillText(part, currentX + bioCtx.measureText(part).width / 2, centerY);
@@ -1173,7 +1237,7 @@
                 const centerX = bioCanvas.width / 2;
                 const centerY = startY + i * lineHeight;
 
-                if (i === 2) {
+                if (line.includes('grass')) {
                     // Split the line at 'grass'
                     const parts = line.split(/\b(grass)\b/);
                     let currentX = centerX - bioCtx.measureText(line).width / 2;
@@ -1203,69 +1267,112 @@
         };
 
         function setupKana() {
-            // Calculate dimensions to fit the image within 65vh while maintaining aspect ratio
-            const maxHeight = Math.floor(window.innerHeight * 0.65 / 4);
-            const scale = maxHeight / kanaImage.height;
+            const isMobile = window.innerWidth <= 768;
+            // Calculate dimensions to fit the image within screen bounds while maintaining aspect ratio
+            const maxHeight = Math.floor(window.innerHeight * (isMobile ? 0.6 : 0.65) / (isMobile ? 2 : 4));
+            const maxWidth = Math.floor(window.innerWidth * (isMobile ? 1.2 : 1) / (isMobile ? 2 : 4));
+            
+            // Calculate scale based on both height and width constraints
+            const scaleHeight = maxHeight / kanaImage.height;
+            const scaleWidth = maxWidth / kanaImage.width;
+            const scale = Math.min(scaleHeight, scaleWidth);
+            
             const targetWidth = Math.floor(kanaImage.width * scale);
+            const targetHeight = Math.floor(kanaImage.height * scale);
 
             kanaCanvas.width = targetWidth;
-            kanaCanvas.height = maxHeight;
+            kanaCanvas.height = targetHeight;
             kanaCtx.imageSmoothingEnabled = false;
             
             // Draw the image
-            kanaCtx.drawImage(kanaImage, 0, 0, targetWidth, maxHeight);
+            kanaCtx.drawImage(kanaImage, 0, 0, targetWidth, targetHeight);
         }
 
         function setupRobotics() {
             const isMobile = window.innerWidth <= 768;
-            const fontSize = isMobile ? 11 : 20;
+            const fontSize = isMobile ? 14 : 20;
             
-            roboticsCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.5 : 0.9));
-            roboticsCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.1 : 0.2));
+            roboticsCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.7 : 0.9));
+            roboticsCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.15 : 0.2));
             roboticsCtx.imageSmoothingEnabled = false;
             
-            const text = ["check out my robotics team, ", "triple fault", ":"];
+            const text = isMobile ? 
+                ["check out my robotics", "team, triple fault:"] :
+                ["check out my robotics team, ", "triple fault", ":"];
+
             const centerX = roboticsCanvas.width / 2;
             const centerY = roboticsCanvas.height / 2;
+            const lineHeight = fontSize * 1.5;
 
             roboticsCtx.textAlign = 'center';
             roboticsCtx.textBaseline = 'middle';
-            
-            roboticsCtx.font = `${fontSize}px "Crimson Text"`;
-            const normalWidth = roboticsCtx.measureText(text[0]).width;
-            roboticsCtx.font = `bold ${fontSize}px "Crimson Text"`;
-            const boldWidth = roboticsCtx.measureText(text[1]).width;
-            roboticsCtx.font = `${fontSize}px "Crimson Text"`;
-            const colonWidth = roboticsCtx.measureText(text[2]).width;
-            const totalWidth = normalWidth + boldWidth + colonWidth;
-            
-            // Start position for text
-            let currentX = centerX - totalWidth / 2;
 
-            // Draw first part
-            roboticsCtx.font = `${fontSize}px "Crimson Text"`;
-            drawTextWithGlow(text[0], currentX + roboticsCtx.measureText(text[0]).width / 2, centerY, false);
-            currentX += roboticsCtx.measureText(text[0]).width;
+            if (isMobile) {
+                // Mobile layout
+                text.forEach((line, i) => {
+                    const y = centerY + (i - 0.5) * lineHeight;
+                    if (line.includes('triple fault')) {
+                        const parts = line.split(/(triple fault)/);
+                        let currentX = centerX - roboticsCtx.measureText(line).width / 2;
+                        
+                        parts.forEach(part => {
+                            if (part === 'triple fault') {
+                                roboticsCtx.font = `bold ${fontSize}px "Crimson Text"`;
+                                const tfX = currentX + roboticsCtx.measureText(part).width / 2;
+                                drawTextWithGlow(part, tfX, y, true);
+                                
+                                // Store click area
+                                const tfWidth = roboticsCtx.measureText(part).width;
+                                roboticsWrapper.clickArea = {
+                                    x: tfX - tfWidth/2,
+                                    y: y - fontSize/2,
+                                    width: tfWidth,
+                                    height: fontSize
+                                };
+                            } else {
+                                roboticsCtx.font = `${fontSize}px "Crimson Text"`;
+                                drawTextWithGlow(part, currentX + roboticsCtx.measureText(part).width / 2, y, false);
+                            }
+                            currentX += roboticsCtx.measureText(part).width;
+                        });
+                    } else {
+                        roboticsCtx.font = `${fontSize}px "Crimson Text"`;
+                        drawTextWithGlow(line, centerX, y, false);
+                    }
+                });
+            } else {
+                // Desktop layout (existing code)
+                roboticsCtx.font = `${fontSize}px "Crimson Text"`;
+                const normalWidth = roboticsCtx.measureText(text[0]).width;
+                roboticsCtx.font = `bold ${fontSize}px "Crimson Text"`;
+                const boldWidth = roboticsCtx.measureText(text[1]).width;
+                roboticsCtx.font = `${fontSize}px "Crimson Text"`;
+                const colonWidth = roboticsCtx.measureText(text[2]).width;
+                const totalWidth = normalWidth + boldWidth + colonWidth;
+                
+                let currentX = centerX - totalWidth / 2;
 
-            // Draw triple fault in bold
-            roboticsCtx.font = `bold ${fontSize}px "Crimson Text"`;
-            const tfX = currentX + roboticsCtx.measureText(text[1]).width / 2;
-            drawTextWithGlow(text[1], tfX, centerY, true);
-            
-            // Store click area for triple fault
-            const tfWidth = roboticsCtx.measureText(text[1]).width;
-            roboticsWrapper.clickArea = {
-                x: tfX - tfWidth/2,
-                y: centerY - fontSize/2,
-                width: tfWidth,
-                height: fontSize
-            };
-            
-            currentX += roboticsCtx.measureText(text[1]).width;
+                roboticsCtx.font = `${fontSize}px "Crimson Text"`;
+                drawTextWithGlow(text[0], currentX + roboticsCtx.measureText(text[0]).width / 2, centerY, false);
+                currentX += roboticsCtx.measureText(text[0]).width;
 
-            // Draw colon
-            roboticsCtx.font = `${fontSize}px "Crimson Text"`;
-            drawTextWithGlow(text[2], currentX + roboticsCtx.measureText(text[2]).width / 2, centerY, false);
+                roboticsCtx.font = `bold ${fontSize}px "Crimson Text"`;
+                const tfX = currentX + roboticsCtx.measureText(text[1]).width / 2;
+                drawTextWithGlow(text[1], tfX, centerY, true);
+                
+                const tfWidth = roboticsCtx.measureText(text[1]).width;
+                roboticsWrapper.clickArea = {
+                    x: tfX - tfWidth/2,
+                    y: centerY - fontSize/2,
+                    width: tfWidth,
+                    height: fontSize
+                };
+                
+                currentX += roboticsCtx.measureText(text[1]).width;
+
+                roboticsCtx.font = `${fontSize}px "Crimson Text"`;
+                drawTextWithGlow(text[2], currentX + roboticsCtx.measureText(text[2]).width / 2, centerY, false);
+            }
         }
 
         function drawTextWithGlow(text, x, y, isBold) {
@@ -1343,7 +1450,7 @@
         // Setup indicator text
         function setupIndicator() {
             const isMobile = window.innerWidth <= 768;
-            const fontSize = isMobile ? 10 : 16;
+            const fontSize = isMobile ? 16 : 16;
             
             // Calculate text width first
             const text = currentSection === 1 ? "up next: robotics" : "";
@@ -1481,8 +1588,26 @@
             bioBgCanvas.height = Math.floor(window.innerHeight / 4);
             bioBgCtx.imageSmoothingEnabled = false;
 
+            // Calculate dimensions to maintain aspect ratio and cover the canvas
+            const canvasRatio = bioBgCanvas.width / bioBgCanvas.height;
+            const imageRatio = blissImage.width / blissImage.height;
+            
+            let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+            
+            if (canvasRatio > imageRatio) {
+                // Canvas is wider than image ratio - fit to width
+                drawWidth = bioBgCanvas.width;
+                drawHeight = drawWidth / imageRatio;
+                offsetY = (bioBgCanvas.height - drawHeight) / 2;
+            } else {
+                // Canvas is taller than image ratio - fit to height
+                drawHeight = bioBgCanvas.height;
+                drawWidth = drawHeight * imageRatio;
+                offsetX = (bioBgCanvas.width - drawWidth) / 2;
+            }
+
             // Draw and darken the image
-            bioBgCtx.drawImage(blissImage, 0, 0, bioBgCanvas.width, bioBgCanvas.height);
+            bioBgCtx.drawImage(blissImage, offsetX, offsetY, drawWidth, drawHeight);
             
             // Apply darkening effect
             bioBgCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
@@ -1502,8 +1627,26 @@
             roboticsBgCanvas.height = Math.floor(window.innerHeight / 4);
             roboticsBgCtx.imageSmoothingEnabled = false;
 
+            // Calculate dimensions to maintain aspect ratio and cover the canvas
+            const canvasRatio = roboticsBgCanvas.width / roboticsBgCanvas.height;
+            const imageRatio = oceanImage.width / oceanImage.height;
+            
+            let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
+            
+            if (canvasRatio > imageRatio) {
+                // Canvas is wider than image ratio - fit to width
+                drawWidth = roboticsBgCanvas.width;
+                drawHeight = drawWidth / imageRatio;
+                offsetY = (roboticsBgCanvas.height - drawHeight) / 2;
+            } else {
+                // Canvas is taller than image ratio - fit to height
+                drawHeight = roboticsBgCanvas.height;
+                drawWidth = drawHeight * imageRatio;
+                offsetX = (roboticsBgCanvas.width - drawWidth) / 2;
+            }
+
             // Draw and darken the image
-            roboticsBgCtx.drawImage(oceanImage, 0, 0, roboticsBgCanvas.width, roboticsBgCanvas.height);
+            roboticsBgCtx.drawImage(oceanImage, offsetX, offsetY, drawWidth, drawHeight);
             
             // Apply darkening effect
             roboticsBgCtx.fillStyle = 'rgba(0, 0, 0, 0.3)';
@@ -1523,6 +1666,16 @@
             if (currentSection === 0) {
                 updateSection(1);
             }
+        });
+
+        // Add click handler for kana image
+        kanaWrapper.addEventListener('click', () => {
+            window.location.href = 'https://3fault.com';
+        });
+
+        // Add cursor change on hover
+        kanaWrapper.addEventListener('mouseover', () => {
+            kanaWrapper.style.cursor = 'pointer';
         });
     </script>
 </body>
