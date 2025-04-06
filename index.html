@@ -6,45 +6,43 @@
     <title>Polycarbonate</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     
-    <!-- Preload font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Preload font files -->
+    <link rel="preload" href="https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJX1C1GA9N.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <!-- Load font stylesheet -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap">
     
     <style>
+        /* Font loading behavior */
+        .fonts-loading {
+            font-family: Arial, sans-serif;
+        }
+        
+        .fonts-loaded {
+            font-family: "Crimson Text", "Times New Roman", serif;
+        }
+
+        /* Hide content until fonts are ready */
+        .loading {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .ready {
+            opacity: 1;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Crimson Text", "Times New Roman", serif;
-        }
-
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-
-        .loading-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
         }
 
         body {
             background: #000;
             min-height: 100vh;
             overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.5s ease;
         }
 
         body.loaded {
@@ -277,8 +275,8 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+                width: 100%;
+                height: 100%;
             image-rendering: pixelated;
         }
 
@@ -289,7 +287,7 @@
         }
 
         .robotics-wrapper {
-            position: fixed;
+                position: fixed;
             top: 25%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -315,7 +313,7 @@
             z-index: 998;
             opacity: 0;
             transition: opacity 0.3s ease;
-            width: 100%;
+                width: 100%;
             display: flex;
             justify-content: center;
             pointer-events: none;
@@ -493,7 +491,6 @@
     </style>
 </head>
 <body>
-    <div class="loading-screen"></div>
     <div class="title-wrapper">
         <canvas id="title-canvas"></canvas>
     </div>
@@ -545,42 +542,86 @@
     <div class="robotics-background">
         <canvas id="robotics-bg-canvas"></canvas>
     </div>
+    <div class="loading-overlay"></div>
 
     <script>
+        // Font loading detection
+        if ("fonts" in document) {
+            document.documentElement.classList.add('fonts-loading');
+            
+            Promise.all([
+                document.fonts.load('1em "Crimson Text"'),
+                document.fonts.load('bold 1em "Crimson Text"')
+            ]).then(() => {
+                document.documentElement.classList.remove('fonts-loading');
+                document.documentElement.classList.add('fonts-loaded');
+                document.body.classList.add('ready');
+            }).catch(err => {
+                console.warn('Font loading failed:', err);
+                document.body.classList.add('ready');
+            });
+        } else {
+            document.body.classList.add('ready');
+        }
+
+        // Preload images before DOM content loads
+        const imagesToPreload = [
+            'layer1.png',
+            'layer2.png',
+            'layer3.png',
+            'bliss.png',
+            'kana.png',
+            'ocean.jpg'
+        ].map(img => {
+            const resolution = getImageResolution();
+            return `optimized/${img.split('.')[0]}_${resolution}.${img.split('.')[1]}`;
+        });
+
+        // Load all resources in parallel
+        Promise.all([
+            ...imagesToPreload.map(src => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = resolve;
+                    img.onerror = () => {
+                        console.warn(`Failed to load optimized image ${src}, falling back to original`);
+                        const originalImg = new Image();
+                        originalImg.onload = resolve;
+                        originalImg.onerror = reject;
+                        originalImg.src = src.replace(/optimized\/(.+)_(720p|1080p|2k|4k)\./, '$1.');
+                    };
+                    img.src = src;
+                });
+            })
+        ]).catch(error => {
+            console.error('Error loading resources:', error);
+        });
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // Set up canvas dimensions and initial content immediately
+            setupNoise();
+            setupTitle();
+            setupChevron();
+            requestAnimationFrame(drawNoise);
+            requestAnimationFrame(drawChevron);
+
+            // Start loading backgrounds immediately
+            initBackgrounds();
+
             try {
-                // Wait for font to load
-                await document.fonts.ready;
-                
-                // Set up initial elements
-                setupNoise();
-                setupTitle();
-                setupChevron();
-                
-                // Start loading images in the background
-                const loadedImages = await loadOptimizedImages();
-                
-                // Initialize backgrounds with preloaded images
-                await initBackgrounds(loadedImages);
-                
-                // Initialize other elements
-                setupParallax(loadedImages);
-                
-                // Remove loading screen and show content
-                document.querySelector('.loading-screen').classList.add('hidden');
-                document.body.classList.add('loaded');
-                
-                // Initialize remaining elements
+                // Initialize all elements
+                setupParallax();
                 setupBio();
                 setupRobotics();
                 setupIndicator();
                 setupParallaxCanvas();
                 setupNavDots();
-                
-                // Start animations
-                requestAnimationFrame(drawNoise);
-                requestAnimationFrame(drawChevron);
                 animate();
+
+                // Show content
+                document.querySelector('.parallax-container').style.opacity = '1';
+                document.querySelector('.title-wrapper').style.opacity = '1';
+                document.querySelector('.chevron-wrapper').style.opacity = '1';
             } catch (error) {
                 console.error('Error during initialization:', error);
             }
@@ -604,112 +645,67 @@
             noiseCanvas.height = Math.floor(window.innerHeight / 4);
         });
 
-        async function setupParallax(loadedImages) {
+        async function setupParallax() {
             const layer1 = document.getElementById('layer1').querySelector('img');
             const layer2 = document.getElementById('layer2').querySelector('img');
             const layer3 = document.getElementById('layer3').querySelector('img');
 
-            // Use preloaded images if available
-            if (loadedImages) {
-                layer1.src = loadedImages['layer1.png'].src;
-                layer2.src = loadedImages['layer2.png'].src;
-                layer3.src = loadedImages['layer3.png'].src;
-            } else {
-                // Fallback to optimized paths
-                layer1.src = getOptimizedImagePath('layer1.png');
-                layer2.src = getOptimizedImagePath('layer2.png');
-                layer3.src = getOptimizedImagePath('layer3.png');
-            }
-        }
-
-        // Function to determine appropriate image resolution
-        function getImageResolution() {
-            const width = window.screen.width * window.devicePixelRatio;
-            const height = window.screen.height * window.devicePixelRatio;
-            
-            if (width <= 1280 || height <= 720) return '720p';
-            if (width <= 1920 || height <= 1080) return '1080p';
-            if (width <= 2560 || height <= 1440) return '2k';
-            return '4k';
-        }
-
-        // Function to get optimized image path
-        function getOptimizedImagePath(originalPath) {
+            // Get optimized paths
             const resolution = getImageResolution();
-            const ext = originalPath.split('.').pop();
-            const baseName = originalPath.split('/').pop().split('.')[0];
-            return `optimized/${baseName}_${resolution}.${ext}`;
+            layer1.src = `optimized/layer1_${resolution}.png`;
+            layer2.src = `optimized/layer2_${resolution}.png`;
+            layer3.src = `optimized/layer3_${resolution}.png`;
         }
 
-        // Function to load image with fallback
-        async function loadImageWithFallback(originalPath) {
+        // Initialize backgrounds
+        async function initBackgrounds() {
             try {
-                const optimizedPath = getOptimizedImagePath(originalPath);
-                const img = await preloadImage(optimizedPath);
-                return img;
-            } catch (error) {
-                console.warn(`Failed to load optimized image ${originalPath}, falling back to original`);
-                return await preloadImage(originalPath);
-            }
-        }
-
-        // Setup title text
-        function setupTitle() {
-            const isMobile = window.innerWidth <= 768;
-            const fontSize = isMobile ? 18 : 20;
-            
-            titleCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.8 : 0.9));
-            titleCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.2 : 0.15));
-            titleCtx.imageSmoothingEnabled = false;
-            
-            const text = isMobile ? ["hey, i'm", "polycarbonate"] : ["hey, i'm polycarbonate"];
-            const lineHeight = fontSize * 1.5;
-            const totalHeight = text.length * lineHeight;
-            const startY = titleCanvas.height / 2 - (totalHeight / 2) + (lineHeight / 2);
-
-            titleCtx.textAlign = 'center';
-            titleCtx.textBaseline = 'middle';
-            titleCtx.font = `${fontSize}px "Crimson Text"`;
-
-            text.forEach((line, i) => {
-                const centerX = titleCanvas.width / 2;
-                const centerY = startY + (i * lineHeight);
-
-                // Draw dark outline first
-                titleCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-                titleCtx.lineWidth = 3;
-                titleCtx.strokeText(line, centerX, centerY);
+                const resolution = getImageResolution();
+                const bioBg = new Image();
+                const oceanBg = new Image();
                 
-                // Draw outer glow layers
-                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.3)';
-                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.3)';
-                titleCtx.shadowBlur = 8;
-                titleCtx.fillText(line, centerX, centerY);
+                // Set up bio background
+                const bioCanvas = document.getElementById('bio-bg-canvas');
+                const bioCtx = bioCanvas.getContext('2d');
+                
+                // Set up robotics background
+                const roboticsCanvas = document.getElementById('robotics-bg-canvas');
+                const roboticsCtx = roboticsCanvas.getContext('2d');
 
-                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.5)';
-                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.5)';
-                titleCtx.shadowBlur = 6;
-                titleCtx.fillText(line, centerX, centerY);
+                // Load bio background
+                bioBg.onload = () => {
+                    drawBackground(bioCanvas, bioCtx, bioBg);
+                    window.backgroundImages = window.backgroundImages || {};
+                    window.backgroundImages.bioBg = bioBg;
+                };
+                bioBg.src = `optimized/bliss_${resolution}.png`;
 
-                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.7)';
-                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.7)';
-                titleCtx.shadowBlur = 4;
-                titleCtx.fillText(line, centerX, centerY);
+                // Load ocean background
+                oceanBg.onload = () => {
+                    drawBackground(roboticsCanvas, roboticsCtx, oceanBg);
+                    window.backgroundImages = window.backgroundImages || {};
+                    window.backgroundImages.oceanBg = oceanBg;
+                };
+                oceanBg.src = `optimized/ocean_${resolution}.jpg`;
 
-                // Draw main text with brightest glow
-                titleCtx.fillStyle = '#ffd280';
-                titleCtx.shadowColor = 'rgba(255, 176, 0, 0.9)';
-                titleCtx.shadowBlur = 2;
-                titleCtx.fillText(line, centerX, centerY);
-
-                // Final pass without shadow for crisp text
-                titleCtx.shadowBlur = 0;
-                titleCtx.fillText(line, centerX, centerY);
-            });
+                // Add error handlers
+                bioBg.onerror = () => {
+                    console.warn('Failed to load bio background, trying original');
+                    bioBg.src = 'bliss.png';
+                };
+                oceanBg.onerror = () => {
+                    console.warn('Failed to load ocean background, trying original');
+                    oceanBg.src = 'ocean.jpg';
+                };
+            } catch (error) {
+                console.error('Error initializing backgrounds:', error);
+            }
         }
 
         // Function to draw background
         function drawBackground(canvas, ctx, img) {
+            if (!img.complete) return;
+            
             const scale = 4;
             canvas.width = Math.floor(window.innerWidth / scale);
             canvas.height = Math.floor(window.innerHeight / scale);
@@ -732,30 +728,6 @@
             ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Initialize backgrounds
-        async function initBackgrounds(loadedImages) {
-            try {
-                // Use preloaded images if available, otherwise load them
-                const bioBg = loadedImages ? loadedImages['bliss.png'] : await loadImageWithFallback('bliss.png');
-                const oceanBg = loadedImages ? loadedImages['ocean.jpg'] : await loadImageWithFallback('ocean.jpg');
-
-                // Set up bio background
-                const bioCanvas = document.getElementById('bio-bg-canvas');
-                const bioCtx = bioCanvas.getContext('2d');
-                drawBackground(bioCanvas, bioCtx, bioBg);
-
-                // Set up robotics background
-                const roboticsCanvas = document.getElementById('robotics-bg-canvas');
-                const roboticsCtx = roboticsCanvas.getContext('2d');
-                drawBackground(roboticsCanvas, roboticsCtx, oceanBg);
-
-                // Store images for resize handling
-                window.backgroundImages = { bioBg, oceanBg };
-            } catch (error) {
-                console.error('Error initializing backgrounds:', error);
-            }
         }
 
         // DOM Element References - moved to top
@@ -1072,6 +1044,13 @@
                 bioBackground.style.opacity = '1';
                 roboticsBackground.style.opacity = '0';
                 
+                // Redraw bio background
+                if (window.backgroundImages && window.backgroundImages.bioBg) {
+                    const bioCanvas = document.getElementById('bio-bg-canvas');
+                    const bioCtx = bioCanvas.getContext('2d');
+                    drawBackground(bioCanvas, bioCtx, window.backgroundImages.bioBg);
+                }
+                
                 // Disable click events
                 kanaCanvas.style.pointerEvents = 'none';
                 roboticsCanvas.style.pointerEvents = 'none';
@@ -1091,6 +1070,13 @@
                 bioBackground.style.opacity = '0';
                 roboticsBackground.style.opacity = '1';
                 
+                // Redraw robotics background
+                if (window.backgroundImages && window.backgroundImages.oceanBg) {
+                    const roboticsCanvas = document.getElementById('robotics-bg-canvas');
+                    const roboticsCtx = roboticsCanvas.getContext('2d');
+                    drawBackground(roboticsCanvas, roboticsCtx, window.backgroundImages.oceanBg);
+                }
+                
                 // Enable click events only on robotics page
                 kanaCanvas.style.pointerEvents = 'auto';
                 roboticsCanvas.style.pointerEvents = 'auto';
@@ -1106,12 +1092,6 @@
                 indicatorWrapper.style.opacity = '0';
                 bioBackground.style.opacity = '0';
                 roboticsBackground.style.opacity = '0';
-                
-                // Disable click events
-                kanaCanvas.style.pointerEvents = 'none';
-                roboticsCanvas.style.pointerEvents = 'none';
-                kanaCanvas.style.cursor = 'default';
-                roboticsCanvas.style.cursor = 'default';
             }
             
             // Re-render indicator text
@@ -1125,14 +1105,18 @@
 
         // Window resize handler
         window.addEventListener('resize', () => {
+            // Redraw backgrounds if they exist
             if (window.backgroundImages) {
-                const bioCanvas = document.getElementById('bio-bg-canvas');
-                const bioCtx = bioCanvas.getContext('2d');
-                drawBackground(bioCanvas, bioCtx, window.backgroundImages.bioBg);
-
-                const roboticsCanvas = document.getElementById('robotics-bg-canvas');
-                const roboticsCtx = roboticsCanvas.getContext('2d');
-                drawBackground(roboticsCanvas, roboticsCtx, window.backgroundImages.oceanBg);
+                if (window.backgroundImages.bioBg) {
+                    const bioCanvas = document.getElementById('bio-bg-canvas');
+                    const bioCtx = bioCanvas.getContext('2d');
+                    drawBackground(bioCanvas, bioCtx, window.backgroundImages.bioBg);
+                }
+                if (window.backgroundImages.oceanBg) {
+                    const roboticsCanvas = document.getElementById('robotics-bg-canvas');
+                    const roboticsCtx = roboticsCanvas.getContext('2d');
+                    drawBackground(roboticsCanvas, roboticsCtx, window.backgroundImages.oceanBg);
+                }
             }
 
             // Update noise canvas
@@ -1931,6 +1915,61 @@
         kanaWrapper.addEventListener('mouseover', () => {
             kanaWrapper.style.cursor = 'pointer';
         });
+
+        // Setup title text
+        function setupTitle() {
+            const isMobile = window.innerWidth <= 768;
+            const fontSize = isMobile ? 18 : 20;
+            
+            titleCanvas.width = Math.floor(window.innerWidth * (isMobile ? 0.8 : 0.9));
+            titleCanvas.height = Math.floor(window.innerHeight * (isMobile ? 0.2 : 0.15));
+            titleCtx.imageSmoothingEnabled = false;
+            
+            const text = isMobile ? ["hey, i'm", "polycarbonate"] : ["hey, i'm polycarbonate"];
+            const lineHeight = fontSize * 1.5;
+            const totalHeight = text.length * lineHeight;
+            const startY = titleCanvas.height / 2 - (totalHeight / 2) + (lineHeight / 2);
+
+            titleCtx.textAlign = 'center';
+            titleCtx.textBaseline = 'middle';
+            titleCtx.font = `${fontSize}px "Crimson Text"`;
+
+            text.forEach((line, i) => {
+                const centerX = titleCanvas.width / 2;
+                const centerY = startY + (i * lineHeight);
+
+                // Draw dark outline first
+                titleCtx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+                titleCtx.lineWidth = 3;
+                titleCtx.strokeText(line, centerX, centerY);
+                
+                // Draw outer glow layers
+                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.3)';
+                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.3)';
+                titleCtx.shadowBlur = 8;
+                titleCtx.fillText(line, centerX, centerY);
+
+                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.5)';
+                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.5)';
+                titleCtx.shadowBlur = 6;
+                titleCtx.fillText(line, centerX, centerY);
+
+                titleCtx.fillStyle = 'rgba(255, 140, 0, 0.7)';
+                titleCtx.shadowColor = 'rgba(255, 140, 0, 0.7)';
+                titleCtx.shadowBlur = 4;
+                titleCtx.fillText(line, centerX, centerY);
+
+                // Draw main text with brightest glow
+                titleCtx.fillStyle = '#ffd280';
+                titleCtx.shadowColor = 'rgba(255, 176, 0, 0.9)';
+                titleCtx.shadowBlur = 2;
+                titleCtx.fillText(line, centerX, centerY);
+
+                // Final pass without shadow for crisp text
+                titleCtx.shadowBlur = 0;
+                titleCtx.fillText(line, centerX, centerY);
+            });
+        }
     </script>
 </body>
 </html>
