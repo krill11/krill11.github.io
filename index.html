@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polycarbonate</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" rel="stylesheet">
@@ -217,6 +218,7 @@
             opacity: 0;
             transform: translate(-50%, 100%);
             pointer-events: none;
+            display: none;
         }
 
         .bio-wrapper {
@@ -258,19 +260,22 @@
         }
 
         .robotics-wrapper {
-                position: fixed;
+            position: fixed;
             top: 25%;
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 998;
             opacity: 0;
             transition: opacity 0.3s ease;
+            pointer-events: none;
         }
 
         #robotics-canvas {
             image-rendering: pixelated;
             transform: scale(4);
             transform-origin: center;
+            pointer-events: none;
+            cursor: default;
         }
 
         .kana-wrapper {
@@ -281,11 +286,10 @@
             z-index: 998;
             opacity: 0;
             transition: opacity 0.3s ease;
-                width: 100%;
+            width: 100%;
             display: flex;
             justify-content: center;
-            cursor: pointer;
-            pointer-events: auto;
+            pointer-events: none;
         }
 
         #kana-canvas {
@@ -294,6 +298,8 @@
             transform-origin: center;
             max-height: 65vh;
             width: auto;
+            pointer-events: none;
+            cursor: default;
         }
 
         .indicator-wrapper {
@@ -402,6 +408,8 @@
                 justify-content: center;
                 align-items: center;
                 transform: translate(-50%, -50%);
+                opacity: 0;
+                transition: opacity 0.3s ease;
             }
 
             .title-wrapper.moved {
@@ -410,12 +418,24 @@
             }
 
             .bio-wrapper,
-            .robotics-wrapper,
-            .indicator-wrapper {
+            .robotics-wrapper {
                 width: 100%;
                 display: flex;
                 justify-content: center;
                 align-items: center;
+            }
+
+            .indicator-wrapper {
+                display: none !important;
+            }
+
+            .chevron-wrapper {
+                bottom: 20px;
+                width: 100%;
+            }
+
+            .chevron-hidden {
+                display: none !important;
             }
 
             body {
@@ -423,14 +443,9 @@
             }
 
             .nav-dots {
-                right: 16px;
+                display: none !important;
             }
             
-            .nav-dot {
-                width: 28px;
-                height: 28px;
-            }
-
             .bio-wrapper {
                 top: 55% !important;
             }
@@ -441,17 +456,6 @@
 
             .kana-wrapper {
                 top: 65% !important;
-                width: 100%;
-                display: flex;
-                justify-content: center;
-            }
-
-            .indicator-wrapper {
-                bottom: 20px;
-            }
-
-            .chevron-wrapper {
-                bottom: 20px;
                 width: 100%;
                 display: flex;
                 justify-content: center;
@@ -511,23 +515,45 @@
     <div class="robotics-background">
         <canvas id="robotics-bg-canvas"></canvas>
     </div>
+    <div class="loading-overlay"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize everything when DOM is loaded
+            // Set up canvas dimensions first
+            setupNoise();
+            setupTitle();
+            setupChevron();
+
+            // Initialize title and noise immediately
+            requestAnimationFrame(drawNoise);
+            requestAnimationFrame(drawChevron);
+            
+            // Show title and chevron with a slight delay to ensure smooth fade
+            setTimeout(() => {
+                document.querySelector('.title-wrapper').style.opacity = '1';
+                document.querySelector('.chevron-wrapper').style.opacity = '1';
+            }, 100);
+
             try {
-                // Initialize backgrounds first
-                await initBackgrounds();
+                // Start loading images in the background
+                const loadedImages = await loadOptimizedImages();
+                
+                // Initialize backgrounds with preloaded images
+                await initBackgrounds(loadedImages);
                 
                 // Initialize other elements
-                setupParallax();
-                setupTitle();
-                setupChevron();
+                setupParallax(loadedImages);
                 
-                // Show initial content
+                // Show content after images are loaded
                 document.querySelector('.parallax-container').style.opacity = '1';
-                document.querySelector('.title-wrapper').style.opacity = '1';
-                document.querySelector('.chevron-wrapper').classList.add('fade-in');
+                
+                // Initialize remaining elements
+                setupBio();
+                setupRobotics();
+                setupIndicator();
+                setupParallaxCanvas();
+                setupNavDots();
+                animate();
             } catch (error) {
                 console.error('Error during initialization:', error);
             }
@@ -551,15 +577,22 @@
             noiseCanvas.height = Math.floor(window.innerHeight / 4);
         });
 
-        async function setupParallax() {
-            const layer1 = document.getElementById('layer1');
-            const layer2 = document.getElementById('layer2');
-            const layer3 = document.getElementById('layer3');
+        async function setupParallax(loadedImages) {
+            const layer1 = document.getElementById('layer1').querySelector('img');
+            const layer2 = document.getElementById('layer2').querySelector('img');
+            const layer3 = document.getElementById('layer3').querySelector('img');
 
-            // Load optimized images
-            layer1.src = getOptimizedImagePath('layer1.png');
-            layer2.src = getOptimizedImagePath('layer2.png');
-            layer3.src = getOptimizedImagePath('layer3.png');
+            // Use preloaded images if available
+            if (loadedImages) {
+                layer1.src = loadedImages['layer1.png'].src;
+                layer2.src = loadedImages['layer2.png'].src;
+                layer3.src = loadedImages['layer3.png'].src;
+            } else {
+                // Fallback to optimized paths
+                layer1.src = getOptimizedImagePath('layer1.png');
+                layer2.src = getOptimizedImagePath('layer2.png');
+                layer3.src = getOptimizedImagePath('layer3.png');
+            }
         }
 
         // Function to determine appropriate image resolution
@@ -675,13 +708,11 @@
         }
 
         // Initialize backgrounds
-        async function initBackgrounds() {
+        async function initBackgrounds(loadedImages) {
             try {
-                // Load background images
-                const [bioBg, oceanBg] = await Promise.all([
-                    loadImageWithFallback('bliss.png'),
-                    loadImageWithFallback('ocean.jpg')
-                ]);
+                // Use preloaded images if available, otherwise load them
+                const bioBg = loadedImages ? loadedImages['bliss.png'] : await loadImageWithFallback('bliss.png');
+                const oceanBg = loadedImages ? loadedImages['ocean.jpg'] : await loadImageWithFallback('ocean.jpg');
 
                 // Set up bio background
                 const bioCanvas = document.getElementById('bio-bg-canvas');
@@ -835,10 +866,6 @@
             requestAnimationFrame(drawNoise);
         }
 
-        // Initialize noise effect
-        setupNoise();
-        requestAnimationFrame(drawNoise);
-
         // Setup parallax canvas
         function setupParallaxCanvas() {
             parallaxCanvas.width = Math.floor(container.clientWidth);
@@ -983,7 +1010,7 @@
             
             // Title movement and darkening
             if (currentSection >= 1) {
-            if (isMobile) {
+                if (isMobile) {
                     titleWrapper.classList.add('moved');
                 } else {
                     titleWrapper.style.top = '10%';
@@ -1017,6 +1044,13 @@
                 indicatorWrapper.style.opacity = '1';
                 bioBackground.style.opacity = '1';
                 roboticsBackground.style.opacity = '0';
+                
+                // Disable click events
+                kanaCanvas.style.pointerEvents = 'none';
+                roboticsCanvas.style.pointerEvents = 'none';
+                kanaCanvas.style.cursor = 'default';
+                roboticsCanvas.style.cursor = 'default';
+                
                 setupBio(); // Re-render bio text
             }
             // Robotics section
@@ -1029,6 +1063,12 @@
                 indicatorWrapper.style.opacity = '0';
                 bioBackground.style.opacity = '0';
                 roboticsBackground.style.opacity = '1';
+                
+                // Enable click events only on robotics page
+                kanaCanvas.style.pointerEvents = 'auto';
+                roboticsCanvas.style.pointerEvents = 'auto';
+                kanaCanvas.style.cursor = 'pointer';
+                
                 setupRobotics(); // Re-render robotics text
             }
             // Title section
@@ -1039,6 +1079,12 @@
                 indicatorWrapper.style.opacity = '0';
                 bioBackground.style.opacity = '0';
                 roboticsBackground.style.opacity = '0';
+                
+                // Disable click events
+                kanaCanvas.style.pointerEvents = 'none';
+                roboticsCanvas.style.pointerEvents = 'none';
+                kanaCanvas.style.cursor = 'default';
+                roboticsCanvas.style.cursor = 'default';
             }
             
             // Re-render indicator text
@@ -1607,9 +1653,12 @@
 
         // Add click handler for robotics text
         roboticsWrapper.addEventListener('click', (e) => {
+            // Only trigger if on robotics page (section 2) and clicking the canvas
+            if (currentSection !== 2 || e.target !== roboticsCanvas) return;
+            
             const rect = roboticsCanvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / 4; // Divide by 4 to account for scale
-            const y = (e.clientY - rect.top) / 4;  // Divide by 4 to account for scale
+            const x = (e.clientX - rect.left) / (window.innerWidth <= 768 ? 2 : 4);
+            const y = (e.clientY - rect.top) / (window.innerWidth <= 768 ? 2 : 4);
             
             if (roboticsWrapper.clickArea && 
                 x >= roboticsWrapper.clickArea.x && 
@@ -1620,11 +1669,17 @@
             }
         });
 
-        // Add cursor change on hover
+        // Update mousemove handler for robotics text
         roboticsWrapper.addEventListener('mousemove', (e) => {
+            // Only show pointer if on robotics page (section 2)
+            if (currentSection !== 2 || e.target !== roboticsCanvas) {
+                roboticsWrapper.style.cursor = 'default';
+                return;
+            }
+            
             const rect = roboticsCanvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / 4; // Divide by 4 to account for scale
-            const y = (e.clientY - rect.top) / 4;  // Divide by 4 to account for scale
+            const x = (e.clientX - rect.left) / (window.innerWidth <= 768 ? 2 : 4);
+            const y = (e.clientY - rect.top) / (window.innerWidth <= 768 ? 2 : 4);
             
             if (roboticsWrapper.clickArea && 
                 x >= roboticsWrapper.clickArea.x && 
@@ -1632,7 +1687,7 @@
                 y >= roboticsWrapper.clickArea.y && 
                 y <= roboticsWrapper.clickArea.y + roboticsWrapper.clickArea.height) {
                 roboticsWrapper.style.cursor = 'pointer';
-                } else {
+            } else {
                 roboticsWrapper.style.cursor = 'default';
             }
         });
@@ -1839,8 +1894,11 @@
             }
         });
 
-        kanaWrapper.addEventListener('click', () => {
-            window.location.href = 'https://3fault.com';
+        kanaWrapper.addEventListener('click', (e) => {
+            // Only trigger if clicking the canvas itself
+            if (e.target === kanaCanvas) {
+                window.location.href = 'https://3fault.com';
+            }
         });
 
         kanaWrapper.addEventListener('mouseover', () => {
