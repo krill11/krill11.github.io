@@ -10,8 +10,11 @@
     <link rel="preload" href="https://fonts.gstatic.com/s/crimsontext/v19/wlp2gwHKFkZgtmSR3NB0oRJfbwhT.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="https://fonts.gstatic.com/s/crimsontext/v19/wlppgwHKFkZgtmSR3NB0oRJX1C1GA9N.woff2" as="font" type="font/woff2" crossorigin>
     
-    <!-- Load font stylesheet -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap">
+    <!-- Load font stylesheet with high priority -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700&display=swap">
+    </noscript>
     
     <style>
         /* Font loading behavior */
@@ -551,24 +554,32 @@
     <div class="loading-overlay"></div>
 
     <script>
-        // Font loading detection
-        if ("fonts" in document) {
-            document.documentElement.classList.add('fonts-loading');
-            
-            Promise.all([
-                document.fonts.load('1em "Crimson Text"'),
-                document.fonts.load('bold 1em "Crimson Text"')
-            ]).then(() => {
-                document.documentElement.classList.remove('fonts-loading');
-                document.documentElement.classList.add('fonts-loaded');
+        // Font loading detection - moved to top before any other initialization
+        (function() {
+            if ("fonts" in document) {
+                // Add loading class immediately
+                document.documentElement.classList.add('fonts-loading');
+                
+                // Pre-load both font weights
+                Promise.all([
+                    document.fonts.load('1em "Crimson Text"'),
+                    document.fonts.load('bold 1em "Crimson Text"')
+                ]).then(() => {
+                    document.documentElement.classList.remove('fonts-loading');
+                    document.documentElement.classList.add('fonts-loaded');
+                    document.body.classList.add('ready');
+                    // Re-render title after fonts are loaded
+                    if (typeof setupTitle === 'function') {
+                        setupTitle();
+                    }
+                }).catch(err => {
+                    console.warn('Font loading failed:', err);
+                    document.body.classList.add('ready');
+                });
+            } else {
                 document.body.classList.add('ready');
-            }).catch(err => {
-                console.warn('Font loading failed:', err);
-                document.body.classList.add('ready');
-            });
-        } else {
-            document.body.classList.add('ready');
-        }
+            }
+        })();
 
         // Preload images before DOM content loads
         const imagesToPreload = [
@@ -1021,7 +1032,7 @@
             
             // Title movement and darkening
             if (currentSection >= 1) {
-                if (isMobile) {
+            if (isMobile) {
                     titleWrapper.classList.add('moved');
                 } else {
                     titleWrapper.style.top = '10%';
