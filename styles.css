@@ -85,6 +85,8 @@ main {
     border: 1.5px solid #ff8b3d;
     overflow: hidden;
     position: relative;
+    background: url('back.gif');
+    background-size: cover;
 }
 
 .avatar-placeholder img {
@@ -317,7 +319,7 @@ main {
         transform: translateX(0);
     }
     100% {
-        transform: translateX(calc(-9 * (88px + 10px))); /* Move by the width of one complete set */
+        transform: translateX(calc(-17 * (88px + 10px))); /* Move by the width of one complete set */
     }
 }
 
@@ -559,9 +561,10 @@ main {
     .badge-banner { order: 2; }
     .card[data-section="stars"] { order: 3; }
     .card[data-section="status"] { order: 4; }
-    .card[data-section="albums"] { order: 5; }
-    .card[data-section="projects"] { order: 6; }
-    .card[data-section="webring"] { display: none; }
+    .card[data-section="setup"] { order: 5; }
+    .card[data-section="albums"] { order: 6; }
+    .card[data-section="projects"] { order: 7; }
+    .card[data-section="webring"] { order: 8; }
 
     .card-header {
         font-size: 1.8rem;
@@ -607,4 +610,104 @@ main {
     .footer {
         padding: 15px 10px;
     }
+}
+
+.card[data-section="albums"] {
+    position: relative;
+}
+
+.hanging-sign {
+    position: absolute;
+    left: -25px;
+    top: 110px;
+    image-rendering: pixelated;
+    display: none;
+    transform: scale(2.5);
+    transform-origin: right center;
+}
+
+@media screen and (min-width: 769px) {
+    .hanging-sign {
+        display: block;
+    }
+}
+
+.card[data-section="stars"] {
+    position: relative;
+}
+
+.hanging-sign-right {
+    position: absolute;
+    right: -75px;
+    top: 90px;
+    image-rendering: pixelated;
+    display: none;
+    transform: scale(2.5) scaleX(-1);
+    transform-origin: left center;
+}
+
+@media screen and (min-width: 769px) {
+    .hanging-sign-right {
+        display: block;
+    }
+}
+
+.sitting-cat {
+    position: absolute;
+    top: 35px;
+    left: 30%;
+    transform: translateX(-50%) scale(1.25);
+    image-rendering: pixelated;
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .sitting-cat {
+        display: block;
+    }
+}
+
+.setup-content {
+    padding: 12px;
+    font-family: "MS UI Gothic", monospace;
+    color: #ffffff;
+}
+
+.setup-image {
+    width: 100%;
+    height: auto;
+    margin-bottom: 12px;
+    image-rendering: pixelated;
+}
+
+.setup-specs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.setup-specs li {
+    padding: 4px 0;
+    color: #ffffff;
+}
+
+.setup-specs li::before {
+    content: "> ";
+    color: #ff6b00;
+}
+
+.card[data-section="setup"] {
+    order: 5;
+}
+
+.card[data-section="albums"] {
+    order: 6;
+}
+
+.card[data-section="projects"] {
+    order: 7;
+}
+
+.card[data-section="webring"] {
+    order: 8;
 } 
