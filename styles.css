@@ -510,12 +510,16 @@ main {
     }
 
     .title {
-        font-size: 4.2em;
+        font-size: 14vw;
         text-align: center;
         margin: 5px 0 15px 0;
         padding: 0;
         line-height: 1;
-        letter-spacing: -1px;
+        letter-spacing: -0.02em;
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+        white-space: nowrap;
     }
 
     .title::before {
@@ -527,7 +531,9 @@ main {
     }
 
     .broken {
+        display: inline-block;
         transform: rotate(15deg) translateY(2px);
+        white-space: nowrap;
     }
 
     .column-left {
