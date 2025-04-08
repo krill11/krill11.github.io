@@ -655,8 +655,8 @@ main {
 .sitting-cat {
     position: absolute;
     top: 35px;
-    left: 30%;
-    transform: translateX(-50%) scale(1.25);
+    left: calc(50% - 415px);
+    transform: scale(1.25);
     image-rendering: pixelated;
     display: none;
 }
