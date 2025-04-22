@@ -1,8 +1,8 @@
 let pdfDoc = null;
-let pageNum = 1;
-let scale = 1.0;
-let isWidthFit = false;
-let isPageFit = true;
+let pageNum = parseInt(localStorage.getItem('920london_page')) || 1;
+let scale = parseFloat(localStorage.getItem('920london_scale')) || 1.0;
+let isWidthFit = localStorage.getItem('920london_width_fit') === 'true' || false;
+let isPageFit = localStorage.getItem('920london_page_fit') !== 'false';  // default true if not set
 const canvas = document.querySelector('#pdf-render');
 const ctx = canvas.getContext('2d');
 
@@ -12,11 +12,27 @@ const ctx2 = canvas2.getContext('2d');
 canvas.parentElement.appendChild(canvas2);
 canvas2.style.marginLeft = '10px';
 
+// Save current state
+function saveState() {
+    localStorage.setItem('920london_page', pageNum);
+    localStorage.setItem('920london_scale', scale);
+    localStorage.setItem('920london_width_fit', isWidthFit);
+    localStorage.setItem('920london_page_fit', isPageFit);
+}
+
 // Load the PDF
 pdfjsLib.getDocument('920London.pdf').promise.then(pdfDoc_ => {
     pdfDoc = pdfDoc_;
     document.querySelector('#page-count').textContent = pdfDoc.numPages;
+    
+    // Ensure saved page number is valid
+    if (pageNum > pdfDoc.numPages) {
+        pageNum = 1;
+        saveState();
+    }
+    
     renderPages(pageNum);
+    updateFitButtons(); // Update buttons to match restored state
 }).catch(error => {
     console.error('Error loading PDF:', error);
     alert('Error loading PDF. Please check if the file exists and try again.');
@@ -104,6 +120,9 @@ async function renderPages(num) {
         // Update page numbers
         document.querySelector('#page-num').textContent = num + (page2 ? '-' + (num + 1) : '');
         document.querySelector('#zoom-level').textContent = Math.round(finalScale * 100) + '%';
+        
+        // Save state after successful render
+        saveState();
     } catch (err) {
         console.error('Error rendering pages:', err);
     }
