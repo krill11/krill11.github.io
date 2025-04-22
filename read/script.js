@@ -1,77 +1,126 @@
 let pdfDoc = null;
 let pageNum = 1;
 let scale = 1.0;
-let isWidthFit = true;
-let isPageFit = false;
+let isWidthFit = false;
+let isPageFit = true;
 const canvas = document.querySelector('#pdf-render');
 const ctx = canvas.getContext('2d');
+
+// Create second canvas for two-page spread
+const canvas2 = document.createElement('canvas');
+const ctx2 = canvas2.getContext('2d');
+canvas.parentElement.appendChild(canvas2);
+canvas2.style.marginLeft = '10px';
 
 // Load the PDF
 pdfjsLib.getDocument('920London.pdf').promise.then(pdfDoc_ => {
     pdfDoc = pdfDoc_;
     document.querySelector('#page-count').textContent = pdfDoc.numPages;
-    renderPage(pageNum);
+    renderPages(pageNum);
 }).catch(error => {
     console.error('Error loading PDF:', error);
     alert('Error loading PDF. Please check if the file exists and try again.');
 });
 
 // Calculate scale for fitting width
-function calculateWidthScale(page) {
-    const viewport = page.getViewport({ scale: 1 });
-    const containerWidth = canvas.parentElement.clientWidth - 40; // Account for padding
-    return containerWidth / viewport.width;
+function calculateWidthScale(viewport1, viewport2 = null) {
+    const containerWidth = canvas.parentElement.clientWidth - 50; // Account for padding and gap
+    if (viewport2) {
+        return containerWidth / (viewport1.width * 2 + 10);
+    }
+    return containerWidth / viewport1.width;
 }
 
 // Calculate scale for fitting page
-function calculatePageScale(page) {
-    const viewport = page.getViewport({ scale: 1 });
+function calculatePageScale(viewport1, viewport2 = null) {
     const containerHeight = window.innerHeight - 150; // Account for toolbar and padding
-    const containerWidth = canvas.parentElement.clientWidth - 40;
-    const heightScale = containerHeight / viewport.height;
-    const widthScale = containerWidth / viewport.width;
+    const containerWidth = canvas.parentElement.clientWidth - 50;
+    
+    let totalWidth = viewport1.width;
+    if (viewport2) {
+        totalWidth = viewport1.width * 2 + 10;
+    }
+    
+    const heightScale = containerHeight / viewport1.height;
+    const widthScale = containerWidth / totalWidth;
     return Math.min(heightScale, widthScale);
 }
 
-// Render the page
-function renderPage(num) {
-    pdfDoc.getPage(num).then(page => {
-        let finalScale = scale;
-        
-        if (isWidthFit) {
-            finalScale = calculateWidthScale(page);
-        } else if (isPageFit) {
-            finalScale = calculatePageScale(page);
+// Render the pages
+async function renderPages(num) {
+    try {
+        // Clear second canvas if we're showing first page (cover)
+        if (num === 1) {
+            canvas2.width = 0;
+            canvas2.height = 0;
+            canvas2.style.display = 'none';
+        } else {
+            canvas2.style.display = 'inline-block';
         }
 
-        const viewport = page.getViewport({ scale: finalScale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+        // Get the current page
+        const page1 = await pdfDoc.getPage(num);
+        const viewport1 = page1.getViewport({ scale: 1 });
+        
+        // Get the next page if we're not on the cover
+        let page2 = null;
+        let viewport2 = null;
+        if (num !== 1 && num + 1 <= pdfDoc.numPages) {
+            page2 = await pdfDoc.getPage(num + 1);
+            viewport2 = page2.getViewport({ scale: 1 });
+        }
 
-        const renderContext = {
+        // Calculate the scale
+        let finalScale = scale;
+        if (isWidthFit) {
+            finalScale = calculateWidthScale(viewport1, viewport2);
+        } else if (isPageFit) {
+            finalScale = calculatePageScale(viewport1, viewport2);
+        }
+
+        // Set up first canvas
+        const scaledViewport1 = page1.getViewport({ scale: finalScale });
+        canvas.height = scaledViewport1.height;
+        canvas.width = scaledViewport1.width;
+
+        // Render first page
+        await page1.render({
             canvasContext: ctx,
-            viewport: viewport
-        };
+            viewport: scaledViewport1
+        }).promise;
 
-        page.render(renderContext).promise.then(() => {
-            document.querySelector('#page-num').textContent = num;
-            document.querySelector('#zoom-level').textContent = Math.round(finalScale * 100) + '%';
-        });
-    });
+        // Render second page if applicable
+        if (page2) {
+            const scaledViewport2 = page2.getViewport({ scale: finalScale });
+            canvas2.height = scaledViewport2.height;
+            canvas2.width = scaledViewport2.width;
+
+            await page2.render({
+                canvasContext: ctx2,
+                viewport: scaledViewport2
+            }).promise;
+        }
+
+        // Update page numbers
+        document.querySelector('#page-num').textContent = num + (page2 ? '-' + (num + 1) : '');
+        document.querySelector('#zoom-level').textContent = Math.round(finalScale * 100) + '%';
+    } catch (err) {
+        console.error('Error rendering pages:', err);
+    }
 }
 
 // Previous page
 document.querySelector('#prev-page').addEventListener('click', () => {
     if (pageNum <= 1) return;
-    pageNum--;
-    renderPage(pageNum);
+    pageNum = pageNum === 2 ? 1 : pageNum - 2;
+    renderPages(pageNum);
 });
 
 // Next page
 document.querySelector('#next-page').addEventListener('click', () => {
     if (pageNum >= pdfDoc.numPages) return;
-    pageNum++;
-    renderPage(pageNum);
+    pageNum = pageNum === 1 ? 2 : pageNum + 2;
+    renderPages(pageNum);
 });
 
 // Zoom in
@@ -81,7 +130,7 @@ document.querySelector('#zoom-in').addEventListener('click', () => {
     updateFitButtons();
     if (scale >= 3.0) return;
     scale += 0.25;
-    renderPage(pageNum);
+    renderPages(pageNum);
 });
 
 // Zoom out
@@ -91,7 +140,7 @@ document.querySelector('#zoom-out').addEventListener('click', () => {
     updateFitButtons();
     if (scale <= 0.5) return;
     scale -= 0.25;
-    renderPage(pageNum);
+    renderPages(pageNum);
 });
 
 // Fit to width
@@ -99,7 +148,7 @@ document.querySelector('#fit-width').addEventListener('click', () => {
     isWidthFit = true;
     isPageFit = false;
     updateFitButtons();
-    renderPage(pageNum);
+    renderPages(pageNum);
 });
 
 // Fit to page
@@ -107,7 +156,7 @@ document.querySelector('#fit-page').addEventListener('click', () => {
     isWidthFit = false;
     isPageFit = true;
     updateFitButtons();
-    renderPage(pageNum);
+    renderPages(pageNum);
 });
 
 // Update fit buttons active state
@@ -120,14 +169,14 @@ function updateFitButtons() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
         if (pageNum < pdfDoc.numPages) {
-            pageNum++;
-            renderPage(pageNum);
+            pageNum = pageNum === 1 ? 2 : pageNum + 2;
+            renderPages(pageNum);
         }
         e.preventDefault();
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'Backspace') {
         if (pageNum > 1) {
-            pageNum--;
-            renderPage(pageNum);
+            pageNum = pageNum === 2 ? 1 : pageNum - 2;
+            renderPages(pageNum);
         }
         e.preventDefault();
     }
@@ -139,7 +188,7 @@ window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
         if (isWidthFit || isPageFit) {
-            renderPage(pageNum);
+            renderPages(pageNum);
         }
     }, 200);
 }); 
