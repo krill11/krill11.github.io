@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cookbook</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Georgia&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>polycarbonate's recipes</h1>
+            <div class="theme-toggle">
+                <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </header>
+        
+        <main>
+            <div class="recipe-carousel-wrapper">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="recipe-search" placeholder="Search recipes...">
+                    <span class="search-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <div class="search-results" id="search-results">
+                        <!-- Search results will appear here -->
+                    </div>
+                </div>
+                
+                <div class="recipe-carousel">
+                    <div class="carousel-container" id="carousel-container">
+                        <!-- Recipe cards will be added here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recipe-display" id="recipe-display">
+                <div class="recipe-content" id="recipe-content">
+                    <p class="select-prompt">Select a recipe to view details</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="recipes.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 

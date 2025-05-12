@@ -670,7 +670,7 @@ function updateRobot() {
     updateTransferAnimation();
     
     // Get time delta for smooth movement (assuming 60 FPS if not available)
-    const deltaTime = 1/120;
+    const deltaTime = 1/60;
     
     // Calculate desired velocities based on input
     let targetVelocityX = 0;
