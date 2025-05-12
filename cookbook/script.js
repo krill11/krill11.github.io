@@ -26,8 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Check for saved theme preference
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
+    if (savedTheme === 'light') {
+        document.body.classList.remove('dark-theme');
+    } else {
+        // Either savedTheme is 'dark' or null (first visit)
         document.body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
     }
 
     // Allow mouse wheel scrolling in recipe content
