@@ -577,6 +577,38 @@
             // Clear canvas
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the glowing "conflict" text
+            const textProgress = Math.min(Math.max((elapsedTime - 0.5) / 2, 0), 1); // Start appearing after 0.5s
+            if (textProgress > 0) {
+                ctx.save();
+                ctx.font = 'bold 240px Georgia';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Create gradient for text
+                const gradient = ctx.createLinearGradient(0, canvas.height/2 - 120, 0, canvas.height/2 + 120);
+                gradient.addColorStop(0, 'rgba(255, 140, 0, ' + textProgress + ')');
+                gradient.addColorStop(0.5, 'rgba(255, 69, 0, ' + textProgress + ')');
+                gradient.addColorStop(1, 'rgba(255, 140, 0, ' + textProgress + ')');
+                
+                // Draw multiple layers for glow effect
+                for (let i = 30; i >= 0; i--) {
+                    ctx.fillStyle = `rgba(255, 140, 0, ${0.03 * textProgress})`;
+                    ctx.shadowColor = 'rgba(255, 140, 0, 0.3)';
+                    ctx.shadowBlur = i * 2;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                    ctx.fillText('conflict', canvas.width/2, canvas.height/2);
+                }
+                
+                // Draw the main text
+                ctx.fillStyle = gradient;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'rgba(255, 140, 0, 0.8)';
+                ctx.fillText('conflict', canvas.width/2, canvas.height/2);
+                ctx.restore();
+            }
             
             const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
             const width = 1920;
