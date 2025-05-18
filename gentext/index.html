@@ -1,38 +1,221 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Text Visualization</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sentiment analysis</title>
     <style>
-        body {
+        :root {
+            --pastel-pink: #FFB7C5;
+            --pastel-purple: #C8A2C8;
+            --pastel-orange: #FFB347;
+            --dark-brown: #2A1810;
+            --darker-brown: #1C0F0A;
+            --accent-brown: #3D261C;
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
             background: black;
-            overflow: hidden;
-            width: 100vw;
-            height: 100vh;
+            color: #FFF;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
         }
-        
-        #presentation {
-            width: 1920px;
-            height: 1080px;
+
+        .input-container {
+            background: var(--dark-brown);
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            margin: 2rem auto;
+            transition: var(--transition);
             position: relative;
-            background: black;
-            transform-origin: center;
+            z-index: 100;
+            border: 1px solid var(--accent-brown);
         }
-        
-        canvas {
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            min-height: 32px;
+            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-purple));
+            border-radius: 6px;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-family: Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-purple), var(--pastel-orange));
+            background-size: 200% 200%;
+            animation: gradient 6s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--accent-brown);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--darker-brown);
+        }
+
+        .upload-area:hover {
+            border-color: var(--pastel-purple);
+            background: rgba(200, 162, 200, 0.05);
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--pastel-pink);
+            background: rgba(255, 183, 197, 0.05);
+        }
+
+        .or-divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: Georgia, serif;
+            font-style: italic;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background: var(--accent-brown);
+        }
+
+        .or-divider::before { left: 0; }
+        .or-divider::after { right: 0; }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 1rem;
+            border: 1px solid var(--accent-brown);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            resize: vertical;
+            transition: var(--transition);
+            background: var(--darker-brown);
+            color: #FFF;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--pastel-purple);
+            box-shadow: 0 0 0 3px rgba(200, 162, 200, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-purple));
+            background-size: 200% 200%;
+            animation: gradient 6s ease infinite;
+            color: var(--darker-brown);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+            width: 100%;
+            font-family: Georgia, serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.processing {
+            pointer-events: none;
+            background: linear-gradient(135deg, var(--pastel-purple), var(--pastel-orange));
+            animation: gradient 2s ease infinite;
+        }
+
+        button.processing::after {
+            content: '';
             position: absolute;
             top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                transparent 100%
+            );
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(50%); }
+        }
+
+        #visualization-container {
+            position: fixed;
+            top: 0;
             left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            display: none;
+        }
+
+        canvas {
             width: 100%;
             height: 100%;
         }
 
         #pixel-counter {
-            position: absolute;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -48,24 +231,99 @@
             opacity: 1;
             padding: 20px;
             border-radius: 10px;
+            display: none;
         }
 
+        #file-input {
+            display: none;
+        }
 
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
 
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .loading.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .loading-spinner::before,
+        .loading-spinner::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-purple), var(--pastel-orange));
+            background-size: 200% 200%;
+            animation: pulse 2s ease-in-out infinite, gradient 6s ease infinite;
+        }
+
+        .loading-spinner::after {
+            filter: blur(15px);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.85); opacity: 0.8; }
+            50% { transform: scale(1); opacity: 0.95; }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div id="presentation">
+    <div class="input-container" id="input-container">
+        <div class="brand">
+            <div class="logo"></div>
+            <h1>sentiment analysis</h1>
+        </div>
+        <div class="upload-area" id="upload-area">
+            <p>Drag and drop your file here</p>
+            <p style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); margin-top: 0.5rem;">Supported formats: .txt, .pdf</p>
+            <input type="file" id="file-input" accept=".txt,.pdf">
+        </div>
+        <div class="or-divider">or</div>
+        <textarea id="text-input" placeholder="Paste your text here..."></textarea>
+        <button id="analyze-btn">Analyze Text</button>
+    </div>
+
+    <div id="visualization-container">
         <canvas></canvas>
         <div id="pixel-counter"></div>
     </div>
-    
+
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     <script>
+        // Initialize PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+
         let isAnimating = false;
         let currentAnimation = null;
         let canvas, ctx;
@@ -97,72 +355,581 @@
             slideOutDelays: null,
             slideOutSpeeds: null
         };
-        
+
+        // UI Elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const textInput = document.getElementById('text-input');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const inputContainer = document.getElementById('input-container');
+        const visualizationContainer = document.getElementById('visualization-container');
+        const loadingScreen = document.getElementById('loading');
+
+        // Event Listeners
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        analyzeBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            analyzeBtn.disabled = true;
+            
+            try {
+                await handleAnalyze();
+            } catch (error) {
+                console.error('Error in analyze button handler:', error);
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        async function processFile(file) {
+            showLoading();
+            let text = '';
+            
+            if (file.type === 'text/plain') {
+                text = await file.text();
+            } else if (file.type === 'application/pdf') {
+                text = await extractTextFromPDF(file);
+            }
+
+            if (text) {
+                textInput.value = text;
+            }
+            hideLoading();
+        }
+
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = '';
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                text += content.items.map(item => item.str).join(' ') + '\n';
+            }
+
+            return text;
+        }
+
+        async function handleAnalyze() {
+            const text = textInput.value.trim();
+            if (!text) {
+                alert('Please enter or upload some text first.');
+                return;
+            }
+
+            // Show loading screen immediately when analyze is clicked
+            loadingScreen.classList.add('active');
+            await new Promise(resolve => requestAnimationFrame(resolve));
+
+            try {
+                const pixels = await processText(text);
+                setupVisualization(pixels);
+                inputContainer.style.display = 'none';
+                visualizationContainer.style.display = 'block';
+                document.getElementById('pixel-counter').style.display = 'block';
+                startAnimation();
+            } catch (error) {
+                console.error('Error processing text:', error);
+                alert('An error occurred while processing the text. Please try again.');
+            }
+        }
+
+        function showLoading() {
+            loadingScreen.style.display = 'flex';
+            loadingScreen.style.opacity = '1';
+            loadingScreen.style.pointerEvents = 'all';
+        }
+
+        function hideLoading() {
+            loadingScreen.style.display = 'none';
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.pointerEvents = 'none';
+        }
+
+        function resetVisualization() {
+            isAnimating = false;
+            if (currentAnimation) {
+                currentAnimation.cancel();
+                currentAnimation = null;
+            }
+            
+            inputContainer.style.display = 'block';
+            visualizationContainer.style.display = 'none';
+            
+            // Reset animation state
+            animationState = {
+                currentIndex: 0,
+                activePixels: new Set(),
+                completedPixels: new Set(),
+                collapsiblePixels: new Set(),
+                pixels: [],
+                layout: null,
+                phase: 'initial',
+                velocities: null,
+                startTime: null,
+                targetSlots: null,
+                activeRowPixels: new Set(),
+                pixelOrder: [],
+                fallingOrder: [],
+                currentFallingIndex: 0,
+                fallenPixels: new Set(),
+                finalPositions: null,
+                movingPixels: new Set(),
+                finalPixelSize: null,
+                linePositions: null,
+                lineHeights: null,
+                bounds: null,
+                originalCoords: null,
+                finalColors: null,
+                slideOutDelays: null,
+                slideOutSpeeds: null
+            };
+        }
+
+        async function processText(text) {
+            try {
+                // Show loading screen BEFORE any processing
+                loadingScreen.classList.add('active');
+                // Force a reflow and wait for the loading screen to be visible
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                
+                // Split text into words and analyze sentiment
+                const words = text.split(/\s+/).filter(word => word.length > 0);
+                
+                // Initial sentiment analysis
+                const initialSentiments = words.map(word => {
+                    let sentiment = 0.5;
+                    if (negativeWords.has(word.toLowerCase())) sentiment -= 0.3;
+                    if (positiveWords.has(word.toLowerCase())) sentiment += 0.3;
+                    if (word.toLowerCase().startsWith('un') || word.toLowerCase().startsWith('dis') || word.toLowerCase().startsWith('mis')) {
+                        sentiment -= 0.15;
+                    }
+                    if (word.toLowerCase().startsWith('en') || word.toLowerCase().startsWith('em') || word.toLowerCase().startsWith('re')) {
+                        sentiment += 0.1;
+                    }
+                    if (word.endsWith('!')) sentiment += 0.15;
+                    if (word.endsWith('?')) sentiment -= 0.1;
+                    if (word.endsWith('...')) sentiment -= 0.1;
+                    if (word === word.toUpperCase() && word.length > 1) {
+                        if (sentiment > 0.5) sentiment += 0.1;
+                        if (sentiment < 0.5) sentiment -= 0.1;
+                    }
+                    // Ensure sentiment stays in 0-1 range
+                    return Math.max(0, Math.min(1, sentiment));
+                });
+                console.log('Initial sentiment analysis complete');
+
+                // Group similar sentiments and enhance diversity
+                const uniqueSentiments = enhanceSentimentDiversity(words, initialSentiments);
+                console.log('Sentiment diversity enhanced');
+                
+                // Calculate word features
+                const wordFeatures = words.map(word => ({
+                    vowelRatio: (word.match(/[aeiou]/gi) || []).length / Math.max(word.length, 1),
+                    length: Math.min(word.length / 20, 1.0)  // Match Python's length normalization
+                }));
+                console.log('Word features calculated');
+
+                // Calculate dimensions for a screen-filling layout
+                const screenRatio = window.innerWidth / window.innerHeight;
+                const width = Math.ceil(Math.sqrt(words.length * screenRatio));
+                const height = Math.ceil(words.length / width);
+                
+                // Create normalized coordinates first (for influence calculations)
+                const normalizedCoords = words.map((_, i) => ({
+                    x: i % width,
+                    y: Math.floor(i / width)
+                }));
+                
+                // Calculate influence using normalized coordinates
+                const sentimentDiffs = uniqueSentiments.map(s => Math.abs(s - 0.5));
+                const strongIndices = sentimentDiffs.map((diff, i) => diff > 0.35 ? i : -1).filter(i => i !== -1);
+                const strongSentiments = strongIndices.map(i => uniqueSentiments[i]);
+                const strongCoords = strongIndices.map(i => normalizedCoords[i]);
+                console.log('Strong sentiment pixels identified:', strongIndices.length);
+                
+                // Calculate sentiment types and strengths
+                const isNegative = strongSentiments.map(s => s < 0.5);
+                const baseStrengths = strongIndices.map(i => sentimentDiffs[i]);
+                const influenceStrengths = baseStrengths.map((strength, i) => 
+                    isNegative[i] ? strength * 1.45 : strength * 0.95
+                );
+
+                // Initialize color arrays exactly like Python
+                const hues = uniqueSentiments.map(s => s * 0.83);  // Map to 0-0.83 range
+                const saturations = words.map((_, i) => 0.6 + wordFeatures[i].vowelRatio * 0.4);  // 0.6-1.0 range
+                const values = words.map((_, i) => 0.7 + wordFeatures[i].length * 0.3);  // 0.7-1.0 range
+
+                // Calculate sentiment intensities and adjust base colors
+                const sentimentIntensities = sentimentDiffs.map(diff => diff * 2);
+                for (let i = 0; i < words.length; i++) {
+                    saturations[i] = Math.min(1, saturations[i] * sentimentIntensities[i]);
+                    values[i] = Math.min(1, values[i] * sentimentIntensities[i] + (1 - sentimentIntensities[i]) * 0.95);
+                }
+                console.log('Base colors calculated');
+
+                // Process weak sentiment pixels
+                const weakIndices = sentimentDiffs.map((diff, i) => diff <= 0.35 ? i : -1).filter(i => i !== -1);
+                console.log('Weak pixels identified:', weakIndices.length);
+                
+                if (strongIndices.length > 0 && weakIndices.length > 0) {
+                    console.log('Processing influence calculations...');
+                    // Calculate similar sentiment boosts for strong pixels
+                    const similarBoosts = strongIndices.map((strongIdx, i) => {
+                        let boost = 0;
+                        strongIndices.forEach((otherIdx, j) => {
+                            if (i !== j) {
+                                const dx = strongCoords[i].x - strongCoords[j].x;
+                                const dy = strongCoords[i].y - strongCoords[j].y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                if (distance < 4 && isNegative[i] === isNegative[j]) {
+                                    boost += Math.max(0, 1 - distance / 4) * 0.45;
+                                }
+                            }
+                        });
+                        return boost;
+                    });
+
+                    // Process weak pixels in batches
+                    const batchSize = 1000;
+                    for (let batchStart = 0; batchStart < weakIndices.length; batchStart += batchSize) {
+                        const batchEnd = Math.min(batchStart + batchSize, weakIndices.length);
+                        const batchIndices = weakIndices.slice(batchStart, batchEnd);
+                        console.log(`Processing batch ${batchStart}-${batchEnd} of ${weakIndices.length}`);
+                        
+                        // Calculate influences for each weak pixel
+                        batchIndices.forEach(weakIdx => {
+                            const weakCoord = normalizedCoords[weakIdx];
+                            const influences = strongIndices.map((strongIdx, i) => {
+                                const dx = weakCoord.x - strongCoords[i].x;
+                                const dy = weakCoord.y - strongCoords[i].y;
+                                const gridDistance = Math.sqrt(dx * dx + dy * dy);
+                                const linearDistance = Math.abs(weakIdx - strongIdx) / 7;
+                                
+                                // Calculate influence radius using ADJUSTED ratios
+                                const baseRadius = isNegative[i] ? 4.83 : 5.175; // 15% stronger radii
+                                const strengthFactor = isNegative[i] ? 5.98 : 6.555; // 15% stronger factors
+                                const baseStrength = baseStrengths[i] * (isNegative[i] ? 1.38 : 1.61); // 15% stronger base strengths
+                                const influenceRadius = (baseRadius + baseStrength * strengthFactor) * (1 + similarBoosts[i]);
+                                
+                                // Calculate adjusted distance with ADJUSTED weights
+                                const gridWeight = isNegative[i] ? 0.65 : 0.6; // More similar grid weights
+                                const linearWeight = isNegative[i] ? 0.35 : 0.4; // More similar linear weights
+                                const distanceScale = (isNegative[i] ? 1.0 : 0.85) * (1 - similarBoosts[i] * 0.7); // Less extreme difference
+                                const adjustedDistance = (gridWeight * gridDistance + linearWeight * linearDistance) * distanceScale;
+                                
+                                if (adjustedDistance >= influenceRadius) return 0;
+                                
+                                // Calculate base influence with ADJUSTED multipliers
+                                let influence = (1 - adjustedDistance / influenceRadius) * (1 + similarBoosts[i] * (isNegative[i] ? 1.4 : 1.6));
+                                
+                                // Apply type multipliers with more balanced adjustment
+                                influence *= isNegative[i] ? 1.75 : 1.95; // Slightly increased positive multiplier
+                                
+                                // Apply strength multiplier
+                                influence *= baseStrength;
+                                
+                                return influence;
+                            });
+
+                            // Calculate total influence and blend colors with ADJUSTED ratios
+                            const totalInfluence = influences.reduce((a, b) => a + b, 0);
+                            if (totalInfluence > 0) {
+                                const negInfluence = influences.reduce((sum, inf, i) => sum + (isNegative[i] ? inf : 0), 0);
+                                const posInfluence = totalInfluence - negInfluence;
+                                const maxBlend = negInfluence > posInfluence ? 0.88 : 0.92; // More similar blend caps
+                                const blendFactor = Math.min(totalInfluence * (negInfluence > posInfluence ? 1.7 : 1.9), maxBlend);
+
+                                // Calculate strong colors with more balanced ratios
+                                let weightedHue = 0, weightedSat = 0, weightedVal = 0;
+                                influences.forEach((inf, i) => {
+                                    const strongIdx = strongIndices[i];
+                                    const clusterBoost = 1 + similarBoosts[i] * (isNegative[i] ? 1.4 : 1.6);
+                                    
+                                    // Calculate strong colors with more balanced formula
+                                    const baseStrongSat = (0.6 + wordFeatures[strongIdx].vowelRatio * 0.4) * sentimentIntensities[strongIdx];
+                                    const baseStrongVal = 0.7 + wordFeatures[strongIdx].length * 0.3;
+                                    
+                                    // Apply boosts with more balanced adjustments
+                                    const strongSat = Math.min(1.0, baseStrongSat * (isNegative[i] ? 1.8 : 2.1) * clusterBoost);
+                                    const strongVal = Math.min(1.0, baseStrongVal * (isNegative[i] ? 1.7 : 1.9) * clusterBoost);
+                                    
+                                    weightedHue += hues[strongIdx] * inf;
+                                    weightedSat += strongSat * inf;
+                                    weightedVal += strongVal * inf;
+                                });
+
+                                // Apply blending with bounds checking
+                                hues[weakIdx] = Math.max(0, Math.min(1, 
+                                    hues[weakIdx] * (1 - blendFactor) + (weightedHue / totalInfluence) * blendFactor
+                                ));
+                                saturations[weakIdx] = Math.max(0, Math.min(1,
+                                    saturations[weakIdx] * (1 - blendFactor) + (weightedSat / totalInfluence) * blendFactor
+                                ));
+                                values[weakIdx] = Math.max(0, Math.min(1,
+                                    values[weakIdx] * (1 - blendFactor) + (weightedVal / totalInfluence) * blendFactor
+                                ));
+                            }
+                        });
+                    }
+                }
+
+                // Process strong sentiment pixels
+                if (strongIndices.length > 0) {
+                    console.log('Processing strong pixels...');
+                    strongIndices.forEach((strongIdx, i) => {
+                        let strongBoost = 0;
+                        strongIndices.forEach((otherIdx, j) => {
+                            if (i !== j) {
+                                const dx = strongCoords[i].x - strongCoords[j].x;
+                                const dy = strongCoords[i].y - strongCoords[j].y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                if (distance < 3 && isNegative[i] === isNegative[j]) {
+                                    strongBoost += 0.15;
+                                }
+                            }
+                        });
+
+                        const clusterBoost = 1 + strongBoost;
+                        if (isNegative[i]) {
+                            saturations[strongIdx] = Math.min(1.0, saturations[strongIdx] * 1.4 * clusterBoost);
+                            values[strongIdx] = Math.min(1.0, values[strongIdx] * 1.3 * clusterBoost);
+                        } else {
+                            saturations[strongIdx] = Math.min(1.0, saturations[strongIdx] * 1.3 * clusterBoost);
+                            values[strongIdx] = Math.min(1.0, values[strongIdx] * 1.25 * clusterBoost);
+                        }
+                    });
+                }
+
+                console.log('Converting colors to RGB...');
+                // Only scale to screen coordinates at the final pixel creation
+                const coords = normalizedCoords.map(coord => ({
+                    x: coord.x * (window.innerWidth / width),
+                    y: coord.y * (window.innerHeight / height)
+                }));
+
+                // Convert HSV to RGB and create pixels
+                const pixels = words.map((_, i) => {
+                    const [r, g, b] = hsvToRgb(
+                        Math.max(0, Math.min(1, hues[i])), 
+                        Math.max(0, Math.min(1, saturations[i])), 
+                        Math.max(0, Math.min(1, values[i]))
+                    );
+                    return {
+                        x: coords[i].x,
+                        y: coords[i].y,
+                        color: `rgb(${r},${g},${b})`,
+                        isLight: (r + g + b) / 3 > 200  // Mark pixels that are close to white
+                    };
+                });
+
+                // Identify collapsible pixels (light colored ones)
+                const collapsiblePixels = pixels.filter(p => p.isLight)
+                    .map(p => ({ x: p.x, y: p.y }));
+
+                const result = {
+                    allPixels: pixels,
+                    collapsedPixels: collapsiblePixels
+                };
+
+                // Hide loading screen
+                loadingScreen.classList.remove('active');
+                
+                return result;
+            } catch (error) {
+                // Hide loading screen in case of error
+                loadingScreen.classList.remove('active');
+                throw error;
+            }
+        }
+
+        // Helper function for sentiment diversity enhancement
+        function enhanceSentimentDiversity(words, sentiments) {
+            // Group similar sentiments
+            const groups = [];
+            let currentGroup = [];
+            let currentSentiment = null;
+            
+            words.forEach((word, i) => {
+                const sentiment = sentiments[i];
+                if (currentSentiment === null || Math.abs(sentiment - currentSentiment) > 0.05) {
+                    if (currentGroup.length > 0) {
+                        groups.push({ indices: currentGroup, sentiment: currentSentiment });
+                    }
+                    currentGroup = [i];
+                    currentSentiment = sentiment;
+                } else {
+                    currentGroup.push(i);
+                }
+            });
+            if (currentGroup.length > 0) {
+                groups.push({ indices: currentGroup, sentiment: currentSentiment });
+            }
+
+            // Make neutral words unique
+            const uniqueSentiments = [...sentiments];
+            groups.forEach(group => {
+                if (Math.abs(group.sentiment - 0.5) < 0.1 && group.indices.length > 1) {
+                    const spread = 0.2;
+                    const base = group.sentiment - spread/2;
+                    
+                    group.indices.forEach((wordIndex, idx) => {
+                        const word = words[wordIndex];
+                        const gradientValue = base + (idx / (group.indices.length - 1 || 1)) * spread;
+                        const wordHash = hashString(word) % 1000 / 1000;
+                        const hashValue = base + wordHash * spread;
+                        const vowelRatio = (word.match(/[aeiou]/gi) || []).length / word.length;
+                        const lengthFactor = Math.min(word.length / 10, 1.0);
+                        const featureValue = base + ((vowelRatio + lengthFactor) / 2) * spread;
+                        uniqueSentiments[wordIndex] = 0.6 * gradientValue + 0.2 * hashValue + 0.2 * featureValue;
+                    });
+                }
+            });
+
+            // Enhance diversity
+            return uniqueSentiments.map(sentiment => {
+                const normalized = (sentiment - 0.2) / (0.8 - 0.2);
+                if (normalized <= 0.5) {
+                    return (normalized * 2) ** 1.5 / 2;
+                } else {
+                    return 1 - ((1 - normalized) * 2) ** 1.5 / 2;
+                }
+            });
+        }
+
+        function hsvToRgb(h, s, v) {
+            let r, g, b;
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+            
+            switch (i % 6) {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+            }
+            
+            return [
+                Math.round(r * 255),
+                Math.round(g * 255),
+                Math.round(b * 255)
+            ];
+        }
+
+        // Negative and positive word sets
+        const negativeWords = new Set([
+            'no', 'not', 'never', 'bad', 'wrong', 'hate', 'sad', 'angry', 'fear', 'terrible',
+            'awful', 'horrible', 'worst', 'fail', 'failed', 'failing', 'lose', 'lost', 'losing',
+            'impossible', 'cannot', "can't", 'wont', "won't", 'against', 'reject', 'rejected',
+            'deny', 'denied', 'refuse', 'refused', 'destroy', 'destroyed', 'ruin', 'ruined'
+        ]);
+
+        const positiveWords = new Set([
+            'yes', 'good', 'great', 'love', 'happy', 'joy', 'peace', 'beautiful', 'excellent',
+            'amazing', 'wonderful', 'best', 'succeed', 'succeeded', 'succeeding', 'win', 'won',
+            'winning', 'possible', 'can', 'will', 'accept', 'accepted', 'approve', 'approved',
+            'build', 'built', 'create', 'created'
+        ]);
+
         function setupCanvas() {
             canvas = document.querySelector('canvas');
             const dpr = window.devicePixelRatio || 1;
-            const rect = canvas.getBoundingClientRect();
             
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
+            canvas.width = window.innerWidth * dpr;
+            canvas.height = window.innerHeight * dpr;
+            
             ctx = canvas.getContext('2d', {
                 alpha: false,
                 desynchronized: true
             });
+            
             ctx.scale(dpr, dpr);
-            ctx.imageSmoothingEnabled = false; // Sharper pixels
+            ctx.imageSmoothingEnabled = false;
         }
-        
-        function setupPresentationScale() {
-            const presentation = document.getElementById('presentation');
-            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-            presentation.style.transform = `scale(${scale})`;
-        }
-        
-        fetch('pixel_data.json')
-            .then(response => response.json())
-            .then(data => {
-                pixelData = data;
+
+        function setupVisualization(data) {
+            pixelData = data;
+            setupCanvas();
+            setupPixels(data.allPixels, data.collapsedPixels);
+            window.addEventListener('resize', () => {
                 setupCanvas();
-                setupPresentationScale();
-                setupPixels(data.allPixels, data.collapsedPixels);
-                window.addEventListener('resize', () => {
-                    setupCanvas();
-                    setupPresentationScale();
-                    if (!isAnimating) {
-                        // Redraw current frame
-                        if (animationState.phase === 'initial') {
-                            animateInitialPhase(performance.now());
-                        } else if (animationState.phase === 'falling') {
-                            animateFallingPhase();
-                        } else if (animationState.phase === 'reorganizing') {
-                            animateReorganizingPhase();
-                        } else if (animationState.phase === 'unraveling') {
-                            animateUnravelingPhase();
-                        }
+                if (!isAnimating) {
+                    if (animationState.phase === 'initial') {
+                        animateInitialPhase(performance.now());
+                    } else if (animationState.phase === 'falling') {
+                        animateFallingPhase();
+                    } else if (animationState.phase === 'reorganizing') {
+                        animateReorganizingPhase();
+                    } else if (animationState.phase === 'unraveling') {
+                        animateUnravelingPhase();
                     }
-                });
+                }
             });
-        
+        }
+
         function setupPixels(pixels, collapsiblePixels) {
-            const width = 1920;
-            const height = 1080;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
             
-            // Store original coordinates
             animationState.originalCoords = pixels.map(p => ({ x: p.x, y: p.y }));
-            
-            // Add counter element reference
             animationState.counterElement = document.getElementById('pixel-counter');
             animationState.totalPixels = pixels.length;
             
-            const cols = Math.ceil(Math.sqrt(pixels.length * 16/9));
+            // Calculate grid dimensions based on screen ratio
+            const screenRatio = width / height;
+            const cols = Math.ceil(Math.sqrt(pixels.length * screenRatio));
             const rows = Math.ceil(pixels.length / cols);
-            const pixelSize = Math.min(width / cols, height / rows);
             
+            // Calculate pixel size to fill screen
+            const pixelSize = Math.max(width / cols, height / rows);
             const pixelRenderSize = pixelSize + 0.5;
             
-            const startX = (width - cols * pixelSize) / 2;
-            const startY = (height - rows * pixelSize) / 2;
+            // Calculate starting position to fill screen
+            const startX = 0;
+            const startY = 0;
+
+            // Initialize animation order
+            animationState.pixelOrder = Array.from({length: pixels.length}, (_, i) => i);
+            for (let i = animationState.pixelOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [animationState.pixelOrder[i], animationState.pixelOrder[j]] = 
+                [animationState.pixelOrder[j], animationState.pixelOrder[i]];
+            }
 
             // Calculate bounds for the text coordinates
             let minX = Infinity, maxX = -Infinity;
@@ -174,24 +941,19 @@
                 maxY = Math.max(maxY, pixel.y);
             });
             animationState.bounds = { minX, maxX, minY, maxY };
-
-            // Create randomized order of indices
-            animationState.pixelOrder = Array.from({length: pixels.length}, (_, i) => i);
-            for (let i = animationState.pixelOrder.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [animationState.pixelOrder[i], animationState.pixelOrder[j]] = 
-                [animationState.pixelOrder[j], animationState.pixelOrder[i]];
-            }
             
-            // Store original coordinates for each pixel for matching
+            // Store original coordinates for influence matching
             const pixelCoords = new Map();
             pixels.forEach((pixel, i) => {
-                pixelCoords.set(i, { x: pixel.x, y: pixel.y });
+                pixelCoords.set(i, { 
+                    x: pixel.x / (width / cols),
+                    y: pixel.y / (height / rows)
+                });
             });
             
             // Create a set of collapsible coordinates for matching
             const collapsibleCoords = new Set(
-                collapsiblePixels.map(p => `${p.x},${p.y}`)
+                collapsiblePixels.map(p => `${p.x / (width / cols)},${p.y / (height / rows)}`)
             );
             
             animationState.pixels = new Float32Array(pixels.length * 6);
@@ -208,7 +970,6 @@
                     colors.set(pixel.color, colorIndex++);
                 }
                 
-                // Check if this pixel's original coordinates match any collapsible pixel
                 const coords = pixelCoords.get(i);
                 if (collapsibleCoords.has(`${coords.x},${coords.y}`)) {
                     animationState.collapsiblePixels.add(i);
@@ -217,7 +978,6 @@
                 const targetX = startX + col * pixelSize;
                 const targetY = startY + row * pixelSize;
                 
-                // Set initial and target positions
                 animationState.pixels[baseIndex] = targetX;
                 animationState.pixels[baseIndex + 1] = targetY;
                 animationState.pixels[baseIndex + 2] = targetY;
@@ -226,25 +986,11 @@
                 animationState.pixels[baseIndex + 5] = colors.get(pixel.color);
             });
             
-            console.log('Total pixels:', pixels.length);
-            console.log('Collapsible pixels in data:', collapsiblePixels.length);
-            console.log('Matched collapsible pixels:', animationState.collapsiblePixels.size);
-            
-            // Debug: log some sample matches
-            const sampleCollapsible = Array.from(animationState.collapsiblePixels).slice(0, 5);
-            console.log('Sample collapsible pixels coordinates:');
-            sampleCollapsible.forEach(index => {
-                const coords = pixelCoords.get(index);
-                console.log(`Index ${index}: Original coords (${coords.x}, ${coords.y})`);
-            });
-            
             animationState.layout = { cols, rows, pixelSize, pixelRenderSize, startX, startY };
             animationState.colors = Array.from(colors.keys());
             animationState.currentIndex = 0;
             
-                            document.addEventListener('click', () => {
-
-                // If currently animating, stop the animation and move to next phase
+            visualizationContainer.addEventListener('click', () => {
                 if (isAnimating) {
                     if (currentAnimation) {
                         currentAnimation.cancel();
@@ -253,7 +999,6 @@
                     isAnimating = false;
                 }
 
-                // Determine which phase to start next
                 if (animationState.phase === 'initial' && animationState.completedPixels.size > 0) {
                     animationState.phase = 'falling';
                     startFallingAnimation();
@@ -275,7 +1020,14 @@
                 }
             });
         }
-        
+
+        function Animation() {
+            this.cancelled = false;
+            this.cancel = function() {
+                this.cancelled = true;
+            }
+        }
+
         function startAnimation() {
             if (isAnimating) return;
             isAnimating = true;
@@ -294,7 +1046,6 @@
             if (isAnimating) return;
             isAnimating = true;
             
-            // Create a randomized order of collapsible pixels
             const collapsibleArray = Array.from(animationState.collapsiblePixels);
             animationState.fallingOrder = collapsibleArray.sort(() => Math.random() - 0.5);
             
@@ -303,7 +1054,6 @@
             animationState.fallenPixels = new Set();
             animationState.startTime = performance.now();
             
-            // Start with just a few pixels
             const initialBatchSize = Math.min(1, collapsibleArray.length);
             for (let i = 0; i < initialBatchSize; i++) {
                 const index = animationState.fallingOrder[i];
@@ -323,29 +1073,21 @@
             if (isAnimating) return;
             isAnimating = true;
             
-            // Get remaining pixels (non-collapsible ones that didn't fall)
             const remainingPixels = Array.from(animationState.completedPixels)
                 .filter(index => !animationState.collapsiblePixels.has(index))
                 .sort((a, b) => a - b);
             
-            console.log('Starting reorganizing animation with', remainingPixels.length, 'pixels');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
             
-            const width = 1920;
-            const height = 1080;
-            
-            // Calculate new grid dimensions maintaining 16:9 ratio
-            const cols = Math.ceil(Math.sqrt(remainingPixels.length * 16/9));
+            const cols = Math.ceil(Math.sqrt(remainingPixels.length));
             const rows = Math.ceil(remainingPixels.length / cols);
             const pixelSize = Math.min(width / cols, height / rows);
             const pixelRenderSize = pixelSize + 0.5;
             
-            console.log('New grid:', { cols, rows, pixelSize });
-            
-            // Calculate starting position to center the grid
             const startX = (width - cols * pixelSize) / 2;
             const startY = (height - rows * pixelSize) / 2;
             
-            // Store final positions and size for each pixel
             animationState.finalPositions = new Float32Array(remainingPixels.length * 2);
             animationState.finalPixelSize = pixelRenderSize;
             animationState.movingPixels = new Set(remainingPixels);
@@ -368,7 +1110,6 @@
             if (isAnimating) return;
             isAnimating = true;
 
-            // Sort pixels by their current grid position (top to bottom, left to right)
             const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => {
                 const aBase = a * 6;
                 const bBase = b * 6;
@@ -377,23 +1118,21 @@
                 const aX = animationState.pixels[aBase];
                 const bX = animationState.pixels[bBase];
                 
-                // Sort by Y first (top to bottom), then by X (left to right)
                 if (Math.abs(aY - bY) < 1) return aX - bX;
                 return aY - bY;
             });
 
-            const width = 1920;
-            const height = 1080;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
             const totalLines = remainingPixels.length;
-            const lineWidth = width / totalLines; // Each line gets equal portion of screen width
+            const lineWidth = width / totalLines;
             
-            // Calculate x positions based on sequence order
             animationState.linePositions = new Float32Array(remainingPixels.length * 2);
             
             remainingPixels.forEach((pixelIndex, i) => {
                 const posIndex = i * 2;
                 animationState.linePositions[posIndex] = i * lineWidth;
-                animationState.linePositions[posIndex + 1] = height / 2; // Center vertically
+                animationState.linePositions[posIndex + 1] = height / 2;
             });
 
             animationState.startTime = performance.now();
@@ -408,7 +1147,6 @@
             const remainingPixels = Array.from(animationState.movingPixels);
             animationState.finalColors = new Float32Array(remainingPixels.length);
             
-            // Calculate sentiment scores from current colors
             remainingPixels.forEach((pixelIndex, i) => {
                 const baseIndex = pixelIndex * 6;
                 const colorIndex = Math.floor(animationState.pixels[baseIndex + 5]);
@@ -417,214 +1155,18 @@
                 // Parse RGB values from rgb(r,g,b) format
                 const [r, g, b] = color.match(/\d+/g).map(Number);
                 
-                // Calculate sentiment (higher when more purple/white, lower when more red)
-                const sentiment = (b * 2 + g) / (r + 1);
-                animationState.finalColors[i] = sentiment;
+                // Calculate brightness (higher when closer to white)
+                const brightness = (r + g + b) / 3;
+                const normalizedBrightness = Math.min(brightness / 255, 1);
+                animationState.finalColors[i] = normalizedBrightness;
             });
 
             console.log('Starting color transition with', remainingPixels.length, 'pixels');
-            console.log('Sample colors:', remainingPixels.slice(0, 5).map(pixelIndex => {
-                const baseIndex = pixelIndex * 6;
-                const colorIndex = Math.floor(animationState.pixels[baseIndex + 5]);
-                return animationState.colors[colorIndex];
-            }));
-
             animationState.startTime = performance.now();
             currentAnimation = new Animation();
             requestAnimationFrame(animate);
         }
 
-        function animateSlideOut() {
-            const pixels = animationState.pixels;
-            const currentTime = performance.now();
-            const elapsedTime = (currentTime - animationState.startTime) / 1000;
-            
-            // Clear canvas
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Draw the glowing "conflict" text
-            const textProgress = Math.min(Math.max((elapsedTime - 0.5) / 2, 0), 1); // Start appearing after 0.5s
-            if (textProgress > 0) {
-                ctx.save();
-                ctx.font = 'bold 240px Georgia';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                // Create gradient for text
-                const gradient = ctx.createLinearGradient(0, canvas.height/2 - 120, 0, canvas.height/2 + 120);
-                gradient.addColorStop(0, 'rgba(255, 140, 0, ' + textProgress + ')');
-                gradient.addColorStop(0.5, 'rgba(255, 69, 0, ' + textProgress + ')');
-                gradient.addColorStop(1, 'rgba(255, 140, 0, ' + textProgress + ')');
-                
-                // Draw multiple layers for glow effect
-                for (let i = 30; i >= 0; i--) {
-                    ctx.fillStyle = `rgba(255, 140, 0, ${0.03 * textProgress})`;
-                    ctx.shadowColor = 'rgba(255, 140, 0, 0.3)';
-                    ctx.shadowBlur = i * 2;
-                    ctx.shadowOffsetX = 0;
-                    ctx.shadowOffsetY = 0;
-                    ctx.fillText('conflict', canvas.width/2, canvas.height/2);
-                }
-                
-                // Draw the main text
-                ctx.fillStyle = gradient;
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = 'rgba(255, 140, 0, 0.8)';
-                ctx.fillText('conflict', canvas.width/2, canvas.height/2);
-                ctx.restore();
-            }
-            
-            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
-            const width = 1920;
-            const height = 1080;
-            const totalLines = remainingPixels.length;
-            const baseLineWidth = width / totalLines;
-            
-            let allLinesGone = true;
-            
-            remainingPixels.forEach((pixelIndex, arrayIndex) => {
-                const baseIndex = pixelIndex * 6;
-                const currentX = pixels[baseIndex];
-                const currentY = pixels[baseIndex + 2];
-                
-                // Calculate individual line timing
-                const delay = animationState.slideOutDelays[arrayIndex];
-                const speed = animationState.slideOutSpeeds[arrayIndex];
-                const lineProgress = Math.max(0, (elapsedTime - delay) * speed);
-                
-                // Exponential ease-in
-                const easeProgress = lineProgress < 1 ? Math.pow(lineProgress, 2) : 1;
-                
-                // Move upward by height + extra padding
-                const yOffset = easeProgress * (height + 200);
-                
-                // If any line is still visible, continue animation
-                if (easeProgress < 1) allLinesGone = false;
-                
-                // Only draw if line hasn't completely left the screen
-                if (easeProgress < 1) {
-                    const colorIndex = Math.floor(pixels[baseIndex + 5]);
-                    const sentiment = animationState.finalColors[arrayIndex];
-                    const normalizedSentiment = Math.min(Math.max((sentiment - 0.5) / 0.15, 0), 1);
-                    
-                    // Use the final color state from previous animation
-                    let r = 255;
-                    let g, b;
-                    if (normalizedSentiment < 0.5) {
-                        g = Math.floor(128 * (normalizedSentiment * 2));
-                        b = 0;
-                    } else {
-                        g = Math.floor(128 + (255 - 128) * ((normalizedSentiment - 0.5) * 2));
-                        b = Math.floor(255 * ((normalizedSentiment - 0.5) * 2));
-                    }
-                    
-                    // Calculate width scale for negative sentiment
-                    const widthScale = normalizedSentiment < 0.5 ? 5 - 4 * normalizedSentiment : 1;
-                    const currentLineWidth = baseLineWidth * widthScale;
-                    
-                    ctx.fillStyle = `rgb(${r},${g},${b})`;
-                    ctx.fillRect(
-                        currentX - (currentLineWidth - baseLineWidth) / 2,
-                        currentY - height / 2 - yOffset,
-                        currentLineWidth,
-                        height
-                    );
-                }
-            });
-            
-            // Apply subtle blur
-            ctx.filter = `blur(8px)`;
-            ctx.drawImage(canvas, 0, 0);
-            ctx.filter = 'none';
-            
-            // Check if animation is complete
-            if (allLinesGone) {
-                isAnimating = false;
-                currentAnimation = null;
-            }
-        }
-
-        function animateColorTransition() {
-            const pixels = animationState.pixels;
-            const currentTime = performance.now();
-            const elapsedTime = (currentTime - animationState.startTime) / 1000;
-            const progress = Math.min(elapsedTime / 2, 1); // 2 second animation
-            const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
-            
-            // Create offscreen canvas for blur effect
-            const offscreen = document.createElement('canvas');
-            offscreen.width = canvas.width;
-            offscreen.height = canvas.height;
-            const offCtx = offscreen.getContext('2d');
-            
-            // Clear offscreen canvas
-            offCtx.fillStyle = 'black';
-            offCtx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
-            const width = 1920;
-            const height = 1080;
-            const totalLines = remainingPixels.length;
-            const baseLineWidth = width / totalLines;
-            
-            remainingPixels.forEach((pixelIndex, arrayIndex) => {
-                const baseIndex = pixelIndex * 6;
-                const currentX = pixels[baseIndex];
-                const currentY = pixels[baseIndex + 2];
-                const colorIndex = Math.floor(pixels[baseIndex + 5]);
-                const originalColor = animationState.colors[colorIndex];
-                const [origR, origG, origB] = originalColor.match(/\d+/g).map(Number);
-                
-                const sentiment = animationState.finalColors[arrayIndex];
-                const normalizedSentiment = Math.min(Math.max((sentiment - 0.5) / 0.15, 0), 1);
-                
-                // Calculate width scale for negative sentiment
-                const widthScale = normalizedSentiment < 0.5 ? 
-                    1 + (5 - 1) * (1 - normalizedSentiment * 2) * easeProgress : 
-                    1;
-                const currentLineWidth = baseLineWidth * widthScale;
-                
-                // Target colors
-                let targetR = 255;
-                let targetG, targetB;
-                
-                if (normalizedSentiment < 0.5) {
-                    targetG = Math.floor(128 * (normalizedSentiment * 2));
-                    targetB = 0;
-                } else {
-                    targetG = Math.floor(128 + (255 - 128) * ((normalizedSentiment - 0.5) * 2));
-                    targetB = Math.floor(255 * ((normalizedSentiment - 0.5) * 2));
-                }
-                
-                const r = Math.floor(origR + (targetR - origR) * easeProgress);
-                const g = Math.floor(origG + (targetG - origG) * easeProgress);
-                const b = Math.floor(origB + (targetB - origB) * easeProgress);
-                
-                offCtx.fillStyle = `rgb(${r},${g},${b})`;
-                offCtx.fillRect(
-                    currentX - (currentLineWidth - baseLineWidth) / 2,
-                    currentY - height / 2,
-                    currentLineWidth,
-                    height
-                );
-            });
-            
-            // Clear main canvas
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Apply progressive blur and draw to main canvas
-            ctx.filter = `blur(${8 * easeProgress}px)`;
-            ctx.drawImage(offscreen, 0, 0);
-            ctx.filter = 'none';
-            
-            if (progress >= 1) {
-                isAnimating = false;
-                currentAnimation = null;
-            }
-        }
-        
         function animate(timestamp) {
             if (!currentAnimation || !isAnimating) return;
             
@@ -654,18 +1196,15 @@
                 animationState.startTime = currentTime;
             }
             
-            // Clear canvas once per frame
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Calculate accelerating pixels per frame
             const basePixelsPerFrame = Math.floor(elapsedTime * elapsedTime * 0.5) + 1;
             const pixelsToAddPerFrame = Math.min(
                 basePixelsPerFrame,
                 Math.floor((pixels.length / 6 - animationState.currentIndex) * 0.1)
             );
             
-            // Draw completed pixels first (no shadow for completed pixels)
             let pixelsInPlace = 0;
             for (const index of animationState.completedPixels) {
                 const baseIndex = index * 6;
@@ -679,21 +1218,18 @@
                 pixelsInPlace++;
             }
             
-            // Update counter
             animationState.counterElement.textContent = pixelsInPlace;
             
-            // Activate new pixels with acceleration
             for (let i = 0; i < pixelsToAddPerFrame; i++) {
                 if (animationState.currentIndex >= pixels.length / 6) break;
                 
                 const pixelIndex = animationState.pixelOrder[animationState.currentIndex];
                 const baseIndex = pixelIndex * 6;
-                pixels[baseIndex + 4] = 1; // Set opacity
+                pixels[baseIndex + 4] = 1;
                 animationState.activePixels.add(pixelIndex);
                 animationState.currentIndex++;
             }
             
-            // Process active pixels with drop shadows
             const activePixels = Array.from(animationState.activePixels);
             for (let i = activePixels.length - 1; i >= 0; i--) {
                 const index = activePixels[i];
@@ -705,7 +1241,6 @@
                 if (Math.abs(diff) > 0.1) {
                     pixels[baseIndex + 3] += diff * 0.4;
                     
-                    // Add drop shadow
                     ctx.save();
                     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
                     ctx.shadowBlur = 10;
@@ -741,18 +1276,15 @@
             const currentTime = performance.now();
             const elapsedTime = (currentTime - animationState.startTime) / 1000;
             
-            // Clear canvas once per frame
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Calculate how many pixels should be falling based on elapsed time
             const basePixelsPerFrame = Math.floor(elapsedTime * elapsedTime * 0.5) + 1;
             const pixelsToAddPerFrame = Math.min(
                 basePixelsPerFrame,
                 Math.floor((animationState.collapsiblePixels.size - animationState.currentFallingIndex) * 0.1)
             );
             
-            // Add new falling pixels with accelerating rate
             for (let i = 0; i < pixelsToAddPerFrame; i++) {
                 if (animationState.currentFallingIndex < animationState.fallingOrder.length) {
                     const index = animationState.fallingOrder[animationState.currentFallingIndex++];
@@ -765,10 +1297,8 @@
                 }
             }
             
-            // Count and draw pixels in their final positions
             let pixelsInPlace = 0;
             
-            // Draw and count non-collapsible pixels (they stay in place)
             for (const index of animationState.completedPixels) {
                 if (!animationState.collapsiblePixels.has(index)) {
                     const baseIndex = index * 6;
@@ -783,7 +1313,6 @@
                 }
             }
             
-            // Draw and count collapsible pixels that haven't started falling yet
             for (let i = animationState.currentFallingIndex; i < animationState.fallingOrder.length; i++) {
                 const index = animationState.fallingOrder[i];
                 if (!animationState.activeRowPixels.has(index) && !animationState.fallenPixels.has(index)) {
@@ -799,7 +1328,6 @@
                 }
             }
             
-            // Draw falling pixels (these don't count towards the total)
             for (const index of animationState.activeRowPixels) {
                 const baseIndex = index * 6;
                 const velIndex = index * 3;
@@ -830,10 +1358,8 @@
                 ctx.restore();
             }
             
-            // Update counter with total pixels in their final position
             animationState.counterElement.textContent = pixelsInPlace;
             
-            // Check if animation is complete
             if (animationState.currentFallingIndex >= animationState.fallingOrder.length && 
                 animationState.activeRowPixels.size === 0) {
                 isAnimating = false;
@@ -845,14 +1371,12 @@
             const pixels = animationState.pixels;
             const currentTime = performance.now();
             const elapsedTime = (currentTime - animationState.startTime) / 1000;
-            const progress = Math.min(elapsedTime / 4.5, 1); // 4.5 second animation (3x slower)
-            const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+            const progress = Math.min(elapsedTime / 4.5, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
             
-            // Fade out counter at the start
-            const fadeOutProgress = Math.max(0, 1 - elapsedTime * 2); // Fade out over 0.5 seconds
+            const fadeOutProgress = Math.max(0, 1 - elapsedTime * 2);
             animationState.counterElement.style.opacity = fadeOutProgress;
             
-            // Clear canvas
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
@@ -863,26 +1387,21 @@
                 const baseIndex = pixelIndex * 6;
                 const posIndex = arrayIndex * 2;
                 
-                // Current position and size
                 const startX = pixels[baseIndex];
                 const startY = pixels[baseIndex + 2];
                 const startSize = animationState.layout.pixelRenderSize;
                 
-                // Target position and size
                 const targetX = animationState.finalPositions[posIndex];
                 const targetY = animationState.finalPositions[posIndex + 1];
                 const targetSize = animationState.finalPixelSize;
                 
-                // Interpolate position and size
                 const currentX = startX + (targetX - startX) * easeProgress;
                 const currentY = startY + (targetY - startY) * easeProgress;
                 const currentSize = startSize + (targetSize - startSize) * easeProgress;
                 
-                // Update pixel position for next frame
                 pixels[baseIndex] = currentX;
                 pixels[baseIndex + 2] = currentY;
                 
-                // Draw pixel
                 ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
                 ctx.fillRect(
                     currentX + (startSize - currentSize) / 2,
@@ -894,16 +1413,13 @@
                 pixelsInPlace++;
             });
             
-            // Only update counter text if it's still visible
             if (fadeOutProgress > 0) {
                 animationState.counterElement.textContent = pixelsInPlace;
             }
             
-            // Check if animation is complete
             if (progress >= 1) {
                 isAnimating = false;
                 currentAnimation = null;
-                console.log('Reorganizing animation complete');
             }
         }
         
@@ -911,16 +1427,15 @@
             const pixels = animationState.pixels;
             const currentTime = performance.now();
             const elapsedTime = (currentTime - animationState.startTime) / 1000;
-            const progress = Math.min(elapsedTime / 4, 1); // 4 second animation
-            const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+            const progress = Math.min(elapsedTime / 4, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
             
-            // Clear canvas
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
-            const width = 1920;
-            const height = 1080;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
             const totalLines = remainingPixels.length;
             const lineWidth = width / totalLines;
             
@@ -928,29 +1443,20 @@
                 const baseIndex = pixelIndex * 6;
                 const posIndex = arrayIndex * 2;
                 
-                // Current position and dimensions
                 const startX = pixels[baseIndex];
                 const startY = pixels[baseIndex + 2];
                 const startSize = animationState.finalPixelSize;
                 
-                // Target position
                 const targetX = animationState.linePositions[posIndex];
                 
-                // Interpolate position and dimensions
                 const currentX = startX + (targetX - startX) * easeProgress;
-                
-                // Calculate height transformation - grow to full height
                 const currentHeight = startSize + (height - startSize) * easeProgress;
                 const currentWidth = startSize + (lineWidth - startSize) * easeProgress;
-                
-                // Calculate Y position to center the line
                 const currentY = startY * (1 - easeProgress) + (height / 2) * easeProgress;
                 
-                // Update pixel position for next frame
                 pixels[baseIndex] = currentX;
                 pixels[baseIndex + 2] = currentY;
                 
-                // Draw line segment
                 ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
                 ctx.fillRect(
                     currentX,
@@ -960,19 +1466,90 @@
                 );
             });
             
-            // Check if animation is complete
             if (progress >= 1) {
                 isAnimating = false;
                 currentAnimation = null;
             }
         }
         
-        function Animation() {
-            this.cancelled = false;
-            this.cancel = function() {
-                this.cancelled = true;
+        function animateColorTransition() {
+            const pixels = animationState.pixels;
+            const currentTime = performance.now();
+            const elapsedTime = (currentTime - animationState.startTime) / 1000;
+            const progress = Math.min(elapsedTime / 2, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            
+            const offscreen = document.createElement('canvas');
+            offscreen.width = canvas.width;
+            offscreen.height = canvas.height;
+            const offCtx = offscreen.getContext('2d');
+            
+            offCtx.fillStyle = 'black';
+            offCtx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const totalLines = remainingPixels.length;
+            const baseLineWidth = width / totalLines;
+            
+            remainingPixels.forEach((pixelIndex, arrayIndex) => {
+                const baseIndex = pixelIndex * 6;
+                const currentX = pixels[baseIndex];
+                const currentY = pixels[baseIndex + 2];
+                const colorIndex = Math.floor(pixels[baseIndex + 5]);
+                const originalColor = animationState.colors[colorIndex];
+                const [origR, origG, origB] = originalColor.match(/\d+/g).map(Number);
+                
+                const brightness = animationState.finalColors[arrayIndex];
+                const normalizedBrightness = Math.min(Math.max((brightness - 0.5) / 0.3, 0), 1);
+                
+                // Calculate width scale based on brightness
+                const widthScale = brightness > 0.78 ? 
+                    1 + (5 - 1) * ((brightness - 0.78) / 0.22) * easeProgress : 
+                    1;
+                const currentLineWidth = baseLineWidth * widthScale;
+                
+                // Target colors - brighter pixels become more white
+                const targetR = Math.min(255, origR + (255 - origR) * normalizedBrightness);
+                const targetG = Math.min(255, origG + (255 - origG) * normalizedBrightness);
+                const targetB = Math.min(255, origB + (255 - origB) * normalizedBrightness);
+                
+                const r = Math.floor(origR + (targetR - origR) * easeProgress);
+                const g = Math.floor(origG + (targetG - origG) * easeProgress);
+                const b = Math.floor(origB + (targetB - origB) * easeProgress);
+                
+                offCtx.fillStyle = `rgb(${r},${g},${b})`;
+                offCtx.fillRect(
+                    currentX - (currentLineWidth - baseLineWidth) / 2,
+                    currentY - height / 2,
+                    currentLineWidth,
+                    height
+                );
+            });
+            
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.filter = `blur(${8 * easeProgress}px)`;
+            ctx.drawImage(offscreen, 0, 0);
+            ctx.filter = 'none';
+            
+            if (progress >= 1) {
+                isAnimating = false;
+                currentAnimation = null;
             }
+        }
+
+        function hashString(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return Math.abs(hash);
         }
     </script>
 </body>
-</html> 
+</html>

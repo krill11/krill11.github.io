@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Text Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: black;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #presentation {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background: black;
+            transform-origin: center;
+        }
+        
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #pixel-counter {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: Georgia, serif;
+            font-size: 120px;
+            color: white;
+            text-shadow: none;
+            filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.9))
+                   drop-shadow(0 0 40px rgba(0, 0, 0, 0.7))
+                   drop-shadow(0 0 60px rgba(0, 0, 0, 0.5));
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 1;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="presentation">
+        <canvas></canvas>
+        <div id="pixel-counter"></div>
+    </div>
+    
+    <script>
+        let isAnimating = false;
+        let currentAnimation = null;
+        let canvas, ctx;
+        let pixelData = null;
+        let animationState = {
+            currentIndex: 0,
+            activePixels: new Set(),
+            completedPixels: new Set(),
+            collapsiblePixels: new Set(),
+            pixels: [],
+            layout: null,
+            phase: 'initial',
+            velocities: null,
+            startTime: null,
+            targetSlots: null,
+            activeRowPixels: new Set(),
+            pixelOrder: [],
+            fallingOrder: [],
+            currentFallingIndex: 0,
+            fallenPixels: new Set(),
+            finalPositions: null,
+            movingPixels: new Set(),
+            finalPixelSize: null,
+            linePositions: null,
+            lineHeights: null,
+            bounds: null,
+            originalCoords: null,
+            finalColors: null,
+            slideOutDelays: null,
+            slideOutSpeeds: null
+        };
+        
+        function setupCanvas() {
+            canvas = document.querySelector('canvas');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx = canvas.getContext('2d', {
+                alpha: false,
+                desynchronized: true
+            });
+            ctx.scale(dpr, dpr);
+            ctx.imageSmoothingEnabled = false; // Sharper pixels
+        }
+        
+        function setupPresentationScale() {
+            const presentation = document.getElementById('presentation');
+            const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            presentation.style.transform = `scale(${scale})`;
+        }
+        
+        fetch('pixel_data.json')
+            .then(response => response.json())
+            .then(data => {
+                pixelData = data;
+                setupCanvas();
+                setupPresentationScale();
+                setupPixels(data.allPixels, data.collapsedPixels);
+                window.addEventListener('resize', () => {
+                    setupCanvas();
+                    setupPresentationScale();
+                    if (!isAnimating) {
+                        // Redraw current frame
+                        if (animationState.phase === 'initial') {
+                            animateInitialPhase(performance.now());
+                        } else if (animationState.phase === 'falling') {
+                            animateFallingPhase();
+                        } else if (animationState.phase === 'reorganizing') {
+                            animateReorganizingPhase();
+                        } else if (animationState.phase === 'unraveling') {
+                            animateUnravelingPhase();
+                        }
+                    }
+                });
+            });
+        
+        function setupPixels(pixels, collapsiblePixels) {
+            const width = 1920;
+            const height = 1080;
+            
+            // Store original coordinates
+            animationState.originalCoords = pixels.map(p => ({ x: p.x, y: p.y }));
+            
+            // Add counter element reference
+            animationState.counterElement = document.getElementById('pixel-counter');
+            animationState.totalPixels = pixels.length;
+            
+            const cols = Math.ceil(Math.sqrt(pixels.length * 16/9));
+            const rows = Math.ceil(pixels.length / cols);
+            const pixelSize = Math.min(width / cols, height / rows);
+            
+            const pixelRenderSize = pixelSize + 0.5;
+            
+            const startX = (width - cols * pixelSize) / 2;
+            const startY = (height - rows * pixelSize) / 2;
+
+            // Calculate bounds for the text coordinates
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            pixels.forEach(pixel => {
+                minX = Math.min(minX, pixel.x);
+                maxX = Math.max(maxX, pixel.x);
+                minY = Math.min(minY, pixel.y);
+                maxY = Math.max(maxY, pixel.y);
+            });
+            animationState.bounds = { minX, maxX, minY, maxY };
+
+            // Create randomized order of indices
+            animationState.pixelOrder = Array.from({length: pixels.length}, (_, i) => i);
+            for (let i = animationState.pixelOrder.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [animationState.pixelOrder[i], animationState.pixelOrder[j]] = 
+                [animationState.pixelOrder[j], animationState.pixelOrder[i]];
+            }
+            
+            // Store original coordinates for each pixel for matching
+            const pixelCoords = new Map();
+            pixels.forEach((pixel, i) => {
+                pixelCoords.set(i, { x: pixel.x, y: pixel.y });
+            });
+            
+            // Create a set of collapsible coordinates for matching
+            const collapsibleCoords = new Set(
+                collapsiblePixels.map(p => `${p.x},${p.y}`)
+            );
+            
+            animationState.pixels = new Float32Array(pixels.length * 6);
+            animationState.velocities = new Float32Array(pixels.length * 3);
+            const colors = new Map();
+            let colorIndex = 0;
+            
+            pixels.forEach((pixel, i) => {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                const baseIndex = i * 6;
+                
+                if (!colors.has(pixel.color)) {
+                    colors.set(pixel.color, colorIndex++);
+                }
+                
+                // Check if this pixel's original coordinates match any collapsible pixel
+                const coords = pixelCoords.get(i);
+                if (collapsibleCoords.has(`${coords.x},${coords.y}`)) {
+                    animationState.collapsiblePixels.add(i);
+                }
+                
+                const targetX = startX + col * pixelSize;
+                const targetY = startY + row * pixelSize;
+                
+                // Set initial and target positions
+                animationState.pixels[baseIndex] = targetX;
+                animationState.pixels[baseIndex + 1] = targetY;
+                animationState.pixels[baseIndex + 2] = targetY;
+                animationState.pixels[baseIndex + 3] = height + 50;
+                animationState.pixels[baseIndex + 4] = 0;
+                animationState.pixels[baseIndex + 5] = colors.get(pixel.color);
+            });
+            
+            console.log('Total pixels:', pixels.length);
+            console.log('Collapsible pixels in data:', collapsiblePixels.length);
+            console.log('Matched collapsible pixels:', animationState.collapsiblePixels.size);
+            
+            // Debug: log some sample matches
+            const sampleCollapsible = Array.from(animationState.collapsiblePixels).slice(0, 5);
+            console.log('Sample collapsible pixels coordinates:');
+            sampleCollapsible.forEach(index => {
+                const coords = pixelCoords.get(index);
+                console.log(`Index ${index}: Original coords (${coords.x}, ${coords.y})`);
+            });
+            
+            animationState.layout = { cols, rows, pixelSize, pixelRenderSize, startX, startY };
+            animationState.colors = Array.from(colors.keys());
+            animationState.currentIndex = 0;
+            
+                            document.addEventListener('click', () => {
+
+                // If currently animating, stop the animation and move to next phase
+                if (isAnimating) {
+                    if (currentAnimation) {
+                        currentAnimation.cancel();
+                        currentAnimation = null;
+                    }
+                    isAnimating = false;
+                }
+
+                // Determine which phase to start next
+                if (animationState.phase === 'initial' && animationState.completedPixels.size > 0) {
+                    animationState.phase = 'falling';
+                    startFallingAnimation();
+                }
+                else if (animationState.phase === 'falling' && !isAnimating) {
+                    animationState.phase = 'reorganizing';
+                    startReorganizingAnimation();
+                }
+                else if (animationState.phase === 'reorganizing' && !isAnimating) {
+                    animationState.phase = 'unraveling';
+                    startUnravelingAnimation();
+                }
+                else if (animationState.phase === 'unraveling' && !isAnimating) {
+                    animationState.phase = 'coloring';
+                    startColorTransition();
+                }
+                else if (animationState.phase === 'initial' && animationState.completedPixels.size === 0) {
+                    startAnimation();
+                }
+            });
+        }
+        
+        function startAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            animationState.phase = 'initial';
+            animationState.currentIndex = 0;
+            animationState.activePixels.clear();
+            animationState.completedPixels.clear();
+            animationState.startTime = null;
+            currentAnimation = new Animation();
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function startFallingAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            // Create a randomized order of collapsible pixels
+            const collapsibleArray = Array.from(animationState.collapsiblePixels);
+            animationState.fallingOrder = collapsibleArray.sort(() => Math.random() - 0.5);
+            
+            animationState.currentFallingIndex = 0;
+            animationState.activeRowPixels = new Set();
+            animationState.fallenPixels = new Set();
+            animationState.startTime = performance.now();
+            
+            // Start with just a few pixels
+            const initialBatchSize = Math.min(1, collapsibleArray.length);
+            for (let i = 0; i < initialBatchSize; i++) {
+                const index = animationState.fallingOrder[i];
+                const velIndex = index * 3;
+                animationState.velocities[velIndex] = (Math.random() - 0.5) * 12;
+                animationState.velocities[velIndex + 1] = -15 - Math.random() * 5;
+                animationState.velocities[velIndex + 2] = (Math.random() - 0.5) * 0.6;
+                animationState.activeRowPixels.add(index);
+                animationState.currentFallingIndex = i + 1;
+            }
+            
+            currentAnimation = new Animation();
+            requestAnimationFrame(animate);
+        }
+        
+        function startReorganizingAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            // Get remaining pixels (non-collapsible ones that didn't fall)
+            const remainingPixels = Array.from(animationState.completedPixels)
+                .filter(index => !animationState.collapsiblePixels.has(index))
+                .sort((a, b) => a - b);
+            
+            console.log('Starting reorganizing animation with', remainingPixels.length, 'pixels');
+            
+            const width = 1920;
+            const height = 1080;
+            
+            // Calculate new grid dimensions maintaining 16:9 ratio
+            const cols = Math.ceil(Math.sqrt(remainingPixels.length * 16/9));
+            const rows = Math.ceil(remainingPixels.length / cols);
+            const pixelSize = Math.min(width / cols, height / rows);
+            const pixelRenderSize = pixelSize + 0.5;
+            
+            console.log('New grid:', { cols, rows, pixelSize });
+            
+            // Calculate starting position to center the grid
+            const startX = (width - cols * pixelSize) / 2;
+            const startY = (height - rows * pixelSize) / 2;
+            
+            // Store final positions and size for each pixel
+            animationState.finalPositions = new Float32Array(remainingPixels.length * 2);
+            animationState.finalPixelSize = pixelRenderSize;
+            animationState.movingPixels = new Set(remainingPixels);
+            
+            remainingPixels.forEach((pixelIndex, i) => {
+                const col = i % cols;
+                const row = Math.floor(i / cols);
+                const posIndex = i * 2;
+                
+                animationState.finalPositions[posIndex] = startX + col * pixelSize;
+                animationState.finalPositions[posIndex + 1] = startY + row * pixelSize;
+            });
+            
+            animationState.startTime = performance.now();
+            currentAnimation = new Animation();
+            requestAnimationFrame(animate);
+        }
+        
+        function startUnravelingAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            // Sort pixels by their current grid position (top to bottom, left to right)
+            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => {
+                const aBase = a * 6;
+                const bBase = b * 6;
+                const aY = animationState.pixels[aBase + 2];
+                const bY = animationState.pixels[bBase + 2];
+                const aX = animationState.pixels[aBase];
+                const bX = animationState.pixels[bBase];
+                
+                // Sort by Y first (top to bottom), then by X (left to right)
+                if (Math.abs(aY - bY) < 1) return aX - bX;
+                return aY - bY;
+            });
+
+            const width = 1920;
+            const height = 1080;
+            const totalLines = remainingPixels.length;
+            const lineWidth = width / totalLines; // Each line gets equal portion of screen width
+            
+            // Calculate x positions based on sequence order
+            animationState.linePositions = new Float32Array(remainingPixels.length * 2);
+            
+            remainingPixels.forEach((pixelIndex, i) => {
+                const posIndex = i * 2;
+                animationState.linePositions[posIndex] = i * lineWidth;
+                animationState.linePositions[posIndex + 1] = height / 2; // Center vertically
+            });
+
+            animationState.startTime = performance.now();
+            currentAnimation = new Animation();
+            requestAnimationFrame(animate);
+        }
+        
+        function startColorTransition() {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const remainingPixels = Array.from(animationState.movingPixels);
+            animationState.finalColors = new Float32Array(remainingPixels.length);
+            
+            // Calculate sentiment scores from current colors
+            remainingPixels.forEach((pixelIndex, i) => {
+                const baseIndex = pixelIndex * 6;
+                const colorIndex = Math.floor(animationState.pixels[baseIndex + 5]);
+                const color = animationState.colors[colorIndex];
+                
+                // Parse RGB values from rgb(r,g,b) format
+                const [r, g, b] = color.match(/\d+/g).map(Number);
+                
+                // Calculate sentiment (higher when more purple/white, lower when more red)
+                const sentiment = (b * 2 + g) / (r + 1);
+                animationState.finalColors[i] = sentiment;
+            });
+
+            console.log('Starting color transition with', remainingPixels.length, 'pixels');
+            console.log('Sample colors:', remainingPixels.slice(0, 5).map(pixelIndex => {
+                const baseIndex = pixelIndex * 6;
+                const colorIndex = Math.floor(animationState.pixels[baseIndex + 5]);
+                return animationState.colors[colorIndex];
+            }));
+
+            animationState.startTime = performance.now();
+            currentAnimation = new Animation();
+            requestAnimationFrame(animate);
+        }
+
+        function animateSlideOut() {
+            const pixels = animationState.pixels;
+            const currentTime = performance.now();
+            const elapsedTime = (currentTime - animationState.startTime) / 1000;
+            
+            // Clear canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw the glowing "conflict" text
+            const textProgress = Math.min(Math.max((elapsedTime - 0.5) / 2, 0), 1); // Start appearing after 0.5s
+            if (textProgress > 0) {
+                ctx.save();
+                ctx.font = 'bold 240px Georgia';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Create gradient for text
+                const gradient = ctx.createLinearGradient(0, canvas.height/2 - 120, 0, canvas.height/2 + 120);
+                gradient.addColorStop(0, 'rgba(255, 140, 0, ' + textProgress + ')');
+                gradient.addColorStop(0.5, 'rgba(255, 69, 0, ' + textProgress + ')');
+                gradient.addColorStop(1, 'rgba(255, 140, 0, ' + textProgress + ')');
+                
+                // Draw multiple layers for glow effect
+                for (let i = 30; i >= 0; i--) {
+                    ctx.fillStyle = `rgba(255, 140, 0, ${0.03 * textProgress})`;
+                    ctx.shadowColor = 'rgba(255, 140, 0, 0.3)';
+                    ctx.shadowBlur = i * 2;
+                    ctx.shadowOffsetX = 0;
+                    ctx.shadowOffsetY = 0;
+                    ctx.fillText('conflict', canvas.width/2, canvas.height/2);
+                }
+                
+                // Draw the main text
+                ctx.fillStyle = gradient;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = 'rgba(255, 140, 0, 0.8)';
+                ctx.fillText('conflict', canvas.width/2, canvas.height/2);
+                ctx.restore();
+            }
+            
+            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
+            const width = 1920;
+            const height = 1080;
+            const totalLines = remainingPixels.length;
+            const baseLineWidth = width / totalLines;
+            
+            let allLinesGone = true;
+            
+            remainingPixels.forEach((pixelIndex, arrayIndex) => {
+                const baseIndex = pixelIndex * 6;
+                const currentX = pixels[baseIndex];
+                const currentY = pixels[baseIndex + 2];
+                
+                // Calculate individual line timing
+                const delay = animationState.slideOutDelays[arrayIndex];
+                const speed = animationState.slideOutSpeeds[arrayIndex];
+                const lineProgress = Math.max(0, (elapsedTime - delay) * speed);
+                
+                // Exponential ease-in
+                const easeProgress = lineProgress < 1 ? Math.pow(lineProgress, 2) : 1;
+                
+                // Move upward by height + extra padding
+                const yOffset = easeProgress * (height + 200);
+                
+                // If any line is still visible, continue animation
+                if (easeProgress < 1) allLinesGone = false;
+                
+                // Only draw if line hasn't completely left the screen
+                if (easeProgress < 1) {
+                    const colorIndex = Math.floor(pixels[baseIndex + 5]);
+                    const sentiment = animationState.finalColors[arrayIndex];
+                    const normalizedSentiment = Math.min(Math.max((sentiment - 0.5) / 0.15, 0), 1);
+                    
+                    // Use the final color state from previous animation
+                    let r = 255;
+                    let g, b;
+                    if (normalizedSentiment < 0.5) {
+                        g = Math.floor(128 * (normalizedSentiment * 2));
+                        b = 0;
+                    } else {
+                        g = Math.floor(128 + (255 - 128) * ((normalizedSentiment - 0.5) * 2));
+                        b = Math.floor(255 * ((normalizedSentiment - 0.5) * 2));
+                    }
+                    
+                    // Calculate width scale for negative sentiment
+                    const widthScale = normalizedSentiment < 0.5 ? 5 - 4 * normalizedSentiment : 1;
+                    const currentLineWidth = baseLineWidth * widthScale;
+                    
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.fillRect(
+                        currentX - (currentLineWidth - baseLineWidth) / 2,
+                        currentY - height / 2 - yOffset,
+                        currentLineWidth,
+                        height
+                    );
+                }
+            });
+            
+            // Apply subtle blur
+            ctx.filter = `blur(8px)`;
+            ctx.drawImage(canvas, 0, 0);
+            ctx.filter = 'none';
+            
+            // Check if animation is complete
+            if (allLinesGone) {
+                isAnimating = false;
+                currentAnimation = null;
+            }
+        }
+
+        function animateColorTransition() {
+            const pixels = animationState.pixels;
+            const currentTime = performance.now();
+            const elapsedTime = (currentTime - animationState.startTime) / 1000;
+            const progress = Math.min(elapsedTime / 2, 1); // 2 second animation
+            const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+            
+            // Create offscreen canvas for blur effect
+            const offscreen = document.createElement('canvas');
+            offscreen.width = canvas.width;
+            offscreen.height = canvas.height;
+            const offCtx = offscreen.getContext('2d');
+            
+            // Clear offscreen canvas
+            offCtx.fillStyle = 'black';
+            offCtx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
+            const width = 1920;
+            const height = 1080;
+            const totalLines = remainingPixels.length;
+            const baseLineWidth = width / totalLines;
+            
+            remainingPixels.forEach((pixelIndex, arrayIndex) => {
+                const baseIndex = pixelIndex * 6;
+                const currentX = pixels[baseIndex];
+                const currentY = pixels[baseIndex + 2];
+                const colorIndex = Math.floor(pixels[baseIndex + 5]);
+                const originalColor = animationState.colors[colorIndex];
+                const [origR, origG, origB] = originalColor.match(/\d+/g).map(Number);
+                
+                const sentiment = animationState.finalColors[arrayIndex];
+                const normalizedSentiment = Math.min(Math.max((sentiment - 0.5) / 0.15, 0), 1);
+                
+                // Calculate width scale for negative sentiment
+                const widthScale = normalizedSentiment < 0.5 ? 
+                    1 + (5 - 1) * (1 - normalizedSentiment * 2) * easeProgress : 
+                    1;
+                const currentLineWidth = baseLineWidth * widthScale;
+                
+                // Target colors
+                let targetR = 255;
+                let targetG, targetB;
+                
+                if (normalizedSentiment < 0.5) {
+                    targetG = Math.floor(128 * (normalizedSentiment * 2));
+                    targetB = 0;
+                } else {
+                    targetG = Math.floor(128 + (255 - 128) * ((normalizedSentiment - 0.5) * 2));
+                    targetB = Math.floor(255 * ((normalizedSentiment - 0.5) * 2));
+                }
+                
+                const r = Math.floor(origR + (targetR - origR) * easeProgress);
+                const g = Math.floor(origG + (targetG - origG) * easeProgress);
+                const b = Math.floor(origB + (targetB - origB) * easeProgress);
+                
+                offCtx.fillStyle = `rgb(${r},${g},${b})`;
+                offCtx.fillRect(
+                    currentX - (currentLineWidth - baseLineWidth) / 2,
+                    currentY - height / 2,
+                    currentLineWidth,
+                    height
+                );
+            });
+            
+            // Clear main canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Apply progressive blur and draw to main canvas
+            ctx.filter = `blur(${8 * easeProgress}px)`;
+            ctx.drawImage(offscreen, 0, 0);
+            ctx.filter = 'none';
+            
+            if (progress >= 1) {
+                isAnimating = false;
+                currentAnimation = null;
+            }
+        }
+        
+        function animate(timestamp) {
+            if (!currentAnimation || !isAnimating) return;
+            
+            if (animationState.phase === 'initial') {
+                animateInitialPhase(timestamp);
+            } else if (animationState.phase === 'falling') {
+                animateFallingPhase();
+            } else if (animationState.phase === 'reorganizing') {
+                animateReorganizingPhase();
+            } else if (animationState.phase === 'unraveling') {
+                animateUnravelingPhase();
+            } else if (animationState.phase === 'coloring') {
+                animateColorTransition();
+            }
+            
+            if (isAnimating) {
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        function animateInitialPhase(timestamp) {
+            const pixels = animationState.pixels;
+            const currentTime = performance.now();
+            const elapsedTime = !animationState.startTime ? 0 : (currentTime - animationState.startTime) / 1000;
+            
+            if (!animationState.startTime) {
+                animationState.startTime = currentTime;
+            }
+            
+            // Clear canvas once per frame
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate accelerating pixels per frame
+            const basePixelsPerFrame = Math.floor(elapsedTime * elapsedTime * 0.5) + 1;
+            const pixelsToAddPerFrame = Math.min(
+                basePixelsPerFrame,
+                Math.floor((pixels.length / 6 - animationState.currentIndex) * 0.1)
+            );
+            
+            // Draw completed pixels first (no shadow for completed pixels)
+            let pixelsInPlace = 0;
+            for (const index of animationState.completedPixels) {
+                const baseIndex = index * 6;
+                ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
+                ctx.fillRect(
+                    pixels[baseIndex],
+                    pixels[baseIndex + 2],
+                    animationState.layout.pixelRenderSize,
+                    animationState.layout.pixelRenderSize
+                );
+                pixelsInPlace++;
+            }
+            
+            // Update counter
+            animationState.counterElement.textContent = pixelsInPlace;
+            
+            // Activate new pixels with acceleration
+            for (let i = 0; i < pixelsToAddPerFrame; i++) {
+                if (animationState.currentIndex >= pixels.length / 6) break;
+                
+                const pixelIndex = animationState.pixelOrder[animationState.currentIndex];
+                const baseIndex = pixelIndex * 6;
+                pixels[baseIndex + 4] = 1; // Set opacity
+                animationState.activePixels.add(pixelIndex);
+                animationState.currentIndex++;
+            }
+            
+            // Process active pixels with drop shadows
+            const activePixels = Array.from(animationState.activePixels);
+            for (let i = activePixels.length - 1; i >= 0; i--) {
+                const index = activePixels[i];
+                const baseIndex = index * 6;
+                const currentY = pixels[baseIndex + 3];
+                const targetY = pixels[baseIndex + 2];
+                const diff = targetY - currentY;
+                
+                if (Math.abs(diff) > 0.1) {
+                    pixels[baseIndex + 3] += diff * 0.4;
+                    
+                    // Add drop shadow
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 5;
+                    ctx.shadowOffsetY = 5;
+                    
+                    ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
+                    ctx.fillRect(
+                        pixels[baseIndex],
+                        pixels[baseIndex + 3],
+                        animationState.layout.pixelRenderSize,
+                        animationState.layout.pixelRenderSize
+                    );
+                    
+                    ctx.restore();
+                } else {
+                    pixels[baseIndex + 3] = targetY;
+                    animationState.activePixels.delete(index);
+                    animationState.completedPixels.add(index);
+                }
+            }
+            
+            if (animationState.currentIndex >= pixels.length / 6 && animationState.activePixels.size === 0) {
+                isAnimating = false;
+                currentAnimation = null;
+                animationState.startTime = null;
+            }
+        }
+        
+        function animateFallingPhase() {
+            const pixels = animationState.pixels;
+            const velocities = animationState.velocities;
+            const currentTime = performance.now();
+            const elapsedTime = (currentTime - animationState.startTime) / 1000;
+            
+            // Clear canvas once per frame
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate how many pixels should be falling based on elapsed time
+            const basePixelsPerFrame = Math.floor(elapsedTime * elapsedTime * 0.5) + 1;
+            const pixelsToAddPerFrame = Math.min(
+                basePixelsPerFrame,
+                Math.floor((animationState.collapsiblePixels.size - animationState.currentFallingIndex) * 0.1)
+            );
+            
+            // Add new falling pixels with accelerating rate
+            for (let i = 0; i < pixelsToAddPerFrame; i++) {
+                if (animationState.currentFallingIndex < animationState.fallingOrder.length) {
+                    const index = animationState.fallingOrder[animationState.currentFallingIndex++];
+                    const velIndex = index * 3;
+                    velocities[velIndex] = (Math.random() - 0.5) * 12;
+                    velocities[velIndex + 1] = -15 - Math.random() * 5;
+                    velocities[velIndex + 2] = (Math.random() - 0.5) * 0.6;
+                    animationState.activeRowPixels.add(index);
+                    animationState.completedPixels.delete(index);
+                }
+            }
+            
+            // Count and draw pixels in their final positions
+            let pixelsInPlace = 0;
+            
+            // Draw and count non-collapsible pixels (they stay in place)
+            for (const index of animationState.completedPixels) {
+                if (!animationState.collapsiblePixels.has(index)) {
+                    const baseIndex = index * 6;
+                    ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
+                    ctx.fillRect(
+                        pixels[baseIndex],
+                        pixels[baseIndex + 2],
+                        animationState.layout.pixelRenderSize,
+                        animationState.layout.pixelRenderSize
+                    );
+                    pixelsInPlace++;
+                }
+            }
+            
+            // Draw and count collapsible pixels that haven't started falling yet
+            for (let i = animationState.currentFallingIndex; i < animationState.fallingOrder.length; i++) {
+                const index = animationState.fallingOrder[i];
+                if (!animationState.activeRowPixels.has(index) && !animationState.fallenPixels.has(index)) {
+                    const baseIndex = index * 6;
+                    ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
+                    ctx.fillRect(
+                        pixels[baseIndex],
+                        pixels[baseIndex + 2],
+                        animationState.layout.pixelRenderSize,
+                        animationState.layout.pixelRenderSize
+                    );
+                    pixelsInPlace++;
+                }
+            }
+            
+            // Draw falling pixels (these don't count towards the total)
+            for (const index of animationState.activeRowPixels) {
+                const baseIndex = index * 6;
+                const velIndex = index * 3;
+                
+                velocities[velIndex + 1] += 1.2;
+                pixels[baseIndex] += velocities[velIndex];
+                pixels[baseIndex + 3] += velocities[velIndex + 1];
+                
+                if (pixels[baseIndex + 3] > canvas.height + 50) {
+                    animationState.activeRowPixels.delete(index);
+                    animationState.fallenPixels.add(index);
+                    continue;
+                }
+                
+                ctx.save();
+                ctx.translate(
+                    pixels[baseIndex] + animationState.layout.pixelRenderSize / 2,
+                    pixels[baseIndex + 3] + animationState.layout.pixelRenderSize / 2
+                );
+                ctx.rotate(velocities[velIndex + 2] += 0.2);
+                ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
+                ctx.fillRect(
+                    -animationState.layout.pixelRenderSize / 2,
+                    -animationState.layout.pixelRenderSize / 2,
+                    animationState.layout.pixelRenderSize,
+                    animationState.layout.pixelRenderSize
+                );
+                ctx.restore();
+            }
+            
+            // Update counter with total pixels in their final position
+            animationState.counterElement.textContent = pixelsInPlace;
+            
+            // Check if animation is complete
+            if (animationState.currentFallingIndex >= animationState.fallingOrder.length && 
+                animationState.activeRowPixels.size === 0) {
+                isAnimating = false;
+                currentAnimation = null;
+            }
+        }
+        
+        function animateReorganizingPhase() {
+            const pixels = animationState.pixels;
+            const currentTime = performance.now();
+            const elapsedTime = (currentTime - animationState.startTime) / 1000;
+            const progress = Math.min(elapsedTime / 4.5, 1); // 4.5 second animation (3x slower)
+            const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+            
+            // Fade out counter at the start
+            const fadeOutProgress = Math.max(0, 1 - elapsedTime * 2); // Fade out over 0.5 seconds
+            animationState.counterElement.style.opacity = fadeOutProgress;
+            
+            // Clear canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            let pixelsInPlace = 0;
+            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
+            
+            remainingPixels.forEach((pixelIndex, arrayIndex) => {
+                const baseIndex = pixelIndex * 6;
+                const posIndex = arrayIndex * 2;
+                
+                // Current position and size
+                const startX = pixels[baseIndex];
+                const startY = pixels[baseIndex + 2];
+                const startSize = animationState.layout.pixelRenderSize;
+                
+                // Target position and size
+                const targetX = animationState.finalPositions[posIndex];
+                const targetY = animationState.finalPositions[posIndex + 1];
+                const targetSize = animationState.finalPixelSize;
+                
+                // Interpolate position and size
+                const currentX = startX + (targetX - startX) * easeProgress;
+                const currentY = startY + (targetY - startY) * easeProgress;
+                const currentSize = startSize + (targetSize - startSize) * easeProgress;
+                
+                // Update pixel position for next frame
+                pixels[baseIndex] = currentX;
+                pixels[baseIndex + 2] = currentY;
+                
+                // Draw pixel
+                ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
+                ctx.fillRect(
+                    currentX + (startSize - currentSize) / 2,
+                    currentY + (startSize - currentSize) / 2,
+                    currentSize,
+                    currentSize
+                );
+                
+                pixelsInPlace++;
+            });
+            
+            // Only update counter text if it's still visible
+            if (fadeOutProgress > 0) {
+                animationState.counterElement.textContent = pixelsInPlace;
+            }
+            
+            // Check if animation is complete
+            if (progress >= 1) {
+                isAnimating = false;
+                currentAnimation = null;
+                console.log('Reorganizing animation complete');
+            }
+        }
+        
+        function animateUnravelingPhase() {
+            const pixels = animationState.pixels;
+            const currentTime = performance.now();
+            const elapsedTime = (currentTime - animationState.startTime) / 1000;
+            const progress = Math.min(elapsedTime / 4, 1); // 4 second animation
+            const easeProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+            
+            // Clear canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const remainingPixels = Array.from(animationState.movingPixels).sort((a, b) => a - b);
+            const width = 1920;
+            const height = 1080;
+            const totalLines = remainingPixels.length;
+            const lineWidth = width / totalLines;
+            
+            remainingPixels.forEach((pixelIndex, arrayIndex) => {
+                const baseIndex = pixelIndex * 6;
+                const posIndex = arrayIndex * 2;
+                
+                // Current position and dimensions
+                const startX = pixels[baseIndex];
+                const startY = pixels[baseIndex + 2];
+                const startSize = animationState.finalPixelSize;
+                
+                // Target position
+                const targetX = animationState.linePositions[posIndex];
+                
+                // Interpolate position and dimensions
+                const currentX = startX + (targetX - startX) * easeProgress;
+                
+                // Calculate height transformation - grow to full height
+                const currentHeight = startSize + (height - startSize) * easeProgress;
+                const currentWidth = startSize + (lineWidth - startSize) * easeProgress;
+                
+                // Calculate Y position to center the line
+                const currentY = startY * (1 - easeProgress) + (height / 2) * easeProgress;
+                
+                // Update pixel position for next frame
+                pixels[baseIndex] = currentX;
+                pixels[baseIndex + 2] = currentY;
+                
+                // Draw line segment
+                ctx.fillStyle = animationState.colors[pixels[baseIndex + 5]];
+                ctx.fillRect(
+                    currentX,
+                    currentY - currentHeight / 2,
+                    currentWidth,
+                    currentHeight
+                );
+            });
+            
+            // Check if animation is complete
+            if (progress >= 1) {
+                isAnimating = false;
+                currentAnimation = null;
+            }
+        }
+        
+        function Animation() {
+            this.cancelled = false;
+            this.cancel = function() {
+                this.cancelled = true;
+            }
+        }
+    </script>
+</body>
+</html> 
