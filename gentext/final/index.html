@@ -34,11 +34,39 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            background: black;
         }
 
-        #pdf-canvas {
+        .pdf-canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        #front-container {
+            z-index: 2;
+            transition: opacity 0.3s ease;
+        }
+
+        #back-container {
+            z-index: 1;
+        }
+
+        .pdf-canvas {
             max-width: 100%;
             max-height: 100%;
+        }
+
+        #pdf-canvas-back {
+            position: absolute;
+            opacity: 0;
         }
 
         #pixel-container {
@@ -78,45 +106,23 @@
             display: none;
         }
 
-        #navigation {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 2000;
-        }
-
-        .nav-button {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            cursor: pointer;
-            border-radius: 5px;
-            font-size: 16px;
-            transition: background 0.3s;
-        }
-
-        .nav-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
+        /* Remove navigation buttons CSS */
     </style>
 </head>
 <body>
     <div id="presentation-container">
         <div id="pdf-container">
-            <canvas id="pdf-canvas"></canvas>
+            <div class="pdf-canvas-container">
+                <canvas class="pdf-canvas"></canvas>
+            </div>
+            <div class="pdf-canvas-container" style="opacity: 0;">
+                <canvas class="pdf-canvas"></canvas>
+            </div>
         </div>
         <div id="pixel-container">
             <canvas id="pixel-canvas"></canvas>
             <div id="pixel-counter"></div>
         </div>
-    </div>
-    <div id="navigation">
-        <button class="nav-button" onclick="previousSlide()">Previous</button>
-        <button class="nav-button" onclick="nextSlide()">Next</button>
     </div>
 
     <script>
@@ -151,39 +157,68 @@
         }
 
         function renderPage(num) {
-            // Skip the TONE DEMO slide
             if (num === toneSlideNum) {
-                pageNum++;
-                renderPage(pageNum);
+                // Pre-render the next slide in sequence
+                pdfDoc.getPage(toneSlideNum + 1).then(function(nextPage) {
+                    const viewport = nextPage.getViewport({scale: 1});
+                    const container = document.getElementById('pdf-container');
+                    const scale = Math.min(
+                        container.clientWidth / viewport.width,
+                        container.clientHeight / viewport.height
+                    ) * 0.98;
+                    
+                    const scaledViewport = nextPage.getViewport({scale: scale});
+                    const containers = Array.from(document.getElementsByClassName('pdf-canvas-container'));
+                    const canvas = containers[1].querySelector('canvas');
+                    canvas.width = scaledViewport.width;
+                    canvas.height = scaledViewport.height;
+
+                    nextPage.render({
+                        canvasContext: canvas.getContext('2d'),
+                        viewport: scaledViewport
+                    }).promise.then(() => {
+                        // Start demo
+                        document.getElementById('pdf-container').style.display = 'none';
+                        document.getElementById('pixel-container').style.display = 'block';
+                        document.getElementById('pixel-counter').style.display = 'block';
+                        isPixelAnimationActive = true;
+                        if (!pixelAnimationStarted) {
+                            initPixelAnimation();
+                            pixelAnimationStarted = true;
+                        }
+                    });
+                });
                 return;
+            }
+
+            const containers = Array.from(document.getElementsByClassName('pdf-canvas-container'));
+            const visibleContainer = containers.find(c => c.style.opacity !== '0');
+            const hiddenContainer = containers.find(c => c.style.opacity === '0');
+            
+            if (!visibleContainer || !hiddenContainer) {
+                containers[0].style.opacity = '1';
+                containers[1].style.opacity = '0';
             }
 
             pdfDoc.getPage(num).then(function(page) {
                 const viewport = page.getViewport({scale: 1});
-                const canvas = document.getElementById('pdf-canvas');
-                const context = canvas.getContext('2d');
-
-                // Scale to fit the container while maintaining aspect ratio
                 const container = document.getElementById('pdf-container');
-                const containerAspectRatio = container.clientWidth / container.clientHeight;
-                const viewportAspectRatio = viewport.width / viewport.height;
-
-                let scale;
-                if (containerAspectRatio > viewportAspectRatio) {
-                    // Container is wider than viewport
-                    scale = container.clientHeight / viewport.height * 0.98; // Add 2% margin
-                } else {
-                    // Container is taller than viewport
-                    scale = container.clientWidth / viewport.width * 0.98; // Add 2% margin
-                }
+                const scale = Math.min(
+                    container.clientWidth / viewport.width,
+                    container.clientHeight / viewport.height
+                ) * 0.98;
 
                 const scaledViewport = page.getViewport({scale: scale});
+                const canvas = hiddenContainer.querySelector('canvas');
                 canvas.width = scaledViewport.width;
                 canvas.height = scaledViewport.height;
 
-                page.render({
-                    canvasContext: context,
+                return page.render({
+                    canvasContext: canvas.getContext('2d'),
                     viewport: scaledViewport
+                }).promise.then(() => {
+                    hiddenContainer.style.opacity = '1';
+                    visibleContainer.style.opacity = '0';
                 });
             });
         }
@@ -203,27 +238,20 @@
                     animationState.phase = 'coloring';
                     startColorTransition();
                 } else if (animationState.phase === 'coloring') {
-                    // Switch back to PDF
+                    // Exit demo and show pre-rendered next slide
                     document.getElementById('pdf-container').style.display = 'flex';
                     document.getElementById('pixel-container').style.display = 'none';
                     document.getElementById('pixel-counter').style.display = 'none';
-                    document.getElementById('navigation').style.display = 'flex';
+                    const containers = Array.from(document.getElementsByClassName('pdf-canvas-container'));
+                    containers[0].style.opacity = '0';
+                    containers[1].style.opacity = '1';
                     isPixelAnimationActive = false;
-                    pageNum++;
-                    renderPage(pageNum);
+                    pageNum = toneSlideNum + 1;
                 }
             } else if (pageNum < pdfDoc.numPages) {
                 if (pageNum + 1 === toneSlideNum) {
-                    // Switch to pixel animation
-                    document.getElementById('pdf-container').style.display = 'none';
-                    document.getElementById('pixel-container').style.display = 'block';
-                    document.getElementById('pixel-counter').style.display = 'block';
-                    document.getElementById('navigation').style.display = 'none';
-                    isPixelAnimationActive = true;
-                    if (!pixelAnimationStarted) {
-                        initPixelAnimation();
-                        pixelAnimationStarted = true;
-                    }
+                    pageNum++;
+                    renderPage(pageNum);
                 } else {
                     pageNum++;
                     renderPage(pageNum);
@@ -250,7 +278,6 @@
                     document.getElementById('pdf-container').style.display = 'flex';
                     document.getElementById('pixel-container').style.display = 'none';
                     document.getElementById('pixel-counter').style.display = 'none';
-                    document.getElementById('navigation').style.display = 'flex';
                     isPixelAnimationActive = false;
                     pageNum--;
                     renderPage(pageNum);
