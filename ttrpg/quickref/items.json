@@ -100,6 +100,15 @@
       "icon": "🗡️"
     },
     {
+      "name": "Crowbar",
+      "category": "Weapons",
+      "subcategory": "Melee Weaponry",
+      "damage": "12",
+      "range": "melee",
+      "type": "Tool",
+      "icon": "🗡️"
+    },
+    {
       "name": "Gun Arm",
       "category": "Weapons",
       "subcategory": "Augmented/Unarmed Weaponry",
