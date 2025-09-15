@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crazy Bill's Gunporium - Premium Firearms & Equipment</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <img src="logo.png" alt="Crazy Bill's Gunporium" class="logo-image">
+                <div class="logo-text">
+                    <h1>CRAZY BILL'S</h1>
+                    <p class="tagline">GUNPORIUM</p>
+                    <span class="subtitle">EST. 2287 • PREMIUM FIREARMS & EQUIPMENT</span>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="#small-guns" class="nav-link">Small Guns</a>
+                <a href="#big-guns" class="nav-link">Big Guns</a>
+                <a href="#melee" class="nav-link">Melee</a>
+                <a href="#ammo" class="nav-link">Ammo</a>
+                <a href="#armor" class="nav-link">Armor</a>
+                <button class="cart-btn" onclick="toggleCart()">
+                    Cart (<span id="cart-count">0</span>)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="hero">
+            <div class="container">
+                <h2>Premium Wasteland Weaponry</h2>
+                <p>Finest firearms and equipment in the Commonwealth. Quality guaranteed or your caps back.</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Small Guns Section -->
+            <section id="small-guns" class="category-section">
+                <h2 class="category-title">Small Guns</h2>
+                <div class="product-grid">
+                    <div class="product-card" data-category="small-guns">
+                        <div class="product-image">🔫</div>
+                        <h3 class="product-name">5mm Assault Rifle</h3>
+                        <div class="product-stats">
+                            <span class="stat">90 DMG</span>
+                            <span class="stat">50ft Range</span>
+                        </div>
+                        <div class="product-price">6,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('5mm Assault rifle', 90, 50, 6000, 'Small')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="small-guns">
+                        <div class="product-image">🔫</div>
+                        <h3 class="product-name">10mm SMG</h3>
+                        <div class="product-stats">
+                            <span class="stat">45 DMG</span>
+                            <span class="stat">50ft Range</span>
+                        </div>
+                        <div class="product-price">3,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('10mm Smg', 45, 50, 3000, 'Small')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="small-guns">
+                        <div class="product-image">🔫</div>
+                        <h3 class="product-name">.44 Magnum</h3>
+                        <div class="product-stats">
+                            <span class="stat">30 DMG</span>
+                            <span class="stat">50ft Range</span>
+                        </div>
+                        <div class="product-price">2,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('.44 magnum', 30, 50, 2000, 'Small')">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Big Guns Section -->
+            <section id="big-guns" class="category-section">
+                <h2 class="category-title">Big Guns</h2>
+                <div class="product-grid">
+                    <div class="product-card" data-category="big-guns">
+                        <div class="product-image">🔫</div>
+                        <h3 class="product-name">10mm Lewis Machine Gun</h3>
+                        <div class="product-stats">
+                            <span class="stat">60 DMG</span>
+                            <span class="stat">10ft Range</span>
+                        </div>
+                        <div class="product-price">2,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('10mm Lewis Machine gun', 60, 10, 2000, 'Big')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="big-guns">
+                        <div class="product-image">🔫</div>
+                        <h3 class="product-name">.44 Lead Spitter Rifle</h3>
+                        <div class="product-stats">
+                            <span class="stat">75 DMG</span>
+                            <span class="stat">10ft Range</span>
+                        </div>
+                        <div class="product-price">3,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('.44 Lead spitter Rifle', 75, 10, 3000, 'Big')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="big-guns" data-featured="true">
+                        <div class="product-image">💥</div>
+                        <h3 class="product-name">10 Gauge Tsunami Arms Helix Minigun</h3>
+                        <div class="product-stats">
+                            <span class="stat">600 DMG</span>
+                            <span class="stat">20ft Range</span>
+                        </div>
+                        <div class="product-price featured-price">100,000 caps</div>
+                        <button class="add-to-cart-btn featured-btn" onclick="addToCart('10 GuageTsunami Arms Helix Minigun', 600, 20, 100000, 'Big')">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Melee Weapons Section -->
+            <section id="melee" class="category-section">
+                <h2 class="category-title">Melee Weapons</h2>
+                <div class="product-grid">
+                    <div class="product-card" data-category="melee">
+                        <div class="product-image">⚾</div>
+                        <h3 class="product-name">Reinforced Steel Bat</h3>
+                        <div class="product-stats">
+                            <span class="stat">10 DMG</span>
+                            <span class="stat">Melee</span>
+                        </div>
+                        <div class="product-price">300 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Reinforced Steel Bat', 10, 0, 300, 'Melee')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="melee">
+                        <div class="product-image">⚾</div>
+                        <h3 class="product-name">Switchbat</h3>
+                        <div class="product-stats">
+                            <span class="stat">15 DMG</span>
+                            <span class="stat">Melee</span>
+                        </div>
+                        <div class="product-price">400 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Switchbat', 15, 0, 400, 'Melee')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="melee">
+                        <div class="product-image">👊</div>
+                        <h3 class="product-name">Brass Knuckles</h3>
+                        <div class="product-stats">
+                            <span class="stat">5 DMG</span>
+                            <span class="stat">Melee</span>
+                        </div>
+                        <div class="product-price">150 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Brass knuckles', 5, 0, 150, 'Melee')">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ammo Section -->
+            <section id="ammo" class="category-section">
+                <h2 class="category-title">Ammunition</h2>
+                <div class="product-grid ammo-grid">
+                    <div class="product-card ammo-card">
+                        <div class="product-image">📦</div>
+                        <h3 class="product-name">5mm Clips</h3>
+                        <div class="product-price">10 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('5mm clips', null, null, 10, 'Ammo')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card ammo-card">
+                        <div class="product-image">📦</div>
+                        <h3 class="product-name">10mm Rounds</h3>
+                        <div class="product-price">4 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('10mm rounds', null, null, 4, 'Ammo')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card ammo-card">
+                        <div class="product-image">📦</div>
+                        <h3 class="product-name">10mm Clips</h3>
+                        <div class="product-price">8 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('10mm clips', null, null, 8, 'Ammo')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card ammo-card">
+                        <div class="product-image">📦</div>
+                        <h3 class="product-name">.44 Magnum Rounds</h3>
+                        <div class="product-price">15 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('.44 magnum rounds', null, null, 15, 'Ammo')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card ammo-card">
+                        <div class="product-image">📦</div>
+                        <h3 class="product-name">.45 Cal Clips</h3>
+                        <div class="product-price">15 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('.45 Cal clips', null, null, 15, 'Ammo')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card ammo-card">
+                        <div class="product-image">📦</div>
+                        <h3 class="product-name">10 Gauge Clips</h3>
+                        <div class="product-price">20 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('10 Gauge Clips', null, null, 20, 'Ammo')">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Armor Section -->
+            <section id="armor" class="category-section">
+                <h2 class="category-title">Armor</h2>
+                <div class="product-grid">
+                    <div class="product-card" data-category="armor">
+                        <div class="product-image">🧥</div>
+                        <h3 class="product-name">Flight Leathers</h3>
+                        <div class="product-stats">
+                            <span class="stat">60 AC</span>
+                            <span class="stat">30 SP</span>
+                        </div>
+                        <div class="product-price">2,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Flight Leathers', 60, 30, 2000, 'Armor')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="armor">
+                        <div class="product-image">🛡️</div>
+                        <h3 class="product-name">Scrap Casing</h3>
+                        <div class="product-stats">
+                            <span class="stat">70 AC</span>
+                            <span class="stat">40 SP</span>
+                        </div>
+                        <div class="product-price">8,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Scrap casing', 70, 40, 8000, 'Armor')">Add to Cart</button>
+                    </div>
+
+                    <div class="product-card" data-category="armor">
+                        <div class="product-image">👕</div>
+                        <h3 class="product-name">Pre-war Combat Fatigues</h3>
+                        <div class="product-stats">
+                            <span class="stat">80 AC</span>
+                            <span class="stat">10 SP</span>
+                        </div>
+                        <div class="product-price">2,000 caps</div>
+                        <button class="add-to-cart-btn" onclick="addToCart('Pre-war combat fatigues', 80, 10, 2000, 'Armor')">Add to Cart</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h3>Shopping Cart</h3>
+            <button class="close-cart" onclick="toggleCart()">×</button>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <!-- Cart items will be populated here -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                Total: <span id="cart-total">0</span> caps
+            </div>
+            <button class="checkout-btn" onclick="checkout()" id="checkout-btn" disabled>Checkout</button>
+        </div>
+    </div>
+
+    <div id="cart-overlay" class="cart-overlay" onclick="toggleCart()"></div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2287 Crazy Bill's Gunporium. All rights reserved. Licensed dealer in the Commonwealth.</p>
+            <p>Quality guaranteed or your caps back. No questions asked.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
