@@ -1,0 +1,306 @@
+{
+  "items": [
+    {
+      "name": "5mm Assault Rifle",
+      "category": "Weapons",
+      "subcategory": "Small Guns",
+      "damage": "90",
+      "range": "50 ft",
+      "type": "Small",
+      "icon": "🔫"
+    },
+    {
+      "name": "10mm SMG",
+      "category": "Weapons",
+      "subcategory": "Small Guns",
+      "damage": "45",
+      "range": "50 ft",
+      "type": "Small",
+      "icon": "🔫"
+    },
+    {
+      "name": ".44 Magnum",
+      "category": "Weapons",
+      "subcategory": "Small Guns",
+      "damage": "30",
+      "range": "50 ft",
+      "type": "Small",
+      "icon": "🔫"
+    },
+    {
+      "name": "10mm Lewis Machine Gun",
+      "category": "Weapons",
+      "subcategory": "Big Guns",
+      "damage": "60",
+      "range": "10 ft",
+      "type": "Big",
+      "icon": "🔫"
+    },
+    {
+      "name": ".44 Lead Spitter Rifle",
+      "category": "Weapons",
+      "subcategory": "Big Guns",
+      "damage": "75",
+      "range": "10 ft",
+      "type": "Big",
+      "icon": "🔫"
+    },
+    {
+      "name": "10 Gauge Tsunami Arms Helix Minigun",
+      "category": "Weapons",
+      "subcategory": "Big Guns",
+      "damage": "600",
+      "range": "20 ft",
+      "type": "Big",
+      "icon": "🔫"
+    },
+    {
+      "name": "Reinforced Steel Bat",
+      "category": "Weapons",
+      "subcategory": "Melee Weapons",
+      "damage": "10",
+      "range": "melee",
+      "type": "Melee",
+      "icon": "⚾"
+    },
+    {
+      "name": "Switchbat",
+      "category": "Weapons",
+      "subcategory": "Melee Weapons",
+      "damage": "15",
+      "range": "melee",
+      "type": "Melee",
+      "icon": "⚾"
+    },
+    {
+      "name": "Brass Knuckles",
+      "category": "Weapons",
+      "subcategory": "Melee Weapons",
+      "damage": "5",
+      "range": "melee",
+      "type": "Melee",
+      "icon": "👊"
+    },
+    {
+      "name": "Reinforced Arms",
+      "category": "Weapons",
+      "subcategory": "Augmented/Unarmed Weaponry",
+      "damage": "+30 to unarmed",
+      "range": "melee",
+      "type": "Augmentation",
+      "icon": "🤖"
+    },
+    {
+      "name": "Hidden Blades",
+      "category": "Weapons",
+      "subcategory": "Augmented/Unarmed Weaponry",
+      "damage": "+45 to unarmed",
+      "range": "melee",
+      "type": "Augmentation",
+      "icon": "🗡️"
+    },
+    {
+      "name": "Gun Arm",
+      "category": "Weapons",
+      "subcategory": "Augmented/Unarmed Weaponry",
+      "damage": "25 to enemy, 5 to self",
+      "range": "ranged",
+      "type": "Augmentation",
+      "special": "10-shot capacity, surgically reloadable",
+      "icon": "🤖"
+    },
+    {
+      "name": "Stim Packs",
+      "category": "Chems / Medical",
+      "subcategory": "Medical",
+      "effect": "Heal 25 health",
+      "type": "Medical",
+      "icon": "💊"
+    },
+    {
+      "name": "RadX",
+      "category": "Chems / Medical",
+      "subcategory": "Chems",
+      "effect": "+20 radiation resistance",
+      "duration": "1 day",
+      "type": "Chem",
+      "icon": "💊"
+    },
+    {
+      "name": "Rad-Away",
+      "category": "Chems / Medical",
+      "subcategory": "Medical",
+      "effect": "Cures radiation sickness",
+      "duration": "delayed effect, 1 day",
+      "type": "Medical",
+      "icon": "💊"
+    },
+    {
+      "name": "Buffout",
+      "category": "Chems / Medical",
+      "subcategory": "Chems",
+      "effect": "+8 dmg to unarmed and melee",
+      "duration": "1 hour",
+      "addiction": "25%",
+      "type": "Chem",
+      "icon": "💊"
+    },
+    {
+      "name": "Jet",
+      "category": "Chems / Medical",
+      "subcategory": "Chems",
+      "effect": "+20 disposable HP and +1 combat action",
+      "duration": "1 day",
+      "addiction": "50%",
+      "type": "Chem",
+      "icon": "💊"
+    },
+    {
+      "name": "Psycho",
+      "category": "Chems / Medical",
+      "subcategory": "Chems",
+      "effect": "+15 SP",
+      "duration": "1 hour",
+      "addiction": "20%",
+      "type": "Chem",
+      "icon": "💊"
+    },
+    {
+      "name": "Mentats",
+      "category": "Chems / Medical",
+      "subcategory": "Chems",
+      "effect": "+2 Intelligence",
+      "duration": "1 hour",
+      "addiction": "20%",
+      "type": "Chem",
+      "icon": "💊"
+    },
+    {
+      "name": "Full Tune Up",
+      "category": "Chems / Medical",
+      "subcategory": "Medical",
+      "effect": "Heals all injuries + cures radiation sickness",
+      "type": "Medical",
+      "icon": "💊"
+    },
+    {
+      "name": "Injury Treatment",
+      "category": "Chems / Medical",
+      "subcategory": "Medical",
+      "effect": "Heals all injuries",
+      "type": "Medical",
+      "icon": "💊"
+    },
+    {
+      "name": "Radiation Sickness Treatment",
+      "category": "Chems / Medical",
+      "subcategory": "Medical",
+      "effect": "Cures radiation sickness",
+      "type": "Medical",
+      "icon": "💊"
+    },
+    {
+      "name": "Gills",
+      "category": "Utility / Augmentations",
+      "subcategory": "Augmentations",
+      "effect": "Breathe underwater, -1 Charisma",
+      "type": "Augmentation",
+      "icon": "⚙️"
+    },
+    {
+      "name": "Bulletproof Skin",
+      "category": "Utility / Augmentations",
+      "subcategory": "Augmentations",
+      "effect": "-1 Charisma, +5 AC, +7 SP",
+      "special": "stackable with armor",
+      "type": "Augmentation",
+      "icon": "⚙️"
+    },
+    {
+      "name": "Tattoo",
+      "category": "Cosmetics",
+      "subcategory": "Cosmetics",
+      "effect": "Standard tattoo (cosmetic only)",
+      "type": "Cosmetic",
+      "icon": "🎨"
+    },
+    {
+      "name": "Glowing Eyes",
+      "category": "Cosmetics",
+      "subcategory": "Cosmetics",
+      "effect": "+1 Perception, -1 Charisma",
+      "special": "bioluminescent eyes",
+      "type": "Cosmetic",
+      "icon": "🎨"
+    },
+    {
+      "name": "Flight Leathers",
+      "category": "Armor",
+      "subcategory": "Armor",
+      "ac": "60",
+      "sp": "30",
+      "type": "Armor",
+      "icon": "🛡️"
+    },
+    {
+      "name": "Scrap Casing",
+      "category": "Armor",
+      "subcategory": "Armor",
+      "ac": "70",
+      "sp": "40",
+      "type": "Armor",
+      "icon": "🛡️"
+    },
+    {
+      "name": "Pre-war Combat Fatigues",
+      "category": "Armor",
+      "subcategory": "Armor",
+      "ac": "80",
+      "sp": "10",
+      "type": "Armor",
+      "icon": "🛡️"
+    },
+    {
+      "name": "5mm Clips",
+      "category": "Ammo",
+      "subcategory": "Ammo",
+      "type": "Ammunition",
+      "icon": "🔋"
+    },
+    {
+      "name": "10mm Rounds",
+      "category": "Ammo",
+      "subcategory": "Ammo",
+      "type": "Ammunition",
+      "icon": "🔋"
+    },
+    {
+      "name": "10mm Clips",
+      "category": "Ammo",
+      "subcategory": "Ammo",
+      "type": "Ammunition",
+      "icon": "🔋"
+    },
+    {
+      "name": ".44 Magnum Rounds",
+      "category": "Ammo",
+      "subcategory": "Ammo",
+      "type": "Ammunition",
+      "icon": "🔋"
+    },
+    {
+      "name": ".45 Cal Clips",
+      "category": "Ammo",
+      "subcategory": "Ammo",
+      "type": "Ammunition",
+      "icon": "🔋"
+    },
+    {
+      "name": "10 Gauge Clips",
+      "category": "Ammo",
+      "subcategory": "Ammo",
+      "type": "Ammunition",
+      "icon": "🔋"
+    }
+  ]
+}

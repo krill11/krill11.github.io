@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fallout TTRPG Item Catalog - Quick Reference</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Fallout TTRPG Item Catalog</h1>
+            <p class="subtitle">Quick Reference Guide</p>
+        </header>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Search items by name..." 
+                    autocomplete="off"
+                >
+                <div class="search-icon">🔍</div>
+            </div>
+            <div class="results-count">
+                <span id="results-count">Loading items...</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="items-table" id="items-table">
+                <thead>
+                    <tr>
+                        <th class="icon-col"></th>
+                        <th class="name-col">Item Name</th>
+                        <th class="category-col">Category</th>
+                        <th class="stats-col">Stats</th>
+                        <th class="details-col">Details</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <!-- Items will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading items...</p>
+        </div>
+
+        <div class="no-results" id="no-results" style="display: none;">
+            <div class="no-results-icon">🔍</div>
+            <h3>No items found</h3>
+            <p>Try adjusting your search terms</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
