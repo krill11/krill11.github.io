@@ -1,3 +1,11 @@
+// Supabase Configuration
+// TODO: Replace with your actual Supabase URL and API key
+const SUPABASE_URL = 'https://jnamtuorbmyibugpltmt.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuYW10dW9yYm15aWJ1Z3BsdG10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMzY0NDUsImV4cCI6MjA3MzcxMjQ0NX0.TTYRPe9oy2NJMnXIsBXSb811Cl-WfxNn8zhqkb77_S0';
+
+// Initialize Supabase client
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // Global variables
 let allItems = [];
 let filteredItems = [];
@@ -9,16 +17,23 @@ const resultsCount = document.getElementById('results-count');
 const loading = document.getElementById('loading');
 const noResults = document.getElementById('no-results');
 const itemsTable = document.getElementById('items-table');
+const addItemBtn = document.getElementById('add-item-btn');
+const addItemModal = document.getElementById('add-item-modal');
+const addItemForm = document.getElementById('add-item-form');
+const closeModal = document.querySelector('.close-modal');
+const cancelAdd = document.getElementById('cancel-add');
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     loadItems();
     setupSearch();
+    setupModal();
 });
 
-// Load items from JSON
+// Load items from both JSON file and Supabase
 async function loadItems() {
     try {
+        // Load base items from JSON file
         const response = await fetch('./items.json');
         
         if (!response.ok) {
@@ -31,10 +46,32 @@ async function loadItems() {
             throw new Error('Invalid data format');
         }
         
-        allItems = data.items;
+        let baseItems = data.items;
+        
+        // Load custom items from Supabase
+        let customItems = [];
+        try {
+            if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+                const { data: supabaseItems, error } = await supabase
+                    .from('items')
+                    .select('*');
+                
+                if (error) {
+                    console.warn('Supabase error:', error.message);
+                } else {
+                    customItems = supabaseItems || [];
+                    console.log(`Loaded ${customItems.length} custom items from Supabase`);
+                }
+            }
+        } catch (supabaseError) {
+            console.warn('Supabase connection failed:', supabaseError);
+        }
+        
+        // Combine base items and custom items
+        allItems = [...baseItems, ...customItems];
         filteredItems = [...allItems];
         
-        console.log(`Loaded ${allItems.length} items successfully`);
+        console.log(`Loaded ${allItems.length} items total (${baseItems.length} base + ${customItems.length} custom)`);
         
         renderItems();
         updateResultsCount();
@@ -46,7 +83,7 @@ async function loadItems() {
     }
 }
 
-// Render items in the table
+// Render items in the table with grouping
 function renderItems() {
     if (filteredItems.length === 0) {
         showNoResults();
@@ -55,32 +92,111 @@ function renderItems() {
     
     hideNoResults();
     
-    const html = filteredItems.map(item => `
-        <tr>
-            <td class="icon-col">
-                <span class="item-icon">${item.icon || '📦'}</span>
-            </td>
-            <td class="name-col">
-                <div class="item-name">${item.name}</div>
-            </td>
-            <td class="category-col">
-                <div class="item-category">${item.category}</div>
-                ${item.subcategory ? `<div class="item-subcategory">${item.subcategory}</div>` : ''}
-            </td>
-            <td class="stats-col">
-                <div class="item-stats">
-                    ${generateStatsHTML(item)}
-                </div>
-            </td>
-            <td class="details-col">
-                <div class="item-details">
-                    ${generateDetailsHTML(item)}
-                </div>
-            </td>
-        </tr>
-    `).join('');
+    // Group items by category
+    const groupedItems = groupItemsByCategory(filteredItems);
+    
+    let html = '';
+    
+    // Render each group
+    Object.keys(groupedItems).forEach(category => {
+        const items = groupedItems[category];
+        
+        // Add group header
+        html += `
+            <tr class="group-header">
+                <td colspan="5">
+                    <div class="group-title">
+                        <span class="group-icon">${getCategoryIcon(category)}</span>
+                        <span class="group-name">${category}</span>
+                        <span class="group-count">(${items.length})</span>
+                    </div>
+                </td>
+            </tr>
+        `;
+        
+        // Add items in the group
+        items.forEach(item => {
+            html += `
+                <tr class="group-item">
+                    <td class="icon-col">
+                        <span class="item-icon">${item.icon || '📦'}</span>
+                    </td>
+                    <td class="name-col">
+                        <div class="item-name">${item.name}</div>
+                    </td>
+                    <td class="category-col">
+                        <div class="item-category">${item.category}</div>
+                        ${item.subcategory ? `<div class="item-subcategory">${item.subcategory}</div>` : ''}
+                    </td>
+                    <td class="stats-col">
+                        <div class="item-stats">
+                            ${generateStatsHTML(item)}
+                        </div>
+                    </td>
+                    <td class="details-col">
+                        <div class="item-details">
+                            ${generateDetailsHTML(item)}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    });
     
     tableBody.innerHTML = html;
+}
+
+// Group items by their main category
+function groupItemsByCategory(items) {
+    const groups = {};
+    
+    items.forEach(item => {
+        const category = item.category;
+        if (!groups[category]) {
+            groups[category] = [];
+        }
+        groups[category].push(item);
+    });
+    
+    // Sort groups by a predefined order for better organization
+    const categoryOrder = [
+        'Weapons',
+        'Armor', 
+        'Chems / Medical',
+        'Utility / Augmentations',
+        'Ammo',
+        'Cosmetics'
+    ];
+    
+    const sortedGroups = {};
+    categoryOrder.forEach(category => {
+        if (groups[category]) {
+            sortedGroups[category] = groups[category];
+        }
+    });
+    
+    // Add any remaining categories not in the predefined order
+    Object.keys(groups).forEach(category => {
+        if (!sortedGroups[category]) {
+            sortedGroups[category] = groups[category];
+        }
+    });
+    
+    return sortedGroups;
+}
+
+// Get appropriate icon for each category
+function getCategoryIcon(category) {
+    const iconMap = {
+        'Weapons': '⚔️',
+        'Armor': '🛡️',
+        'Chems / Medical': '💊',
+        'Utility / Augmentations': '⚙️',
+        'Ammo': '🔋',
+        'Cosmetics': '🎨'
+    };
+    
+    return iconMap[category] || '📦';
 }
 
 // Generate stats HTML based on item type
@@ -316,3 +432,155 @@ updateResultsCount = function() {
     }
     lastResultCount = currentCount;
 };
+
+// Modal Setup
+function setupModal() {
+    // Open modal
+    addItemBtn.addEventListener('click', openAddItemModal);
+    
+    // Close modal
+    closeModal.addEventListener('click', closeAddItemModal);
+    cancelAdd.addEventListener('click', closeAddItemModal);
+    
+    // Close modal when clicking outside
+    addItemModal.addEventListener('click', function(e) {
+        if (e.target === addItemModal) {
+            closeAddItemModal();
+        }
+    });
+    
+    // Handle form submission
+    addItemForm.addEventListener('submit', handleAddItem);
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && addItemModal.style.display === 'flex') {
+            closeAddItemModal();
+        }
+    });
+}
+
+function openAddItemModal() {
+    addItemModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    // Focus first input
+    document.getElementById('item-name').focus();
+}
+
+function closeAddItemModal() {
+    addItemModal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    addItemForm.reset();
+}
+
+// Handle adding new item
+async function handleAddItem(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(addItemForm);
+    const newItem = {
+        name: document.getElementById('item-name').value,
+        category: document.getElementById('item-category').value,
+        subcategory: document.getElementById('item-subcategory').value || null,
+        icon: document.getElementById('item-icon').value || '📦',
+        damage: document.getElementById('item-damage').value || null,
+        range: document.getElementById('item-range').value || null,
+        ac: document.getElementById('item-ac').value || null,
+        sp: document.getElementById('item-sp').value || null,
+        type: document.getElementById('item-type').value || null,
+        effect: document.getElementById('item-effect').value || null,
+        duration: document.getElementById('item-duration').value || null,
+        addiction: document.getElementById('item-addiction').value || null,
+        special: document.getElementById('item-special').value || null
+    };
+    
+    // Remove null/empty values
+    Object.keys(newItem).forEach(key => {
+        if (newItem[key] === null || newItem[key] === '') {
+            delete newItem[key];
+        }
+    });
+    
+    try {
+        // Add to Supabase if configured
+        if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+            const { data, error } = await supabase
+                .from('items')
+                .insert([newItem])
+                .select();
+            
+            if (error) {
+                throw new Error(`Supabase error: ${error.message}`);
+            }
+            
+            console.log('Item added to Supabase:', data[0]);
+            
+            // Add the returned item (with ID) to our local array
+            allItems.push(data[0]);
+        } else {
+            // If Supabase not configured, just add to local array with temporary ID
+            newItem.id = Date.now(); // Temporary ID
+            allItems.push(newItem);
+            console.log('Item added locally (Supabase not configured)');
+        }
+        
+        // Update the display
+        filteredItems = [...allItems];
+        renderItems();
+        updateResultsCount();
+        closeAddItemModal();
+        
+        // Show success message
+        showSuccessMessage('Item added successfully!');
+        
+    } catch (error) {
+        console.error('Error adding item:', error);
+        showErrorMessage(`Failed to add item: ${error.message}`);
+    }
+}
+
+// Success/Error messages
+function showSuccessMessage(message) {
+    showNotification(message, 'success');
+}
+
+function showErrorMessage(message) {
+    showNotification(message, 'error');
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        z-index: 1001;
+        font-weight: 500;
+        background: ${type === 'success' ? '#48bb78' : '#e53e3e'};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
