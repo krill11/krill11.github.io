@@ -106,5 +106,21 @@
       "scarlet sails"
     ],
     "review": "one of my favorite hip hop albums of 2025. album of the year"
+  },
+  {
+    "title": "Revengeseekerz",
+    "artist": "Jane Remover",
+    "year": 2025,
+    "badges": ["AOTY", "EM"],
+    "score": 10.0,
+    "genre": "its jane dont ask",
+    "themeColor": "#f59b42",
+    "image": "images/revengeseekerz.jpg",
+    "bestTracks": [
+      "psychoboost",
+      "star people",
+      "dancing with your eyes closed"
+    ],
+    "review": "“album of the year” I say as the drag me to my padded room"
   }
 ]

@@ -73,10 +73,18 @@
             animation: gold-glow 2s ease-in-out infinite alternate;
         }
         
-        .album-badge {
+        .album-badges {
             position: absolute;
             top: 8px;
             left: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 10;
+            align-items: flex-start;
+        }
+        
+        .album-badge {
             background: linear-gradient(45deg, #9C59D1, #7B2CBF);
             color: #fff;
             padding: 4px 8px;
@@ -87,6 +95,9 @@
             border: 2px solid #9C59D1;
             box-shadow: 0 0 10px rgba(156, 89, 209, 0.5);
             animation: purple-glow 2s ease-in-out infinite alternate;
+            display: inline-block;
+            width: auto;
+            white-space: nowrap;
         }
         
         @keyframes gold-glow {
@@ -104,6 +115,23 @@
             }
             to {
                 box-shadow: 0 0 20px rgba(156, 89, 209, 0.8);
+            }
+        }
+        
+        .album-badge.em {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: #fff;
+            border: 2px solid #2196F3;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+            animation: blue-glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes blue-glow {
+            from {
+                box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(33, 150, 243, 0.8);
             }
         }
         
@@ -320,15 +348,19 @@
                 album.badges.forEach(badge => {
                     if (badge === 'AOTY') {
                         badges.push('<div class="album-badge">AOTY</div>');
+                    } else if (badge === 'EM') {
+                        badges.push('<div class="album-badge em">EM</div>');
                     }
                 });
             }
+            
+            const badgesHtml = badges.length > 0 ? `<div class="album-badges">${badges.join('')}</div>` : '';
             
             card.innerHTML = `
                 <div class="album-cover-container">
                     <img src="${album.image}" alt="${album.title}" class="album-cover">
                     <div class="album-score ${scoreClass}">${album.score}/10</div>
-                    ${badges.join('')}
+                    ${badgesHtml}
                 </div>
                 <div class="album-info" style="border-left: 4px solid ${themeColor}; background-color: ${themeColor}15;">
                     <div class="album-title">${album.title}</div>
