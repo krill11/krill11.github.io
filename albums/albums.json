@@ -1,0 +1,93 @@
+[
+  {
+    "title": "1000 gecs",
+    "artist": "100 gecs",
+    "year": 2019,
+    "score": 9.0,
+    "genre": "hyperpop",
+    "themeColor": "#388fc9",
+    "image": "images/1000_gecs-100_gecs.jpg",
+    "bestTracks": [
+      "money machine",
+      "800db cloud",
+      "ringtone",
+      "hand crushed by a mallet"
+    ],
+    "review": "absolutely revolutionary hyperpop masterpiece. this album changed the genre and still sounds fresh years later."
+  },
+  {
+    "title": "UNKILLABLE ANGEL",
+    "artist": "ada rook",
+    "year": 2025,
+    "score": 8.0,
+    "genre": "industrial dance",
+    "themeColor": "#f50531",
+    "image": "images/unkillable_angel-ada_rook.jpg",
+    "bestTracks": [
+      "all tails death animations",
+      "bury yourself"
+    ],
+    "review": "industrial dance breakup album. very energetic and screamy. very ada rook"
+  },
+  {
+    "title": "Three Cheers for Sweet Revenge",
+    "artist": "My Chemical Romance",
+    "year": 2004,
+    "score": 7.5,
+    "genre": "emo",
+    "themeColor": "#ff0000",
+    "image": "images/three_cheers.jpg",
+    "bestTracks": [
+      "hang em' high",
+      "i'm not okay (i promise)",
+      "thank you for the venom"
+    ],
+    "review": "classic emo masterpiece. the guitar work is incredible, and the storytelling is great"
+  },
+  {
+    "title": "UGLY DEATH NO REDEMPTION ANGEL CURSE I LOVE YOU",
+    "artist": "ada rook",
+    "year": 2022,
+    "score": 10.0,
+    "genre": "industrial dance",
+    "themeColor": "#33ff00",
+    "image": "images/ugly_death-ada_rook.png",
+    "bestTracks": [
+      "gravity weapon",
+      "tru u",
+      "999999999 in a dream",
+      "5h4d0w h34r7z"
+    ],
+    "review": "yeah its my favorite album deal with it. perfect 10 every track is a banger"
+  },
+  {
+    "title": "ROOKIES BUSTLE",
+    "artist": "ada rook",
+    "year": 2023,
+    "score": 7.2,
+    "genre": "experimental electronic",
+    "themeColor": "#fcf374",
+    "image": "images/rookies_bustle-ada_rook.webp",
+    "bestTracks": [
+      "920london",
+      "a future"
+    ],
+    "review": "nice little ep between ugly death and the unkillable angel, not as hardcore"
+  },
+  {
+    "title": "10,000 gecs",
+    "artist": "100 gecs",
+    "year": 2023,
+    "score": 8.5,
+    "genre": "hyperpop",
+    "themeColor": "#dbb37f",
+    "image": "images/10000-gecs.webp",
+    "bestTracks": [
+      "dumbest girl alive",
+      "757",
+      "mememe",
+      "i got my tooth removed"
+    ],
+    "review": "doesnt quite match 1000 gecs but still a great album"
+  }
+]

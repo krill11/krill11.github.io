@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>polycarbonate - albums</title>
+    <link rel="icon" type="image/png" href="../avatar.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .albums-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .album-card {
+            position: relative;
+            background-color: #0a0a0a;
+            border: 4.5px solid #333333;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .album-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .album-cover-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            overflow: hidden;
+        }
+        
+        .album-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border: 1.5px solid #333333;
+            transition: transform 0.3s ease;
+        }
+        
+        .album-card:hover .album-cover {
+            transform: scale(1.05);
+        }
+        
+        .album-score {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: var(--theme-color, #ff6b00);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Jersey 10', sans-serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: 1px solid var(--theme-color, #ff8b3d);
+        }
+        
+        .album-score.perfect-10 {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            animation: gold-glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes gold-glow {
+            from {
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            }
+        }
+        
+        .album-info {
+            padding: 12px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .album-title {
+            color: var(--theme-color, #ff6b00);
+            font-family: 'Jersey 10', sans-serif;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+        
+        .album-artist {
+            color: var(--theme-color, #ff8b3d);
+            font-family: "MS UI Gothic", monospace;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            opacity: 0.8;
+        }
+        
+        .album-year {
+            color: #666;
+            font-family: "MS UI Gothic", monospace;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+        
+        .album-genre {
+            color: var(--theme-color, #ff8b3d);
+            font-family: "MS UI Gothic", monospace;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            font-style: italic;
+            opacity: 0.7;
+        }
+        
+        .expand-btn {
+            background: none;
+            border: 4.5px solid #333333;
+            color: var(--theme-color, #ff6b00);
+            padding: 4px 8px;
+            font-family: "MS UI Gothic", monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        
+        .expand-btn:hover {
+            background-color: var(--theme-color, #ff6b00);
+            color: #000;
+        }
+        
+        .album-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background-color: #111;
+            border-top: 1.5px solid #333333;
+        }
+        
+        .album-details.expanded {
+            max-height: 500px;
+        }
+        
+        .album-details-content {
+            padding: 12px;
+        }
+        
+        .best-tracks {
+            margin-bottom: 12px;
+        }
+        
+        .best-tracks h4 {
+            color: #ff6b00;
+            font-family: 'Jersey 10', sans-serif;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        
+        .track-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .track-list li {
+            color: #fff;
+            font-family: "MS UI Gothic", monospace;
+            font-size: 0.8rem;
+            padding: 2px 0;
+        }
+        
+        .track-list li::before {
+            content: "♪ ";
+            color: #ff8b3d;
+        }
+        
+        .album-review {
+            color: #ccc;
+            font-family: "MS UI Gothic", monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        
+        .albums-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #ff6b00;
+            text-decoration: none;
+            font-family: "MS UI Gothic", monospace;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            padding: 8px 12px;
+            border: 4.5px solid #333333;
+            transition: all 0.2s ease;
+        }
+        
+        .back-link:hover {
+            background-color: #ff6b00;
+            color: #000;
+        }
+        
+        .back-link::before {
+            content: "← ";
+        }
+        
+        @media screen and (max-width: 768px) {
+            .albums-page {
+                padding: 10px;
+            }
+            
+            .albums-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 15px;
+            }
+            
+            .album-title {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="title">POLYCARBONAT<span class="broken">E</span></div>
+    
+    <div class="albums-page">
+        <a href="../" class="back-link">back to home</a>
+        
+        <div class="albums-grid" id="albums-grid">
+            <!-- Albums will be loaded dynamically from JSON -->
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <span>&copy; polycarbonate 2025</span>
+    </footer>
+    
+    <script>
+        let albums = [];
+        
+        // Load albums from JSON
+        async function loadAlbums() {
+            try {
+                const response = await fetch('albums.json');
+                albums = await response.json();
+                renderAlbums();
+            } catch (error) {
+                console.error('Error loading albums:', error);
+            }
+        }
+        
+        // Render albums to the grid
+        function renderAlbums() {
+            const grid = document.getElementById('albums-grid');
+            grid.innerHTML = '';
+            
+            // Sort albums by score (highest to lowest)
+            const sortedAlbums = [...albums].sort((a, b) => b.score - a.score);
+            
+            sortedAlbums.forEach(album => {
+                const albumCard = createAlbumCard(album);
+                grid.appendChild(albumCard);
+            });
+        }
+        
+        // Create album card element
+        function createAlbumCard(album) {
+            const card = document.createElement('div');
+            card.className = 'album-card';
+            
+            const bestTracksList = album.bestTracks.map(track => `<li>${track}</li>`).join('');
+            const scoreClass = album.score === 10 ? 'perfect-10' : '';
+            const themeColor = album.themeColor || '#ff6b00';
+            
+            // Set CSS custom property for theme color
+            card.style.setProperty('--theme-color', themeColor);
+            
+            card.innerHTML = `
+                <div class="album-cover-container">
+                    <img src="${album.image}" alt="${album.title}" class="album-cover">
+                    <div class="album-score ${scoreClass}">${album.score}/10</div>
+                </div>
+                <div class="album-info" style="border-left: 4px solid ${themeColor}; background-color: ${themeColor}15;">
+                    <div class="album-title">${album.title}</div>
+                    <div class="album-artist">${album.artist}</div>
+                    <div class="album-year">${album.year}</div>
+                    <div class="album-genre">${album.genre}</div>
+                    <button class="expand-btn" onclick="toggleDetails(this)" style="border-color: ${themeColor}; margin-top: auto;">expand</button>
+                </div>
+                <div class="album-details">
+                    <div class="album-details-content">
+                        <div class="best-tracks">
+                            <h4>best tracks</h4>
+                            <ul class="track-list">
+                                ${bestTracksList}
+                            </ul>
+                        </div>
+                        <div class="album-review">
+                            ${album.review}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        function toggleDetails(button) {
+            const details = button.parentElement.nextElementSibling;
+            const isExpanded = details.classList.contains('expanded');
+            
+            if (isExpanded) {
+                details.classList.remove('expanded');
+                button.textContent = 'expand';
+            } else {
+                details.classList.add('expanded');
+                button.textContent = 'collapse';
+            }
+        }
+        
+        // Load albums when page loads
+        document.addEventListener('DOMContentLoaded', loadAlbums);
+    </script>
+</body>
+</html>
