@@ -271,9 +271,26 @@
             content: "← ";
         }
         
+        .title {
+            margin: 1px 0 1px 0;
+        }
+        
+        .subtitle {
+            font-family: "MS UI Gothic", monospace;
+            font-size: 1rem;
+            color: #666;
+            text-align: center;
+            margin: -10px 0 -10px 0;
+            font-style: italic;
+        }
+
         @media screen and (max-width: 768px) {
             .albums-page {
                 padding: 10px;
+            }
+            
+            .subtitle {
+                display: none;
             }
             
             .albums-grid {
@@ -289,6 +306,7 @@
 </head>
 <body>
     <div class="title">POLYCARBONAT<span class="broken">E</span></div>
+    <div class="subtitle">'s favorite albums (with @tropical.sprite)</div>
     
     <div class="albums-page">
         
