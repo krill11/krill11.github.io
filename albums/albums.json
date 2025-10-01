@@ -89,5 +89,22 @@
       "i got my tooth removed"
     ],
     "review": "doesnt quite match 1000 gecs but still a great album"
+  },
+  {
+    "title": "Beimax Chessclub",
+    "artist": "Marjorie W.C Sinclaire",
+    "year": 2025,
+    "badges": ["AOTY"],
+    "score": 9.0,
+    "genre": "hip hop (underground)",
+    "themeColor": "#f57f7f",
+    "image": "images/beimax-chessclub.jpg",
+    "bestTracks": [
+      "origami heart",
+      "6hrs asmr rain sound",
+      "grenz str. 13",
+      "scarlet sails"
+    ],
+    "review": "one of my favorite hip hop albums of 2025. album of the year"
   }
 ]

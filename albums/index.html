@@ -73,12 +73,37 @@
             animation: gold-glow 2s ease-in-out infinite alternate;
         }
         
+        .album-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: linear-gradient(45deg, #9C59D1, #7B2CBF);
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Jersey 10', sans-serif;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 2px solid #9C59D1;
+            box-shadow: 0 0 10px rgba(156, 89, 209, 0.5);
+            animation: purple-glow 2s ease-in-out infinite alternate;
+        }
+        
         @keyframes gold-glow {
             from {
                 box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
             }
             to {
                 box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            }
+        }
+        
+        @keyframes purple-glow {
+            from {
+                box-shadow: 0 0 10px rgba(156, 89, 209, 0.5);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(156, 89, 209, 0.8);
             }
         }
         
@@ -238,7 +263,7 @@
     <div class="title">POLYCARBONAT<span class="broken">E</span></div>
     
     <div class="albums-page">
-        <a href="../" class="back-link">back to home</a>
+        
         
         <div class="albums-grid" id="albums-grid">
             <!-- Albums will be loaded dynamically from JSON -->
@@ -289,10 +314,21 @@
             // Set CSS custom property for theme color
             card.style.setProperty('--theme-color', themeColor);
             
+            // Check for badges
+            const badges = [];
+            if (album.badges) {
+                album.badges.forEach(badge => {
+                    if (badge === 'AOTY') {
+                        badges.push('<div class="album-badge">AOTY</div>');
+                    }
+                });
+            }
+            
             card.innerHTML = `
                 <div class="album-cover-container">
                     <img src="${album.image}" alt="${album.title}" class="album-cover">
                     <div class="album-score ${scoreClass}">${album.score}/10</div>
+                    ${badges.join('')}
                 </div>
                 <div class="album-info" style="border-left: 4px solid ${themeColor}; background-color: ${themeColor}15;">
                     <div class="album-title">${album.title}</div>
