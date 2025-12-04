@@ -20,8 +20,11 @@
 
 <body>
     <div id="site-background"></div>
+    <canvas id="lightning-canvas"></canvas>
     <div id="global-rain-overlay" class="rain-overlay global-rain"></div>
-    <div class="title">POLYCARBONAT<span class="broken">E</span></div>
+    <h1 class="title">
+        <span class="title-content">POLYCARBONAT<span class="broken">E</span></span>
+    </h1>
     <main>
         <div class="column-left">
             <div class="card" data-section="about">
@@ -330,6 +333,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Blahaj Fund Banner -->
+            <div class="blahaj-banner">
+                <div class="blahaj-bg">
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                    <div class="bubble"></div>
+                </div>
+                <div class="blahaj-content">
+                    <h3>Donate to the Blahaj Fund</h3>
+                    <div id="kofi-container">
+                        <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                        <script
+                            type='text/javascript'>kofiwidget2.init('Support me on Ko-fi', '#72a4f2', 'S6S71PP38I'); kofiwidget2.draw();</script>
+                    </div>
+                </div>
+            </div>
             <div class="card" data-section="projects">
                 <div class="card-header">
                     <div class="pixel-star" style="transform: rotate(45deg);">
@@ -480,6 +512,7 @@
             </div>
             <div class="card" data-section="atmosphere">
                 <div class="atmosphere-container">
+                    <div class="tv-startup"></div>
                     <img id="atmosphere-image" alt="Atmosphere" class="atmosphere-image">
                     <div id="rain-overlay" class="rain-overlay"></div>
                     <div id="thunder-overlay" class="thunder-overlay"></div>
@@ -752,6 +785,146 @@
         }
 
         initGlobalRain();
+
+        // Lightning Effect
+        const lightningCanvas = document.getElementById('lightning-canvas');
+        const lightningCtx = lightningCanvas.getContext('2d');
+
+        function resizeLightningCanvas() {
+            lightningCanvas.width = window.innerWidth;
+            lightningCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeLightningCanvas);
+        resizeLightningCanvas();
+
+        function drawLightning(x, y, length, angle, branchChance, width) {
+            lightningCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            lightningCtx.lineWidth = width;
+            lightningCtx.shadowBlur = 15;
+            lightningCtx.shadowColor = 'white';
+            lightningCtx.lineCap = 'round';
+            lightningCtx.lineJoin = 'round';
+
+            let currX = x;
+            let currY = y;
+            let remaining = length;
+
+            while (remaining > 0) {
+                // More jagged: shorter segments, higher jitter
+                const step = Math.min(remaining, 5 + Math.random() * 15);
+                const jitter = (Math.random() - 0.5) * 0.8; // High jitter for jaggedness
+                const nextX = currX + step * Math.cos(angle + jitter);
+                const nextY = currY + step * Math.sin(angle + jitter);
+
+                lightningCtx.beginPath();
+                lightningCtx.moveTo(currX, currY);
+                lightningCtx.lineTo(nextX, nextY);
+                lightningCtx.stroke();
+
+                // Branch
+                if (Math.random() < branchChance && remaining > 50 && width > 0.5) {
+                    const branchAngle = angle + (Math.random() < 0.5 ? -1 : 1) * (0.4 + Math.random() * 0.6);
+                    // Taper width for branches
+                    drawLightning(currX, currY, remaining * 0.6, branchAngle, branchChance * 0.5, width * 0.6);
+                }
+
+                currX = nextX;
+                currY = nextY;
+                remaining -= step;
+
+                // Taper main bolt slightly
+                width = Math.max(0.1, width * 0.98);
+                lightningCtx.lineWidth = width;
+            }
+        }
+
+        let isStorming = false;
+        let fadeInterval = null;
+
+        function triggerStrike() {
+            // Draw exactly 1 bolt per strike for sparseness
+            const numBolts = 1;
+            for (let i = 0; i < numBolts; i++) {
+                const startX = Math.random() * lightningCanvas.width;
+                const startY = -50;
+                const length = lightningCanvas.height * (0.8 + Math.random() * 0.4);
+                const angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+
+                // Start width around 3-5px, lower branch chance (0.15)
+                drawLightning(startX, startY, length, angle, 0.15, 3 + Math.random() * 2);
+            }
+        }
+
+        function triggerStorm() {
+            if (window.innerWidth <= 768) return; // Disable on mobile
+            if (isStorming) return;
+            isStorming = true;
+
+            const avatarImg = document.querySelector('.avatar-placeholder img');
+            const title = document.querySelector('.title');
+
+            // UI Effects: Start flashing, NO initial dimming
+            if (avatarImg) avatarImg.classList.add('flashing');
+
+            // Start Fade Engine
+            if (fadeInterval) clearInterval(fadeInterval);
+            fadeInterval = setInterval(() => {
+                lightningCtx.globalCompositeOperation = 'destination-out';
+                lightningCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                lightningCtx.fillRect(0, 0, lightningCanvas.width, lightningCanvas.height);
+                lightningCtx.globalCompositeOperation = 'source-over';
+            }, 30);
+
+            // Sequence: 3 strikes with progressive dimming
+
+            // Strike 1
+            triggerStrike();
+            if (title) title.classList.add('dim-1');
+
+            setTimeout(() => {
+                // Strike 2
+                triggerStrike();
+                if (title) {
+                    title.classList.remove('dim-1');
+                    title.classList.add('dim-2');
+                }
+            }, 400 + Math.random() * 100);
+
+            setTimeout(() => {
+                // Strike 3
+                triggerStrike();
+                if (title) {
+                    title.classList.remove('dim-2');
+                    title.classList.add('dim-3');
+                }
+            }, 900 + Math.random() * 150);
+
+            // End Storm & Recovery
+            setTimeout(() => {
+                if (fadeInterval) clearInterval(fadeInterval);
+                lightningCtx.clearRect(0, 0, lightningCanvas.width, lightningCanvas.height);
+
+                if (avatarImg) avatarImg.classList.remove('flashing');
+                if (title) {
+                    title.classList.remove('dim-3');
+                    title.classList.add('recovering');
+                }
+
+                // Cooldown matches CSS transition (3s)
+                setTimeout(() => {
+                    isStorming = false;
+                    if (title) title.classList.remove('recovering');
+                }, 3000);
+
+            }, 1500); // Storm duration
+        }
+
+        const avatarImg = document.querySelector('.avatar-placeholder img');
+        if (avatarImg) {
+            avatarImg.addEventListener('click', () => {
+                triggerStorm();
+            });
+        }
     </script>
 </body>
 
