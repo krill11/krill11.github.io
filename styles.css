@@ -378,7 +378,7 @@ main {
     }
 
     100% {
-        transform: translateX(calc(-17 * (88px + 10px)));
+        transform: translateX(calc(-22 * (88px + 10px)));
         /* Move by the width of one complete set */
     }
 }
@@ -475,6 +475,9 @@ main {
     border: 1px solid #333;
     background-color: #0a0a0a;
     margin-bottom: 15px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 15px;
 }
 
 .project h3 {
@@ -501,6 +504,22 @@ main {
     color: #999;
     font-size: 0.95em;
     line-height: 1.4;
+}
+
+.kanagawa-container {
+    display: flex;
+    border: 1.5px solid #ff8b3d;
+    margin: 0;
+    overflow: hidden;
+    max-height: 250px;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+}
+
+.kanagawa-container img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
 }
 
 .project-link {
