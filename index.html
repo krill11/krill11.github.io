@@ -2,6 +2,14 @@
 <html lang="en">
 
 <head>
+    <script>
+        (function () {
+            var ua = navigator.userAgent || "";
+            if (/Firefox|FxiOS/i.test(ua)) return;
+            if (/Chrom|Edg|OPR|Opera/i.test(ua) || (/Google/i.test(navigator.vendor || "") && !/Apple/i.test(navigator.vendor || "")))
+                document.documentElement.classList.add("ua-chromium");
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>polycarbonate</title>
@@ -712,72 +720,53 @@
                 header.classList.add('text-black');
             }
 
-            // Rain Generation Logic
+            // Rain drops (low DOM count — many animated nodes wreck Chrome compositing / RAM)
+            let cardRainDropCount = 0;
             if (isRainy) {
-                // Calculate rain angle based on wind speed
-                // Negative angle for leftward fall
-                const baseAngle = 10;
-                const windFactor = Math.min(windSpeed, 40); // Cap at 40mph
-                const angle = -(baseAngle + (windFactor * 1.5)); // Negative for leftward
-
-                rainOverlay.style.setProperty('--rain-angle', `${angle}deg`);
-
-                // Determine Rain Density based on Weather Code
-                // Tripled counts to cover wider spawn area (-100% to 200%)
-                let dropCount = 1200; // Default (Moderate)
-
-                // Light Rain: 61, 80
-                if ([61, 80].includes(code)) {
-                    dropCount = 600;
-                }
-                // Moderate Rain: 63, 81, 95 (Thunderstorm slight/mod)
-                else if ([63, 81, 95].includes(code)) {
-                    dropCount = 1500;
-                }
-                // Heavy Rain: 65, 82, 96, 99
-                else if ([65, 82, 96, 99].includes(code)) {
-                    dropCount = 3000; // Very dense
-                }
-
-                // Check if drops already exist or if density changed significantly
-                // For simplicity, we'll clear and regenerate if count differs significantly or just regenerate always for now to ensure density update
-                // Optimization: Only regenerate if child count differs
-                if (rainOverlay.children.length !== dropCount) {
-                    rainOverlay.innerHTML = ''; // Clear existing
-
-                    for (let i = 0; i < dropCount; i++) {
-                        const drop = document.createElement('div');
-                        drop.classList.add('drop');
-                        // Wider spread to cover diagonal fall: -100% to 400% to ensure coverage at high angles
-                        drop.style.left = `${Math.random() * 500 - 100}%`;
-
-                        // Speed: Heavy rain falls faster
-                        let minSpeed = 0.8;
-                        let maxSpeed = 1.5;
-
-                        if (dropCount > 1500) { // Heavy
-                            minSpeed = 0.5;
-                            maxSpeed = 0.9;
-                        }
-
-                        // Randomize duration more to prevent "sheets"
-                        const duration = minSpeed + Math.random() * (maxSpeed - minSpeed);
-                        drop.style.animationDuration = `${duration}s`;
-
-                        // Negative delay for continuous flow, randomized over a larger window than duration to break patterns
-                        drop.style.animationDelay = `-${Math.random() * duration * 2}s`;
-
-                        // Randomize trail length
-                        drop.style.height = `${40 + Math.random() * 40}px`;
-
-                        // Randomize opacity for depth effect
-                        drop.style.opacity = `${0.3 + Math.random() * 0.5}`;
-
-                        rainOverlay.appendChild(drop);
+                const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (!reducedMotion) {
+                    cardRainDropCount = 220;
+                    if ([61, 80].includes(code)) {
+                        cardRainDropCount = 100;
+                    } else if ([63, 81, 95].includes(code)) {
+                        cardRainDropCount = 220;
+                    } else if ([65, 82, 96, 99].includes(code)) {
+                        cardRainDropCount = 340;
                     }
                 }
+
+                const baseAngle = 10;
+                const windFactor = Math.min(windSpeed, 40);
+                const angle = -(baseAngle + (windFactor * 1.5));
+                rainOverlay.style.setProperty('--rain-angle', `${angle}deg`);
+
+                if (cardRainDropCount > 0) {
+                    if (rainOverlay.children.length !== cardRainDropCount) {
+                        rainOverlay.innerHTML = '';
+                        for (let i = 0; i < cardRainDropCount; i++) {
+                            const drop = document.createElement('div');
+                            drop.classList.add('drop');
+                            drop.style.left = `${Math.random() * 500 - 100}%`;
+
+                            let minSpeed = 0.8;
+                            let maxSpeed = 1.5;
+                            if (cardRainDropCount > 280) {
+                                minSpeed = 0.55;
+                                maxSpeed = 1.0;
+                            }
+
+                            const duration = minSpeed + Math.random() * (maxSpeed - minSpeed);
+                            drop.style.animationDuration = `${duration}s`;
+                            drop.style.animationDelay = `-${Math.random() * duration * 2}s`;
+                            drop.style.height = `${40 + Math.random() * 40}px`;
+                            drop.style.opacity = `${0.3 + Math.random() * 0.5}`;
+                            rainOverlay.appendChild(drop);
+                        }
+                    }
+                } else {
+                    rainOverlay.innerHTML = '';
+                }
             } else {
-                // Clear drops if not rainy
                 rainOverlay.innerHTML = '';
             }
 
@@ -815,34 +804,30 @@
 
         function initGlobalRain() {
             const rainOverlay = document.getElementById('global-rain-overlay');
-            const dropCount = 1500; // Moderate to heavy rain
-            const angle = -10; // 10 degrees to the left
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                rainOverlay.classList.remove('active');
+                return;
+            }
+            // ~36–100 drops scaled to viewport (was 1500; each .drop is a composited layer in Chrome)
+            const dropCount = Math.min(100, Math.max(36, Math.round(window.innerWidth / 18)));
+            const angle = -10;
 
             rainOverlay.style.setProperty('--rain-angle', `${angle}deg`);
             rainOverlay.classList.add('active');
+            rainOverlay.textContent = '';
 
             for (let i = 0; i < dropCount; i++) {
                 const drop = document.createElement('div');
                 drop.classList.add('drop');
-                // Wider spread to cover diagonal fall
                 drop.style.left = `${Math.random() * 200 - 50}%`;
 
-                // Speed (Duration in seconds) - Slower means higher duration
-                // Original: 0.5 to 0.9
-                // New (approx 30% slower speed = ~1.43x duration): 0.7 to 1.3
-                let minDuration = 0.7;
-                let maxDuration = 1.3;
-
+                const minDuration = 0.7;
+                const maxDuration = 1.3;
                 const duration = minDuration + Math.random() * (maxDuration - minDuration);
                 drop.style.animationDuration = `${duration}s`;
                 drop.style.animationDelay = `-${Math.random() * duration * 2}s`;
-
-                // 2x Larger (Height)
-                // Original: 40 + random * 40
-                // New: 80 + random * 80
                 drop.style.height = `${80 + Math.random() * 80}px`;
                 drop.style.opacity = `${0.3 + Math.random() * 0.5}`;
-
                 rainOverlay.appendChild(drop);
             }
         }
