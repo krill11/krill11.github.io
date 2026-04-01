@@ -61,6 +61,39 @@ main {
     margin-bottom: 0;
 }
 
+.card[data-section="status"] {
+    position: relative;
+}
+
+.status-clouds {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 52%;
+    min-height: 118px;
+    max-height: 260px;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.status-clouds .status-cloud__img {
+    position: absolute;
+    width: 20px;
+    height: auto;
+    image-rendering: pixelated;
+    opacity: 0.62;
+    user-select: none;
+    will-change: transform;
+}
+
+.card[data-section="status"] .card-header,
+.card[data-section="status"] .card-content {
+    position: relative;
+    z-index: 1;
+}
+
 .card-header {
     font-family: 'Jersey 10', sans-serif;
     font-size: 2rem;
@@ -165,7 +198,7 @@ main {
     color: #ff6b00;
     letter-spacing: -2px;
     text-transform: uppercase;
-    -webkit-text-stroke: 1.5px #ff8b3d;
+    -webkit-text-stroke: 2px #ff8b3d;
     margin: 1px 0;
     line-height: 0.85;
     padding: 0;
@@ -226,21 +259,21 @@ main {
     opacity: 0.9;
     color: #e66000;
     /* Subtle dim */
-    -webkit-text-stroke: 1px #e66000;
+    -webkit-text-stroke: 1.35px #e66000;
 }
 
 .title.dim-2 {
     opacity: 0.7;
     color: #cc5500;
     /* Medium dim */
-    -webkit-text-stroke: 1px #cc5500;
+    -webkit-text-stroke: 1.35px #cc5500;
 }
 
 .title.dim-3 {
     opacity: 0.5;
     color: #8a5c3a;
     /* Final dim state (brownish, not black) */
-    -webkit-text-stroke: 1px #5c3a24;
+    -webkit-text-stroke: 1.35px #5c3a24;
 }
 
 .tight-ly {
@@ -847,6 +880,120 @@ main {
 
 .card[data-section="stars"] {
     position: relative;
+    background: linear-gradient(180deg, #fcf6dc 0%, #f7eec6 55%, #f5e9bc 100%);
+    border-color: #b8a87a;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Legal-pad margin: one continuous rule behind header + content */
+.card[data-section="stars"]::before {
+    content: "";
+    position: absolute;
+    left: 27px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    border-radius: 1px;
+    background: rgba(214, 90, 90, 0.72);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.card[data-section="stars"] .card-header,
+.card[data-section="stars"] .card-content {
+    position: relative;
+    z-index: 1;
+}
+
+.card[data-section="stars"] .stars-hand-star {
+    flex-shrink: 0;
+    opacity: 0.92;
+    transform: rotate(-8deg);
+    filter: drop-shadow(0.5px 0.5px 0 rgba(23, 58, 92, 0.12));
+}
+
+.card[data-section="stars"] .card-header {
+    font-family: "Schoolbell", cursive;
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: #173a5c;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    -webkit-text-stroke: 0;
+    padding: 10px 14px 8px 40px;
+    margin-bottom: 0;
+    border-bottom: none;
+    /* Leave margin column clear so .card::before red rule stays visible (full sheet) */
+    background: transparent;
+    isolation: isolate;
+}
+
+.card[data-section="stars"] .card-header::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 31px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(180deg, #fdfaf3 0%, #fcf6dc 45%, #f8f0d4 100%);
+}
+
+.card[data-section="stars"] .card-header span {
+    background: none;
+    animation: none;
+    color: #173a5c;
+    -webkit-text-fill-color: #173a5c;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    -webkit-text-stroke: 0;
+}
+
+.card[data-section="stars"] .card-content {
+    --stars-line: 1.75rem;
+    position: relative;
+    padding: 0.4rem 12px 1rem 40px;
+    font-family: "Schoolbell", cursive;
+    color: #173a5c;
+    background-image: repeating-linear-gradient(to bottom,
+            transparent 0,
+            transparent calc(var(--stars-line) - 1px),
+            rgba(110, 145, 195, 0.42) calc(var(--stars-line) - 1px),
+            rgba(110, 145, 195, 0.42) var(--stars-line));
+    background-size: 100% var(--stars-line);
+    background-position: 0 calc(0.35rem + var(--stars-line) * 0.08);
+    background-repeat: repeat;
+}
+
+.card[data-section="stars"] .star-link {
+    font-family: "Schoolbell", cursive;
+    font-size: 1.2rem;
+    line-height: var(--stars-line);
+    color: #173a5c;
+    padding: 0 12px 0 4px;
+    text-decoration: none;
+    transition: color 0.15s ease;
+    border-radius: 2px;
+}
+
+.card[data-section="stars"] .star-link:hover,
+.card[data-section="stars"] .star-link:focus-visible {
+    color: #b42318;
+    outline: none;
+}
+
+.card[data-section="stars"] .star-link::before {
+    content: "– ";
+    color: currentColor;
+    opacity: 0.45;
+}
+
+.card[data-section="stars"] .star-link:hover::before,
+.card[data-section="stars"] .star-link:focus-visible::before {
+    opacity: 0.65;
 }
 
 .hanging-sign-right {
@@ -868,10 +1015,12 @@ main {
 .sitting-cat {
     position: absolute;
     top: 35px;
+    /* Containing block is body (not the narrow card) so 50% matches the old layout */
     left: calc(50% - 415px);
     transform: scale(1.25);
     image-rendering: pixelated;
     display: none;
+    z-index: 2;
 }
 
 @media (min-width: 768px) {
@@ -886,11 +1035,99 @@ main {
     color: #ffffff;
 }
 
-.setup-image {
+/* Current setup: full-width 3D to card edges, title overlaid on top */
+.card[data-section="setup"] {
+    order: 5;
+    padding: 0;
+    overflow: hidden;
+}
+
+.setup-viewport-block {
+    position: relative;
     width: 100%;
-    height: auto;
-    margin-bottom: 12px;
-    image-rendering: pixelated;
+}
+
+.card[data-section="setup"] .setup-header-overlap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    margin: 0;
+    padding: 8px 12px 28px;
+    pointer-events: none;
+    background: linear-gradient(
+        180deg,
+        rgba(5, 4, 3, 0.94) 0%,
+        rgba(5, 4, 3, 0.45) 45%,
+        transparent 100%);
+}
+
+.card[data-section="setup"] .setup-content--specs {
+    padding: 12px;
+    margin: 0;
+    background-color: #050403;
+}
+
+/* 3D laptop (Three.js canvas): hologram edge reveal; sweep-in when ready */
+.setup-model-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-bottom: 0;
+    box-sizing: border-box;
+    background: #0c0b0a;
+    overflow: hidden;
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    filter: brightness(1.2) saturate(1.05);
+}
+
+.setup-model-wrap.is-loaded {
+    animation: setup-model-sweep-in 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes setup-model-sweep-in {
+    0% {
+        opacity: 0;
+        clip-path: inset(0 100% 0 0);
+        filter: brightness(1.35) saturate(1.12);
+    }
+
+    45% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        clip-path: inset(0 0% 0 0);
+        filter: brightness(1) saturate(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .setup-model-wrap {
+        opacity: 1;
+        clip-path: none;
+        filter: none;
+    }
+
+    .setup-model-wrap.is-loaded {
+        animation: none;
+    }
+}
+
+.setup-model-wrap canvas.setup-model {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    touch-action: none;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .setup-specs {
@@ -907,10 +1144,6 @@ main {
 .setup-specs li::before {
     content: "> ";
     color: #ff6b00;
-}
-
-.card[data-section="setup"] {
-    order: 5;
 }
 
 .card[data-section="albums"] {

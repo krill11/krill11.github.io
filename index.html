@@ -12,11 +12,19 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
     <title>polycarbonate</title>
     <link rel="icon" type="image/png" href="avatar.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Space+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Schoolbell&family=Space+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -511,58 +519,13 @@
             <div class="card" data-section="stars">
                 <img src="sign1.png" class="hanging-sign-right" alt="Sign">
                 <div class="card-header">
-                    <div class="pixel-star">
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel star"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel outline"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                        <div class="pixel"></div>
-                    </div>
-                    <span>STARS</span>
+                    <svg class="stars-hand-star" viewBox="0 0 48 48" width="32" height="32" aria-hidden="true"
+                        focusable="false">
+                        <path fill="none" stroke="#173a5c" stroke-width="2.35" stroke-linecap="round"
+                            stroke-linejoin="round" vector-effect="non-scaling-stroke"
+                            d="M23.4 6.1 26.9 15.3 36.9 16.2 29.1 22.1 31.8 32.4 23.8 26.8 15.6 33 18.2 22.3 10.4 16.4 20.4 15.6z" />
+                    </svg>
+                    <span>Stars</span>
                 </div>
                 <div class="card-content">
                     <a href="https://3fault.com" target="_blank" class="star-link">3fault</a>
@@ -574,6 +537,7 @@
                 </div>
             </div>
             <div class="card" data-section="status">
+                <div class="status-clouds" aria-hidden="true"></div>
                 <div class="card-header status-header">
                     <span>STATUS</span>
                 </div>
@@ -598,11 +562,16 @@
                 </div>
             </div>
             <div class="card" data-section="setup">
-                <div class="card-header">
-                    <span>CURRENT SETUP</span>
+                <div class="setup-viewport-block">
+                    <div class="setup-model-wrap" id="setup-model-wrap">
+                        <canvas id="setup-three-canvas" class="setup-model" tabindex="-1"
+                            aria-label="ASUS ROG Zephyrus G14 2024 3D"></canvas>
+                    </div>
+                    <div class="card-header setup-header-overlap">
+                        <span>CURRENT SETUP</span>
+                    </div>
                 </div>
-                <div class="setup-content">
-                    <img src="zeph.png" alt="Zephyrus G14 2024" class="setup-image">
+                <div class="setup-content setup-content--specs">
                     <ul class="setup-specs">
                         <li>Zephyrus g14 (2024)</li>
                         <li>Ryzen 9</li>
@@ -973,7 +942,10 @@
                 triggerStorm();
             });
         }
+
     </script>
+    <script src="js/status-clouds.js" defer></script>
+    <script type="module" src="js/setup-laptop-hologram.js"></script>
 </body>
 
 </html>
