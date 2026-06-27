@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDKit Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@rdkit/rdkit@2025.3.4-1.0.0/dist/RDKit_minimal.js"></script>
+</head>
+<body>
+    <div id="loader" class="loader" aria-live="polite">
+        <div class="loader-card">
+            <div class="loader-spinner" aria-hidden="true"></div>
+            <p class="loader-title">Loading RDKit</p>
+            <p class="loader-sub">Fetching ~7 MB WebAssembly module…</p>
+        </div>
+    </div>
+
+    <div id="app" class="app hidden">
+        <header class="header">
+            <div class="header-inner">
+                <div>
+                    <h1>RDKit Playground</h1>
+                    <p class="subtitle">Cheminformatics in the browser — no server required</p>
+                </div>
+                <p id="rdkit-version" class="version"></p>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="input-panel card">
+                <label for="smiles-input" class="label">SMILES</label>
+                <div class="input-row">
+                    <textarea id="smiles-input" rows="2" spellcheck="false" placeholder="e.g. CC(=O)Oc1ccccc1C(=O)O">CC(=O)Oc1ccccc1C(=O)O</textarea>
+                    <div class="input-actions">
+                        <select id="example-select" aria-label="Example molecules">
+                            <option value="">Examples…</option>
+                            <option value="CC(=O)Oc1ccccc1C(=O)O">Aspirin</option>
+                            <option value="CCO">Ethanol</option>
+                            <option value="c1ccccc1">Benzene</option>
+                            <option value="CN1C=NC2=C1C(=O)N(C(=O)N2C)C">Caffeine</option>
+                            <option value="CC(C)Cc1ccc(C(C)C(=O)O)cc1">Ibuprofen</option>
+                            <option value="CC12CCC3C(C1CCC2O)CCC4=CC(=O)CCC34C">Testosterone</option>
+                        </select>
+                        <button type="button" id="run-btn" class="btn btn-primary">Run</button>
+                    </div>
+                </div>
+                <p id="input-error" class="error hidden" role="alert"></p>
+            </section>
+
+            <div class="workspace">
+                <aside class="tabs card" role="tablist" aria-label="RDKit tools">
+                    <button type="button" class="tab active" role="tab" aria-selected="true" data-tab="structure">Structure</button>
+                    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="descriptors">Descriptors</button>
+                    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="identifiers">Identifiers</button>
+                    <button type="button" class="tab" role="tab" aria-selected="false" data-tab="substructure">Substructure</button>
+                </aside>
+
+                <section class="output card">
+                    <div id="panel-structure" class="panel active" role="tabpanel">
+                        <div class="panel-toolbar">
+                            <label class="checkbox">
+                                <input type="checkbox" id="opt-atom-indices">
+                                Atom indices
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" id="opt-explicit-methyl">
+                                Explicit methyl
+                            </label>
+                            <label class="field-inline">
+                                Legend
+                                <input type="text" id="opt-legend" placeholder="optional">
+                            </label>
+                        </div>
+                        <div class="structure-view">
+                            <div id="svg-output" class="mol-render"></div>
+                            <canvas id="canvas-output" width="420" height="320" class="mol-render hidden"></canvas>
+                        </div>
+                        <div class="render-toggle">
+                            <button type="button" class="btn btn-ghost active" data-render="svg">SVG</button>
+                            <button type="button" class="btn btn-ghost" data-render="canvas">Canvas</button>
+                        </div>
+                    </div>
+
+                    <div id="panel-descriptors" class="panel" role="tabpanel" hidden>
+                        <p class="panel-hint">Molecular descriptors computed by RDKit.</p>
+                        <div id="descriptors-output" class="descriptor-grid"></div>
+                    </div>
+
+                    <div id="panel-identifiers" class="panel" role="tabpanel" hidden>
+                        <p class="panel-hint">Canonical representations and fingerprints.</p>
+                        <dl id="identifiers-output" class="identifier-list"></dl>
+                    </div>
+
+                    <div id="panel-substructure" class="panel" role="tabpanel" hidden>
+                        <label for="smarts-input" class="label">SMARTS pattern</label>
+                        <div class="input-row compact">
+                            <input type="text" id="smarts-input" spellcheck="false" value="Oc1[c,n]cccc1" placeholder="e.g. O=C">
+                            <button type="button" id="highlight-btn" class="btn btn-primary">Highlight</button>
+                        </div>
+                        <p id="substruct-status" class="panel-hint"></p>
+                        <canvas id="substruct-canvas" width="420" height="320" class="mol-render"></canvas>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <a href="https://www.rdkitjs.com/" target="_blank" rel="noopener noreferrer">RDKit.js</a>
+            <span aria-hidden="true">·</span>
+            <a href="/">polycarbonate</a>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
