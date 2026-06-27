@@ -4,6 +4,8 @@ const RDKIT_BASE = `https://unpkg.com/@rdkit/rdkit@${RDKIT_VERSION}/dist`;
 let RDKit = null;
 let currentMol = null;
 let renderMode = "svg";
+let inputMode = "smiles";
+let jsmeApplet = null;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
@@ -35,6 +37,106 @@ function parseMol(smiles) {
     }
     currentMol = mol;
     return mol;
+}
+
+function initJsme() {
+    if (jsmeApplet) return jsmeApplet;
+    const width = Math.max($("#jsme-container").clientWidth, 400);
+    jsmeApplet = new JSApplet.JSME("jsme-container", `${width}px`, "280px");
+    return jsmeApplet;
+}
+
+function syncSmilesToDraw() {
+    const smiles = $("#smiles-input").value.trim();
+    const jsme = initJsme();
+    if (smiles) {
+        jsme.readGenericMolecularInput(smiles);
+    } else {
+        jsme.reset();
+    }
+}
+
+function syncDrawToSmiles() {
+    if (!jsmeApplet) return;
+    const smiles = jsmeApplet.smiles();
+    if (smiles) {
+        $("#smiles-input").value = smiles;
+    }
+}
+
+function setInputMode(mode) {
+    if (mode === inputMode) return;
+
+    if (mode === "draw") {
+        $("#input-smiles-mode").classList.add("hidden");
+        $("#input-draw-mode").classList.remove("hidden");
+        inputMode = mode;
+        $$("[data-input-mode]").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.inputMode === mode);
+        });
+        syncSmilesToDraw();
+        return;
+    }
+
+    syncDrawToSmiles();
+    $("#input-draw-mode").classList.add("hidden");
+    $("#input-smiles-mode").classList.remove("hidden");
+    inputMode = mode;
+    $$("[data-input-mode]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.inputMode === mode);
+    });
+}
+
+function getInputSmiles() {
+    if (inputMode === "draw") {
+        if (!jsmeApplet) initJsme();
+        return jsmeApplet ? jsmeApplet.smiles() : "";
+    }
+    return $("#smiles-input").value.trim();
+}
+
+function getSnippetContext() {
+    const smiles = getInputSmiles() || "CC(=O)Oc1ccccc1C(=O)O";
+    return {
+        smiles,
+        smarts: $("#smarts-input").value.trim() || "Oc1[c,n]cccc1",
+        drawOptions: {
+            addAtomIndices: $("#opt-atom-indices").checked,
+            explicitMethyl: $("#opt-explicit-methyl").checked,
+            legend: $("#opt-legend").value.trim(),
+        },
+    };
+}
+
+function showPythonSnippet(kind) {
+    const ctx = getSnippetContext();
+    let code;
+
+    switch (kind) {
+        case "parse":
+            code = pythonSnippets.parse(ctx.smiles);
+            break;
+        case "draw":
+            code = pythonSnippets.draw(ctx.smiles, ctx.drawOptions);
+            break;
+        case "descriptors":
+            code = pythonSnippets.descriptors(ctx.smiles);
+            break;
+        case "identifiers":
+            code = pythonSnippets.identifiers(ctx.smiles);
+            break;
+        case "substructure":
+            code = pythonSnippets.substructure(ctx.smiles, ctx.smarts);
+            break;
+        default:
+            return;
+    }
+
+    const codeEl = $("#python-code");
+    codeEl.textContent = code;
+    delete codeEl.dataset.highlighted;
+    hljs.highlightElement(codeEl);
+    $("#python-modal").showModal();
 }
 
 function structureDetails() {
@@ -162,9 +264,14 @@ function renderSubstructure() {
 
 function runAll() {
     showError("");
-    const smiles = $("#smiles-input").value.trim();
+
+    if (inputMode === "draw") {
+        syncDrawToSmiles();
+    }
+
+    const smiles = getInputSmiles();
     if (!smiles) {
-        showError("Enter a SMILES string.");
+        showError(inputMode === "draw" ? "Draw a structure first." : "Enter a SMILES string.");
         return;
     }
 
@@ -178,6 +285,14 @@ function runAll() {
     renderDescriptors();
     renderIdentifiers();
     renderSubstructure();
+}
+
+function loadExample(smiles) {
+    $("#smiles-input").value = smiles;
+    if (inputMode === "draw") {
+        initJsme().readGenericMolecularInput(smiles);
+    }
+    runAll();
 }
 
 function switchTab(name) {
@@ -195,16 +310,27 @@ function switchTab(name) {
 
 function initUI() {
     $("#run-btn").addEventListener("click", runAll);
+    $("#run-btn-draw").addEventListener("click", runAll);
     $("#smiles-input").addEventListener("keydown", (e) => {
         if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) runAll();
     });
 
     $("#example-select").addEventListener("change", (e) => {
         if (e.target.value) {
-            $("#smiles-input").value = e.target.value;
+            loadExample(e.target.value);
             e.target.value = "";
-            runAll();
         }
+    });
+
+    $("#example-select-draw").addEventListener("change", (e) => {
+        if (e.target.value) {
+            loadExample(e.target.value);
+            e.target.value = "";
+        }
+    });
+
+    $$("[data-input-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => setInputMode(btn.dataset.inputMode));
     });
 
     $$(".tab").forEach((tab) => {
@@ -227,6 +353,28 @@ function initUI() {
     $("#highlight-btn").addEventListener("click", renderSubstructure);
     $("#smarts-input").addEventListener("keydown", (e) => {
         if (e.key === "Enter") renderSubstructure();
+    });
+
+    $$(".btn-python").forEach((btn) => {
+        btn.addEventListener("click", () => showPythonSnippet(btn.dataset.snippet));
+    });
+
+    $("#python-modal-close").addEventListener("click", () => $("#python-modal").close());
+    $("#python-modal").addEventListener("click", (e) => {
+        if (e.target === $("#python-modal")) $("#python-modal").close();
+    });
+
+    $("#python-copy-btn").addEventListener("click", async () => {
+        const code = $("#python-code").textContent;
+        try {
+            await navigator.clipboard.writeText(code);
+            const btn = $("#python-copy-btn");
+            const prev = btn.textContent;
+            btn.textContent = "Copied!";
+            setTimeout(() => { btn.textContent = prev; }, 1500);
+        } catch {
+            /* clipboard unavailable */
+        }
     });
 }
 

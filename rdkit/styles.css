@@ -89,7 +89,7 @@ body {
 .header-inner {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -100,12 +100,6 @@ body {
     font-weight: 600;
     letter-spacing: -0.01em;
     color: var(--text);
-}
-
-.subtitle {
-    color: var(--muted);
-    font-size: 0.95rem;
-    margin-top: 0.25rem;
 }
 
 .version {
@@ -125,6 +119,174 @@ body {
 .input-panel {
     padding: 1rem 1.25rem;
     margin-bottom: 1rem;
+}
+
+.input-panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.input-mode-toggle {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.draw-hint {
+    margin-bottom: 0.75rem;
+}
+
+.jsme-wrap {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    min-height: 280px;
+}
+
+.draw-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    align-items: stretch;
+}
+
+.draw-actions select {
+    flex: 1;
+}
+
+.panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.panel-head .panel-hint {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.panel-head .panel-toolbar {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+.substruct-controls {
+    flex: 1;
+}
+
+.btn-python {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+}
+
+.python-modal {
+    border: none;
+    padding: 0;
+    background: transparent;
+    max-width: min(640px, 92vw);
+    width: calc(100% - 2rem);
+    margin: 0;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    overflow: visible;
+}
+
+.python-modal::backdrop {
+    background: rgba(245, 244, 237, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.python-modal-inner {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    box-shadow:
+        0 8px 32px rgba(20, 20, 19, 0.12),
+        0 2px 8px rgba(20, 20, 19, 0.06);
+    padding: 1.25rem;
+}
+
+.python-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.python-modal-title {
+    font-family: var(--display);
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.python-code {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.55;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    overflow: auto;
+    max-height: 50vh;
+    margin: 0;
+}
+
+.python-code code {
+    font-family: inherit;
+    font-size: inherit;
+    background: none;
+    padding: 0;
+    white-space: pre;
+    display: block;
+}
+
+.python-code .hljs {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.python-code .hljs-keyword {
+    color: #a85134;
+    font-weight: 500;
+}
+
+.python-code .hljs-built_in {
+    color: #8b6914;
+}
+
+.python-code .hljs-string {
+    color: #2d6a4f;
+}
+
+.python-code .hljs-comment {
+    color: var(--meta);
+    font-style: italic;
+}
+
+.python-code .hljs-title.function_ {
+    color: #5c4d7a;
+}
+
+.python-code .hljs-number {
+    color: #1d6a8a;
+}
+
+.python-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
 }
 
 .label {
